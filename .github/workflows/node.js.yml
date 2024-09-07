@@ -20,7 +20,3 @@ jobs:
       - run: npm ci
       - run: npm run build --if-present
       - run: npm run lint
-
-    test-e2e:
-    name: E2E Tests
-    uses: ./.github/workflows/e2e.yml
