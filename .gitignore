@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# E2E Test Results
+e2e/test-results
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
