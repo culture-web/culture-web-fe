@@ -37,7 +37,13 @@ jobs:
 
       # Step 5: Install Playwright browsers
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install chromium
+
+      # Step 5: Start the React application in the background
+      - name: Start React application
+        run: |
+          npm run dev &     # Starts the server in the background
+          npx wait-on http://localhost:5173/ # Wait until the server is available
 
       # Step 6: Run Playwright tests
       - name: Run Playwright tests
