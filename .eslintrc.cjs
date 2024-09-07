@@ -42,7 +42,7 @@ module.exports = {
     },
     'import/resolver': {
       node: {
-        paths: ['src'],
+        paths: ['src', 'e2e'],
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
     },
