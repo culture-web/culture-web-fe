@@ -39,6 +39,7 @@ export const uploadImgToExpressionRecBE = async (
       throw new Error('Failed to upload image.');
   });
 
+
   const toReturn: Prediction[] = response.map((value: { prediction: string; location: Location[]; accuracy: number[]; }) => ({
       prediction: value.prediction,
       location: {
@@ -52,24 +53,30 @@ export const uploadImgToExpressionRecBE = async (
   return {prediction: toReturn};
 };
 
-export const uploadImgToCharRecBE = async (
-  imageFile: File,
-): Promise<PredictionMultiple> => {
-  const formData = new FormData();
-  formData.append('image', imageFile);
-
-  const response = await fetch(`${BACKEND_URI}/classify`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to upload image.');
-  }
-
-  // TODO: Uncomment return statement and test function once backend is ready
-  // return response.json();
-  return mockResponse;
+export const uploadImgToCharRecBE = async ( 
+  imageFile: File, 
+): Promise<PredictionMultiple> => { 
+  const formData = new FormData(); 
+  formData.append('image', imageFile); 
+  const response = await fetch(`${BACKEND_URI}/`, { 
+    method: 'POST', 
+    body: formData, 
+  }).then((output) => output.json()) 
+    .catch(() => { 
+      throw new Error('Failed to upload image.'); 
+  }); 
+ 
+  const toReturn: Prediction[] = response.map((value: { prediction: string; location: Location[]; accuracy: number[]; }) => ({ 
+      prediction: value.prediction, 
+      location: { 
+        x: value.location[0], 
+        y: value.location[2], 
+        width: value.location[1], 
+        height: value.location[3], 
+        probability: value.accuracy 
+      } 
+    })) 
+  return {prediction: toReturn}; 
 };
 
 // TODO: Uncomment and test function once backend is ready

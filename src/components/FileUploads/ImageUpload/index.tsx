@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Modal, Upload, Spin } from 'antd';
-import ImgCrop from 'antd-img-crop';
 import { UploadOutlined, LoadingOutlined } from '@ant-design/icons';
 import Button from 'components/Common/Button';
 import { PredictionMultiple } from 'types/interface';
@@ -25,6 +24,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [isUploaded, setIsUploaded] = useState(false);
   const [error, setError] = useState('');
   const [content, setContent] = useState<PredictionMultiple | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   const beforeUpload = (file: File): boolean => {
@@ -98,24 +98,20 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       ]}
     >
       <div className="align-center justify-center p-large">
-        <ImgCrop rotationSlider>
-          <Upload
-            className="gray"
-            listType="picture-card"
-            beforeUpload={beforeUpload}
-            onRemove={onRemove}
-            multiple={false}
-            maxCount={1}
-            accept="image/*"
-            fileList={fileList}
-          >
-            {!image && (
-              <Button>
-                <UploadOutlined /> <span>Select Image</span>
-              </Button>
-            )}
-          </Upload>
-        </ImgCrop>
+      <Upload
+          className="gray"
+          name="image"
+          listType="picture"
+          beforeUpload={beforeUpload}
+          onRemove={onRemove}
+          multiple={false}
+          showUploadList
+          accept="image/*"
+        >
+          <Button disabled={!!image}>
+            <UploadOutlined /> <span>Select Image</span>
+          </Button>
+        </Upload>
         {error && <div className="red mt-base">{error}</div>}
         {uploading ? (
           <Spin indicator={<LoadingOutlined spin />} />
