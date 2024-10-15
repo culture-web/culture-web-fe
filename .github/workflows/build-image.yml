@@ -7,6 +7,10 @@ on:
         description: 'Docker image tag'
         required: true
         default: 'latest'
+      backend-uri:
+        description: 'Backend URI'
+        required: true
+        default: 'https://kathakali.comp.nus.edu.sg/api'
 
 jobs:
   build:
@@ -18,8 +22,13 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+      - name: Setup environment variables
+        run: |
+          echo "VITE_BACKEND_URI=${{ github.event.inputs.backend-uri }}" >> $GITHUB_ENV
+          echo "VITE_EMAIL_API_KEY=${{ secrets.VITE_EMAIL_API_KEY }}" >> $GITHUB_ENV
       - run: npm ci
-      - run: npm run build
+      - name: Build the app
+        run: npm run build
       - name: Login to DockerHub
         run: echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u culture4web --password-stdin
       - name: Build the Docker image

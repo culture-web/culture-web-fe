@@ -1,0 +1,29 @@
+.navbar {
+  background-color: #2b2d38;
+}
+
+.menu {
+  display: none;
+  cursor: pointer;
+}
+
+.logo-img {
+  height: 4rem;
+}
+
+@media screen and (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  .nav-links.active {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  .menu {
+    display: block;
+  }
+  .logo-img {
+    height: 2.5rem;
+  }
+}

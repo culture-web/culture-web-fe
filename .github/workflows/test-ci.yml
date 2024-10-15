@@ -1,0 +1,90 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Test Build CI
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 21.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm run lint
+      - name: Setup environment variables
+        run: |
+          echo "VITE_BACKEND_URI=${{ secrets.VITE_BACKEND_URI }}" >> $GITHUB_ENV
+          echo "EMAIL_API_KEY=${{ secrets.EMAIL_API_KEY }}" >> $GITHUB_ENV
+
+  e2e:
+    name: Run Playwright E2E Tests
+    runs-on: ubuntu-latest
+
+    # Install Node.js, dependencies, and run tests
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js version (e.g., 18.x)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      # Step 3: Cache `node_modules` to speed up installation
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 5: Install Playwright browsers
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      # Step 6: Setup environment variables for tests
+      - name: Setup environment variables
+        run: |
+          echo "VITE_BACKEND_URI=${{ secrets.VITE_BACKEND_URI }}" >> $GITHUB_ENV
+          echo "VITE_EMAIL_API_KEY=${{ secrets.VITE_EMAIL_API_KEY }}" >> $GITHUB_ENV
+
+      # Step 5: Start the React application in the background
+      - name: Start React application
+        run: |
+          npm run dev &     # Starts the server in the background
+          npx wait-on http://localhost:5173/ # Wait until the server is available
+      # Step 6: Run Playwright tests
+      - name: Run Playwright tests
+        run: npm run test:e2e
+        # If your tests need a server to be running, you can use `npm start &` to run it in the background
+
+      # Step 7: Upload Playwright report (optional)
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report
+
+      # Step 8: Upload Playwright test results (optional)
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: failure() # Only upload if tests fail
+        with:
+          name: test-results
+          path: test-results/

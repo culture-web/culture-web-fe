@@ -1,0 +1,252 @@
+.media-responsive-base {
+  height: auto;
+  max-height: 50vh;
+  max-width: 100%;
+}
+.media-responsive-large {
+  height: auto;
+  max-height: 55vh;
+  max-width: 100%;
+}
+.max-width-75 {
+  max-width: 75vw;
+  margin-left: auto;
+  margin-right: auto;
+}
+.flex {
+  display: flex;
+}
+.flex-1 {
+  flex: 1;
+}
+.flex-2 {
+  flex: 2;
+}
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+
+  @media screen and (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+.flex-center {
+  display: flex;
+  justify-content: center;
+}
+.flex-center-responsive {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media screen and (max-width: 768px) {
+  .flex-center-responsive {
+    flex-direction: column;
+  }
+}
+.flex-column {
+  flex-direction: column;
+  display: flex;
+}
+.align-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.gap-base {
+  gap: 1rem;
+}
+.gap-large {
+  gap: 2rem;
+}
+.gap-xlarge {
+  gap: 4rem;
+}
+.p-base {
+  padding: 1rem;
+}
+.p-large {
+  padding: 2rem;
+}
+.px-xlarge {
+  padding-left: 4rem;
+  padding-right: 4rem;
+}
+.py-base {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+.mx-auto {
+  margin: 0 auto;
+}
+.my-small {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.mt-base {
+  margin-top: 1rem;
+}
+.mb-small {
+  margin-bottom: 0.5rem;
+}
+.mb-base {
+  margin-bottom: 1rem;
+}
+.mb-large {
+  margin-bottom: 2rem;
+}
+.mb-xlarge {
+  margin-bottom: 4rem;
+}
+.font-bold {
+  font-weight: bold;
+}
+.font-base {
+  font-size: 1rem;
+}
+.font-large {
+  font-size: 1.25rem;
+}
+.font-xlarge {
+  font-size: 1.5rem;
+}
+.font-2xlarge {
+  font-size: 2rem;
+}
+.font-3xlarge {
+  font-size: 3rem;
+}
+.font-4xlarge {
+  font-size: 4rem;
+}
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.break-all {
+  word-break: break-all;
+}
+.text-nowrap {
+  white-space: nowrap;
+}
+.word-normal {
+  word-wrap: normal;
+}
+.w-full {
+  width: 100%;
+}
+.white {
+  color: #ffffff;
+}
+.gray {
+  color: #ababab;
+}
+.red {
+  color: #db2a6b;
+}
+.red-underline {
+  text-decoration: none;
+  color: #db2a6b;
+  &:hover {
+    text-decoration: underline;
+    color: #e02c40;
+  }
+}
+.white-underline {
+  text-decoration: none;
+  color: #ffffff;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+.gray-underline {
+  text-decoration: none;
+  color: #ababab;
+  &:hover {
+    color: #828282;
+    text-decoration: underline;
+  }
+}
+.text-only-button {
+  background: none;
+  border: none;
+}
+.overflow-auto {
+  overflow: auto;
+}
+
+@media screen and (max-width: 768px) {
+  .gap-small {
+    gap: 0.25rem;
+  }
+  .gap-base {
+    gap: 0.5rem;
+  }
+  .gap-large {
+    gap: 1rem;
+  }
+  .gap-xlarge {
+    gap: 2rem;
+  }
+  .p-base {
+    padding: 0.5rem;
+  }
+  .p-large {
+    padding: 1rem;
+  }
+  .px-xlarge {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+  .py-base {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .my-small {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+  .mt-base {
+    margin-top: 0.5rem;
+  }
+  .mb-small {
+    margin-bottom: 0.25rem;
+  }
+  .mb-base {
+    margin-bottom: 0.5rem;
+  }
+  .mb-large {
+    margin-bottom: 1rem;
+  }
+  .mb-xlarge {
+    margin-bottom: 2rem;
+  }
+  .font-base {
+    font-size: 0.875rem;
+  }
+  .font-large {
+    font-size: 1rem;
+  }
+  .font-xlarge {
+    font-size: 1.25rem;
+  }
+  .font-2xlarge {
+    font-size: 1.5rem;
+  }
+  .font-3xlarge {
+    font-size: 2rem;
+  }
+  .font-4xlarge {
+    font-size: 2.5rem;
+  }
+}
