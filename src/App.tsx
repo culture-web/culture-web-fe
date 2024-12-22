@@ -9,8 +9,8 @@ import KootiyattamPage from 'pages/CulturesKootiyattamPage';
 import Navbar from 'components/Common/Navbar';
 import './styles';
 import './app.css';
-import theme from './theme'; // Import the custom theme
 import { ConfigProvider } from 'antd';
+import theme from './theme'; // Import the custom theme
 
 function App() {
   return (

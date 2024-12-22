@@ -1,5 +1,4 @@
 import React, { FormEvent, useState } from 'react';
-import Button from 'components/Common/Button';
 import './index.css';
 import { EMAIL_API_KEY } from 'configs/env.config';
 

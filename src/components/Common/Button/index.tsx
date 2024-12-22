@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './index.css';
 import { Button as AntButton, theme } from 'antd';
+
 const { useToken } = theme;
 interface ButtonProps {
   children?: React.ReactNode;
@@ -16,16 +17,17 @@ const Button: React.FC<ButtonProps> = ({
   type = 'primary',
 }) => {
   const { token } = useToken();
+  const [bgColor, setBgColor] = useState(token.colorPrimary); // Initial background color
 
   return (
   <AntButton
     size="large"
     style={{
-      backgroundColor: token.colorPrimary,
+      backgroundColor: bgColor,
       color: 'white',
     }}
-    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#db2a6b')} // Hover background color
-    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#c81f58')} // Revert to original
+    onMouseEnter={() => setBgColor('#db2a6b')} // Change color on hover
+    onMouseLeave={() => setBgColor(token.colorPrimary)} // Revert to original color
     type={type} // eslint-disable-line react/button-has-type
     onClick={onClick}
     disabled={disabled}
