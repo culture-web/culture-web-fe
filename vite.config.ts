@@ -18,6 +18,7 @@ export default ({ mode }) => {
         configs: path.resolve(__dirname, 'src/configs'),
         pages: path.resolve(__dirname, 'src/pages'),
         utils: path.resolve(__dirname, 'src/utils'),
+        themeStyles: path.resolve(__dirname, 'src/themeStyles')  // Add the alias for themeStyles
       },
     },
   });

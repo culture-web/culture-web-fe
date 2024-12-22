@@ -10,26 +10,26 @@ import Navbar from 'components/Common/Navbar';
 import './styles';
 import './app.css';
 import { ConfigProvider } from 'antd';
-import theme from './theme'; // Import the custom theme
+import themeStyles from './themeStyles'; // Import your custom theme
 
 function App() {
   return (
     <BrowserRouter>
-  <ConfigProvider theme={theme}>
-      <div className="appContainer">
-        <Navbar />
-        <div className="px-xlarge overflow-auto">
-          <Routes>
-            <Route path="/" element={<MainPage />} />
-            <Route path="/about-us" element={<AboutUsPage />} />
-            <Route path="/community" element={<CommunityPage />} />
-            <Route path="/contact-us" element={<ContactUsPage />} />
-            <Route path="/cultures" element={<CulturesPage />} />
-            <Route path="/cultures/kathakali" element={<KathakaliPage />} />
-            <Route path="/cultures/kootiyattam" element={<KootiyattamPage />} />
-          </Routes>
+      <ConfigProvider theme={themeStyles}> {/* Pass themeStyles here */}
+        <div className="appContainer">
+          <Navbar />
+          <div className="px-xlarge overflow-auto">
+            <Routes>
+              <Route path="/" element={<MainPage />} />
+              <Route path="/about-us" element={<AboutUsPage />} />
+              <Route path="/community" element={<CommunityPage />} />
+              <Route path="/contact-us" element={<ContactUsPage />} />
+              <Route path="/cultures" element={<CulturesPage />} />
+              <Route path="/cultures/kathakali" element={<KathakaliPage />} />
+              <Route path="/cultures/kootiyattam" element={<KootiyattamPage />} />
+            </Routes>
+          </div>
         </div>
-      </div>
       </ConfigProvider>
     </BrowserRouter>
   );
