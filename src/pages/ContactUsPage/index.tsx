@@ -38,7 +38,7 @@ const ContactUsPage: React.FC = () => {
         <input type="email" name="email" placeholder="Email" required autoComplete="off" />
       </div>
       <textarea name="message" placeholder="Write your inquiry..." required autoComplete="off" />
-        <Button type="submit">Send Message</Button>
+        <button className='custom-button' type="submit">Send Message</button>
         {submitted && <p>Thank you! Your message has been sent.</p>}
       </form>
     </div>
