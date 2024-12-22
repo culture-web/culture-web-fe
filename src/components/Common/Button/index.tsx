@@ -8,12 +8,16 @@ interface ButtonProps {
   disabled?: boolean;
   className?: string;
   type?: 'primary' | 'default' | 'dashed' | 'text' | 'link';
+  htmlType?: 'submit' | 'reset' | 'button';
+  loading?: boolean;
 }
 const Button: React.FC<ButtonProps> = ({
   onClick,
   children,
   disabled,
   type = 'primary',
+  htmlType = 'button',
+  loading = false
 }) => {
   const styleToken = useStyleToken();
   const [bgColor, setBgColor] = useState(styleToken.button.colorBgButton);
@@ -29,6 +33,8 @@ const Button: React.FC<ButtonProps> = ({
     type={type} // eslint-disable-line react/button-has-type
     onClick={onClick}
     disabled={disabled}
+    htmlType={htmlType}
+    loading={loading}
   >
     {children}
   </AntButton>
