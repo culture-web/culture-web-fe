@@ -9,10 +9,13 @@ import KootiyattamPage from 'pages/CulturesKootiyattamPage';
 import Navbar from 'components/Common/Navbar';
 import './styles';
 import './app.css';
+import { ConfigProvider } from 'antd';
+import theme from './theme'; // Import the custom theme
 
 function App() {
   return (
     <BrowserRouter>
+  <ConfigProvider theme={theme}>
       <div className="appContainer">
         <Navbar />
         <div className="px-xlarge overflow-auto">
@@ -27,6 +30,7 @@ function App() {
           </Routes>
         </div>
       </div>
+      </ConfigProvider>
     </BrowserRouter>
   );
 }
