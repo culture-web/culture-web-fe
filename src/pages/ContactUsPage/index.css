@@ -10,6 +10,12 @@
   font-size: 1.25vw;
 }
 
+/* In your CSS file (e.g., index.css) */
+.ant-input::placeholder {
+  color: #ababab; /* Change placeholder color */
+  font-size: 1.5rem; /* Change placeholder font size */
+}
+
 .contactForm {
   max-width: 600px;
   margin: 20px auto;
