@@ -1,42 +1,48 @@
 import { useNavigate } from 'react-router-dom';
-import heroImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
+import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
 import Button from 'components/Common/Button';
+import { Typography, Flex, Image, Grid } from 'antd';
+import { useStyleToken } from 'themeStyles';
+const { useBreakpoint } = Grid;
+const { Text, Title } = Typography;
 
 function MainPage() {
   const navigate = useNavigate();
-
   const handleNavigate = (path: string) => {
     navigate(path);
   };
+  const styleToken = useStyleToken();
+  const screens = useBreakpoint();
+  const isMobile = screens.xs;
 
   return (
-    <div className="mb-xlarge">
-      <div className="font-4xlarge white mb-large">Home</div>
-      <div className="flex-between align-center gap-xlarge">
-        <div className="mx-auto">
-          <div className="font-4xlarge white">
+    <Flex vertical>
+      <Title style={styleToken.pageHeadingStyle}>Home</Title>
+      <Flex align="center" gap="large" vertical={isMobile}>
+        <Flex vertical align="center">
+          <Title style={styleToken.pageHeadingStyle}>
             Discover the World of Cultures at KathakalAI
-          </div>
-          <div className="font-2xlarge gray my-small">
+          </Title>
+          <Text style={styleToken.subtitleTextStyle}>
             Experience the beauty and diversity of cultures from all around the
             globe.
-          </div>
-          <div className="flex-center gap-large my-small">
+          </Text>
+          <Flex justify="center" gap="large">
             <Button onClick={() => handleNavigate('/cultures')}>
               Get Started
             </Button>
             <Button onClick={() => handleNavigate('/about-us')}>
               Learn More →
             </Button>
-          </div>
-        </div>
-        <img
-          className="media-responsive-large"
-          src={heroImage}
+          </Flex>
+        </Flex>
+        <Image
+          src={kathakaliImage}
           alt="Cultural"
+          style={{ maxWidth: '100%', height: 'auto' }}
         />
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }
 

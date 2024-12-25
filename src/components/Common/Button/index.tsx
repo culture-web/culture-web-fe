@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button as AntButton } from 'antd';
-import { useStyleToken } from 'themeStyles'
+import { useColourToken } from 'themeStyles';
 
 interface ButtonProps {
   children?: React.ReactNode;
@@ -17,28 +17,28 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   type = 'primary',
   htmlType = 'button',
-  loading = false
+  loading = false,
 }) => {
-  const styleToken = useStyleToken();
-  const [bgColor, setBgColor] = useState(styleToken.button.colorBgButton);
+  const colourToken = useColourToken();
+  const [bgColor, setBgColor] = useState(colourToken.pink);
   return (
-  <AntButton
-    size="large"
-    style={{
-      backgroundColor: bgColor,
-      color: styleToken.button.textColor,
-    }}
-    onMouseEnter={() => setBgColor(styleToken.button.colorBgButtonHover)} // Change color on hover
-    onMouseLeave={() => setBgColor(styleToken.button.colorBgButton)} // Revert to original color
-    type={type} // eslint-disable-line react/button-has-type
-    onClick={onClick}
-    disabled={disabled}
-    htmlType={htmlType}
-    loading={loading}
-  >
-    {children}
-  </AntButton>
-)
-}
+    <AntButton
+      size="large"
+      style={{
+        backgroundColor: bgColor,
+        color: colourToken.white,
+      }}
+      onMouseEnter={() => setBgColor(colourToken.pinkLight)} // Change color on hover
+      onMouseLeave={() => setBgColor(colourToken.pink)} // Revert to original color
+      type={type} // eslint-disable-line react/button-has-type
+      onClick={onClick}
+      disabled={disabled}
+      htmlType={htmlType}
+      loading={loading}
+    >
+      {children}
+    </AntButton>
+  );
+};
 
 export default Button;
