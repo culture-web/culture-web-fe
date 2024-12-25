@@ -11,7 +11,7 @@ function CulturesPage() {
   const isMobile = useIsMobile();
   return (
     <Flex vertical>
-      <Title style={styleToken.pageHeadingStyle}>Cultures</Title>
+      <Title style={styleToken.pageHeadingTextStyle}>Cultures</Title>
       <Flex justify="center" align="center" gap="large" vertical={isMobile}>
         {cultureData.map((culture) => (
           <CultureCard
