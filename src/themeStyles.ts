@@ -30,6 +30,13 @@ const pageHeadingTextStyle = {
   marginBottom: '1rem',
 };
 
+const cultureLinkTextStylePink = {
+  color: colours.pinkLight,
+  fontSize: '2rem',
+  textDecoration: 'underline',
+  marginBottom: '0.5rem',
+};
+
 const titleTextStyle = {
   color: colours.white,
   fontSize: '3rem',
@@ -56,6 +63,7 @@ export const useStyleToken = () => {
     titleTextStyle,
     subtitleTextStyle,
     thankyouTextStyle,
+    cultureLinkTextStyle: cultureLinkTextStylePink,
   };
 };
 
