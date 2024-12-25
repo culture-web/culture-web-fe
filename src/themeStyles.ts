@@ -1,5 +1,5 @@
 // theme.ts
-import { theme as AntdTheme, Input } from 'antd';
+import { theme as AntdTheme } from 'antd';
 
 const colours = {
   primary: '#2b2d38',

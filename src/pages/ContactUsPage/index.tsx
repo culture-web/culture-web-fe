@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { EMAIL_API_KEY } from 'configs/env.config';
-import { Form, message } from 'antd';
+import { Form, message, Typography, Flex } from 'antd';
 import Button from 'components/Common/Button';
-import FormInput from './FormItem';
-import { Typography, Flex } from 'antd';
 import { useStyleToken } from 'themeStyles';
+import FormInput from './FormItem';
 
 const { Title, Text } = Typography;
 
