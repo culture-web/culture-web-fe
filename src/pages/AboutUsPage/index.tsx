@@ -30,7 +30,7 @@ function AboutUsPage() {
           <Flex vertical>
             <a
               href="/cultures/kathakali"
-              style={styleToken.cultureLinkTextStyle}
+              style={styleToken.cultureLinkTextStylePink}
             >
               Kathakali
             </a>
@@ -42,7 +42,7 @@ function AboutUsPage() {
             </Text>
             <a
               href="/cultures/kootiyattam"
-              style={styleToken.cultureLinkTextStyle}
+              style={styleToken.cultureLinkTextStylePink}
             >
               Kootiyattam
             </a>

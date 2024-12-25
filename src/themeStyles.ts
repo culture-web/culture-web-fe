@@ -37,6 +37,12 @@ const cultureLinkTextStylePink = {
   marginBottom: '0.5rem',
 };
 
+const cultureLinkTextStyleWhite = {
+  color: colours.white,
+  fontSize: '2rem',
+  marginBottom: '0.5rem',
+};
+
 const titleTextStyle = {
   color: colours.white,
   fontSize: '3rem',
@@ -63,7 +69,8 @@ export const useStyleToken = () => {
     titleTextStyle,
     subtitleTextStyle,
     thankyouTextStyle,
-    cultureLinkTextStyle: cultureLinkTextStylePink,
+    cultureLinkTextStylePink,
+    cultureLinkTextStyleWhite,
   };
 };
 
