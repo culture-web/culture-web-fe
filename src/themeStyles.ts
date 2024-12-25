@@ -1,21 +1,27 @@
 // theme.ts
 import { theme as AntdTheme } from 'antd';
 
-const themeStyles = {
-  token: {},
-};
-
 const colours = {
   primary: '#2b2d38',
   white: '#fff',
   gray: '#ababab',
   pink: '#c81f58',
   pinkLight: '#db2a6b',
+  green: '#00a86b',
+};
+
+const themeStyles = {
+  token: {},
+  components: {
+    Input: {
+      colorTextPlaceholder: colours.gray,
+    },
+  },
 };
 
 export const useColourToken = () => ({
-    ...colours,
-  });
+  ...colours,
+});
 
 // Page Headings, such as Home, Cultures, etc...
 const pageHeadingTextStyle = {
@@ -36,13 +42,20 @@ const subtitleTextStyle = {
   marginBottom: '1rem',
 };
 
+const thankyouTextStyle = {
+  color: colours.green,
+  fontSize: '1.5rem',
+  marginBottom: '1rem',
+};
+
 export const useStyleToken = () => {
   const { token } = AntdTheme.useToken();
   return {
     ...token,
-    pageHeadingStyle: pageHeadingTextStyle,
+    pageHeadingTextStyle,
     titleTextStyle,
     subtitleTextStyle,
+    thankyouTextStyle,
   };
 };
 

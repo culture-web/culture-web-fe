@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import './index.css';
 import { EMAIL_API_KEY } from 'configs/env.config';
-import { Form, message } from 'antd';
+import { Form, message, Typography, Flex } from 'antd';
 import Button from 'components/Common/Button';
+import { useStyleToken } from 'themeStyles';
 import FormInput from './FormItem';
+
+const { Title, Text } = Typography;
 
 const ContactUsPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const styleToken = useStyleToken();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (values: any) => {
@@ -40,28 +43,53 @@ const ContactUsPage: React.FC = () => {
     }
   };
   return (
-    <div className="contactUsPage">
-      <h1>Contact Us</h1>
-      <p>Any questions? Drop us a message!</p>
-      <Form onFinish={handleSubmit} layout="vertical" className="contactForm">
-        <FormInput name="name" placeholder="Name" message="Please enter your name" />
-        <FormInput name="number" required={false} type="tel" placeholder="Phone Number" message="Please enter your phone number" />
-        <FormInput name="email" type="email" placeholder="Email" message="Please enter a valid email" />
-        <FormInput rows={4} name="message" placeholder="Write your inquiry..." message="Please enter your message" />
+    <Flex vertical align="center">
+      <Title style={styleToken.pageHeadingTextStyle}>Contact Us</Title>
+      <Text style={styleToken.subtitleTextStyle}>
+        Any questions? Feel free to drop us a message below!
+      </Text>
+      <Form
+        onFinish={handleSubmit}
+        layout="vertical"
+        style={{ maxWidth: '600px', width: '100%' }}
+      >
+        <FormInput
+          name="name"
+          placeholder="Name"
+          message="Please enter your name"
+        />
+        <FormInput
+          name="number"
+          required={false}
+          type="tel"
+          placeholder="Phone Number"
+          message="Please enter your phone number"
+        />
+        <FormInput
+          name="email"
+          type="email"
+          placeholder="Email"
+          message="Please enter a valid email"
+        />
+        <FormInput
+          rows={4}
+          name="message"
+          placeholder="Write your inquiry..."
+          message="Please enter your message"
+        />
         <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            className="custom-button"
-          >
+          <Button type="primary" htmlType="submit" loading={loading}>
             Send Message
           </Button>
         </Form.Item>
 
-        {submitted && <p>Thank you! Your message has been sent.</p>}
+        {submitted && (
+          <Text style={styleToken.thankyouTextStyle}>
+            Thank you! Your message has been sent!
+          </Text>
+        )}
       </Form>
-    </div>
+    </Flex>
   );
 };
 

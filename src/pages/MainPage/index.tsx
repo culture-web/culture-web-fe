@@ -17,10 +17,10 @@ function MainPage() {
 
   return (
     <Flex vertical>
-      <Title style={styleToken.pageHeadingStyle}>Home</Title>
+      <Title style={styleToken.pageHeadingTextStyle}>Home</Title>
       <Flex align="center" gap="large" vertical={isMobile}>
         <Flex vertical align="center">
-          <Title style={styleToken.pageHeadingStyle}>
+          <Title style={styleToken.pageHeadingTextStyle}>
             Discover the World of Cultures at KathakalAI
           </Title>
           <Text style={styleToken.subtitleTextStyle}>
