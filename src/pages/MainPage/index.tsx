@@ -3,7 +3,8 @@ import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali5.jpg'
 import Button from 'components/Common/Button';
 import { Typography, Flex, Image } from 'antd';
 import { useStyleToken } from 'themeStyles';
-import { useIsMobile } from 'utils/isMobile';
+import useIsMobile from 'utils/isMobile';
+
 const { Text, Title } = Typography;
 
 function MainPage() {

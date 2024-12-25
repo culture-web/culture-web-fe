@@ -1,8 +1,9 @@
 import CultureCard from 'components/Common/CultureCard';
-import cultureData from './content';
 import { Typography, Flex } from 'antd';
 import { useStyleToken } from 'themeStyles';
-import { useIsMobile } from 'utils/isMobile';
+import useIsMobile from 'utils/isMobile';
+import cultureData from './content';
+
 const { Title } = Typography;
 
 function CulturesPage() {
