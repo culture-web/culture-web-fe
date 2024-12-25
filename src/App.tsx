@@ -15,7 +15,7 @@ import themeStyles from './themeStyles'; // Import your custom theme
 function App() {
   return (
     <BrowserRouter>
-      <ConfigProvider theme={themeStyles}> {/* Pass themeStyles here */}
+      <ConfigProvider theme={themeStyles}>
         <div className="appContainer">
           <Navbar />
           <div className="px-xlarge overflow-auto">
@@ -26,7 +26,10 @@ function App() {
               <Route path="/contact-us" element={<ContactUsPage />} />
               <Route path="/cultures" element={<CulturesPage />} />
               <Route path="/cultures/kathakali" element={<KathakaliPage />} />
-              <Route path="/cultures/kootiyattam" element={<KootiyattamPage />} />
+              <Route
+                path="/cultures/kootiyattam"
+                element={<KootiyattamPage />}
+              />
             </Routes>
           </div>
         </div>

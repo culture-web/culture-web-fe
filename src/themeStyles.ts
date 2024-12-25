@@ -2,22 +2,50 @@
 import { theme as AntdTheme } from 'antd';
 
 const themeStyles = {
-    token: {
-    },
+  token: {},
+};
+
+const colours = {
+  primary: '#2b2d38',
+  white: '#fff',
+  gray: '#ababab',
+  pink: '#c81f58',
+  pinkLight: '#db2a6b',
+};
+
+export const useColourToken = () => {
+  return {
+    ...colours,
   };
+};
+
+// Page Headings, such as Home, Cultures, etc...
+const pageHeadingTextStyle = {
+  color: colours.white,
+  fontSize: '3.5rem',
+  marginBottom: '1rem',
+};
+
+const titleTextStyle = {
+  color: colours.white,
+  fontSize: '3rem',
+  marginBottom: '1rem',
+};
+
+const subtitleTextStyle = {
+  color: colours.gray,
+  fontSize: '1.5rem',
+  marginBottom: '1rem',
+};
 
 export const useStyleToken = () => {
-    const { token } = AntdTheme.useToken();
-    return {
-      ...token,
-      colorBackgroundPrimary: '#2b2d38', 
-      button: {
-        colorBgButton: '#c81f58',
-        colorBgButtonHover: '#db2a6b',
-        textColor: '#fff',
-      },
-    };
-  }
-  
-  export default themeStyles;
-  
+  const { token } = AntdTheme.useToken();
+  return {
+    ...token,
+    pageHeadingStyle: pageHeadingTextStyle,
+    titleTextStyle: titleTextStyle,
+    subtitleTextStyle: subtitleTextStyle,
+  };
+};
+
+export default themeStyles;
