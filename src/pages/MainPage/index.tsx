@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
 import Button from 'components/Common/Button';
-import { Typography, Flex, Image, Grid } from 'antd';
+import { Typography, Flex, Image } from 'antd';
 import { useStyleToken } from 'themeStyles';
-const { useBreakpoint } = Grid;
+import { useIsMobile } from 'utils/isMobile';
 const { Text, Title } = Typography;
 
 function MainPage() {
@@ -12,8 +12,7 @@ function MainPage() {
     navigate(path);
   };
   const styleToken = useStyleToken();
-  const screens = useBreakpoint();
-  const isMobile = screens.xs;
+  const isMobile = useIsMobile();
 
   return (
     <Flex vertical>
