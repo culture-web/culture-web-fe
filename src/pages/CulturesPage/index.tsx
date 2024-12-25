@@ -1,11 +1,18 @@
 import CultureCard from 'components/Common/CultureCard';
+import { Typography, Flex } from 'antd';
+import { useStyleToken } from 'themeStyles';
+import useIsMobile from 'utils/isMobile';
 import cultureData from './content';
 
+const { Title } = Typography;
+
 function CulturesPage() {
+  const styleToken = useStyleToken();
+  const isMobile = useIsMobile();
   return (
-    <div className="mb-xlarge">
-      <div className="font-4xlarge white mb-large">Cultures</div>
-      <div className="flex-center-responsive gap-xlarge">
+    <Flex vertical>
+      <Title style={styleToken.pageHeadingStyle}>Cultures</Title>
+      <Flex justify="center" align="center" gap="large" vertical={isMobile}>
         {cultureData.map((culture) => (
           <CultureCard
             key={culture.name}
@@ -14,8 +21,8 @@ function CulturesPage() {
             imageUrl={culture.imageUrl}
           />
         ))}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }
 

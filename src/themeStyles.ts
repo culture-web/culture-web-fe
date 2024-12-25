@@ -13,11 +13,9 @@ const colours = {
   pinkLight: '#db2a6b',
 };
 
-export const useColourToken = () => {
-  return {
+export const useColourToken = () => ({
     ...colours,
-  };
-};
+  });
 
 // Page Headings, such as Home, Cultures, etc...
 const pageHeadingTextStyle = {
@@ -43,8 +41,8 @@ export const useStyleToken = () => {
   return {
     ...token,
     pageHeadingStyle: pageHeadingTextStyle,
-    titleTextStyle: titleTextStyle,
-    subtitleTextStyle: subtitleTextStyle,
+    titleTextStyle,
+    subtitleTextStyle,
   };
 };
 
