@@ -22,9 +22,7 @@ test('Clicking on Learn More brings us to About Us', async ({ page }) => {
     page.getByRole('button', { name: 'Learn More →' }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Learn More →' }).click();
-  await expect(
-    page.locator('div').filter({ hasText: /^About Us$/ }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'About Us' })).toBeVisible();
 
   // Check url is /about-us
   expect(page.url()).toBe(`${baseUrl}/about-us`);
