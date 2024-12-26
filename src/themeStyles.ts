@@ -105,7 +105,7 @@ export const useStyleToken = () => {
     cultureLinkTextStylePink,
     cultureLinkTextStyleWhite,
     navigationBar: {
-      navigationBarStyle: navigationBarStyle,
+      navigationBarStyle,
       kathakalAIButtonStyle: navigationBarKathakalAIButtonStyle,
       activeLinkStyle: navigationBarActiveLinkStyle,
       defaultLinkStyle: navigationBarDefaultLinkStyle,

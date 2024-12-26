@@ -9,14 +9,13 @@ import {
 import RenderCharacterContent from 'components/ContentRender/RenderCharacterContent';
 import RenderExpressionContent from 'components/ContentRender/RenderExpressionContent';
 import { useStyleToken } from 'themeStyles';
-import useIsMobile from 'utils/isMobile';
+
 const { Text, Title } = Typography;
 
 function KathakaliPage() {
   const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
   const [isExpressionModalOpen, setIsExpressionModalOpen] = useState(false);
   const styleToken = useStyleToken();
-  const isMobile = useIsMobile();
 
   const handleNavigation = (
     e: React.MouseEvent<HTMLButtonElement>,

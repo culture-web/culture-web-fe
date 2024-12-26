@@ -24,7 +24,7 @@ function DropdownNavbar() {
       align="center"
       vertical
     >
-      <Flex gap={'large'}>
+      <Flex gap="large">
         <Button
           type="text"
           onClick={() => handleNavigate('/')}

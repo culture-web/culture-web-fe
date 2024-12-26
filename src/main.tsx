@@ -1,12 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { useColourToken } from 'themeStyles';
 
 const rootElement = document.getElementById('root')!;
-const colourToken = useColourToken();
 
-// Inject global styles using TS
+// Inject global styles using JS
 const globalStyles = `
   :root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -14,7 +12,7 @@ const globalStyles = `
     font-weight: 400;
     color-scheme: light dark;
     color: rgba(255, 255, 255, 0.87);
-    background-color: ${colourToken.primary};
+    background-color: #2b2d38;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;

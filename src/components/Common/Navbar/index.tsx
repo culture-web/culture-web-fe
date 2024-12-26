@@ -1,8 +1,7 @@
-import { NavLink } from 'react-router-dom'; // React Router's NavLink for navigation
+import { NavLink, useNavigate } from 'react-router-dom'; // React Router's NavLink for navigation
 import { Button, Image, Flex } from 'antd'; // Ant Design components
 import logoKathakalAI from 'assets/images/logos/kathakalai-pink.png';
 import { useStyleToken } from 'themeStyles';
-import { useNavigate } from 'react-router-dom';
 
 function Navbar() {
   const styleToken = useStyleToken();
