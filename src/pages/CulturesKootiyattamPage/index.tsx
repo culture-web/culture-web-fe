@@ -1,38 +1,45 @@
+import { Typography, Flex, Image, Button } from 'antd';
 import kootiyattamImage from 'assets/images/kootiyattam-stock-images/kootiyattam2.jpg';
+import { useStyleToken } from 'themeStyles';
+import { useRef } from 'react';
+
+const { Title, Text } = Typography;
 
 function KootiyattamPage() {
-  const handleNavigation = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    sectionId: string,
-  ) => {
-    e.preventDefault();
-    const section = document.getElementById(sectionId);
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
+  const styleToken = useStyleToken();
+  const overviewRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollToSection = () => {
+    if (overviewRef.current) {
+      overviewRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <div className="mb-xlarge">
-      <div className="font-4xlarge white mb-large">Kootiyattam</div>
-      <img
-        className="media-responsive-base"
+    <Flex vertical align="center" style={{ marginBottom: '4rem' }}>
+      <Title style={styleToken.pageHeadingTextStyle}>Kootiyattam</Title>
+      <Image
         src={kootiyattamImage}
         alt="Kootiyattam"
+        style={{ maxWidth: '100%', height: 'auto' }}
       />
-      <nav className="flex-center font-large gap-base text-only-button">
-        <button
-          className="white-underline p-base text-only-button"
-          type="button"
-          onClick={(e) => handleNavigation(e, 'overview')}
+
+      <Flex>
+        <Button
+          type="text"
+          onClick={handleScrollToSection}
+          style={{ fontSize: '1.25rem', color: '#ffffff' }}
         >
           Overview
-        </button>
-      </nav>
-      <div className="max-width-75">
-        <section id="overview" className="mb-large">
-          <div className="font-4xlarge white mb-base">Overview</div>
-          <div className="font-2xlarge gray">
+        </Button>
+      </Flex>
+
+      <Flex vertical align="center" style={{ maxWidth: '75vw' }}>
+        <Flex vertical ref={overviewRef}>
+          <Title level={2} style={{ color: '#ffffff', marginBottom: '1rem' }}>
+            Overview
+          </Title>
+          <Text style={{ fontSize: '1.5rem', color: '#ababab' }}>
             Kootiyattam is one of the oldest traditional theatre forms in India,
             originating in Kerala. It blends ancient Sanskrit theatre with local
             performing traditions, using highly stylized facial expressions,
@@ -42,10 +49,10 @@ function KootiyattamPage() {
             days. Recognized by UNESCO as a masterpiece of the oral and
             intangible heritage of humanity, it stands as one of the most
             respected art forms with deep roots in Indian history and culture.
-          </div>
-        </section>
-      </div>
-    </div>
+          </Text>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 }
 

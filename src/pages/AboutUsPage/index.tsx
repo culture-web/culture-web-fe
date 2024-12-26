@@ -9,7 +9,7 @@ function AboutUsPage() {
   const styleToken = useStyleToken();
   const isMobile = useIsMobile();
   return (
-    <Flex vertical>
+    <Flex vertical align="center">
       <Title style={styleToken.pageHeadingTextStyle}>About Us</Title>
       <Flex vertical={isMobile} gap="large">
         <Flex>

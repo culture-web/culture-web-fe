@@ -1,83 +1,72 @@
-import { useState } from 'react';
-import { MenuOutlined } from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom'; // React Router's NavLink for navigation
+import { Button, Image, Flex } from 'antd'; // Ant Design components
 import logoKathakalAI from 'assets/images/logos/kathakalai-pink.png';
-import './index.css';
+import { useStyleToken } from 'themeStyles';
+import { useNavigate } from 'react-router-dom';
 
 function Navbar() {
+  const styleToken = useStyleToken();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-
   const handleNavigate = (path: string) => {
     navigate(path);
-    setIsOpen(false);
   };
 
-  const isActive = (path: string) =>
-    path === '/'
-      ? location.pathname === '/'
-      : location.pathname.startsWith(path);
+  const activeLinkStyles = styleToken.navigationBar.activeLinkStyle;
+  const defaultLinkStyles = styleToken.navigationBar.defaultLinkStyle;
 
   return (
-    <nav className="navbar flex-between align-center px-xlarge">
-      <button
-        type="button"
+    <Flex style={styleToken.navigationBar.navigationBarStyle}>
+      <Button
+        type="text"
         onClick={() => handleNavigate('/')}
-        className="font-xlarge text-only-button red font-bold flex align-center"
+        style={styleToken.navigationBar.kathakalAIButtonStyle}
+        onMouseDown={(e) => e.preventDefault()} // Prevent the default behavior of focus/active states
       >
-        <img src={logoKathakalAI} alt="KathakalAI Logo" className="logo-img" />
+        <Image
+          src={logoKathakalAI}
+          alt="KathakalAI Logo"
+          style={{
+            height: '60px',
+            marginRight: '0.5rem', // Space between the logo and text
+          }}
+        />
         KathakalAI
-      </button>
-      <div className={`nav-links font-large ${isOpen ? 'active' : ''}`}>
-        <button
-          type="button"
-          onClick={() => handleNavigate('/')}
-          className={`text-only-button ${
-            isActive('/') ? 'white-underline' : 'gray-underline'
-          }`}
+      </Button>
+      <Flex align="center" gap="large">
+        <NavLink
+          to="/"
+          style={({ isActive }) =>
+            isActive ? activeLinkStyles : defaultLinkStyles
+          }
         >
           Home
-        </button>
-        <button
-          type="button"
-          onClick={() => handleNavigate('/cultures')}
-          className={`text-only-button ${
-            isActive('/cultures') ? 'white-underline' : 'gray-underline'
-          }`}
+        </NavLink>
+        <NavLink
+          to="/cultures"
+          style={({ isActive }) =>
+            isActive ? activeLinkStyles : defaultLinkStyles
+          }
         >
           Cultures
-        </button>
-        <button
-          type="button"
-          onClick={() => handleNavigate('/about-us')}
-          className={`text-only-button ${
-            isActive('/about-us') ? 'white-underline' : 'gray-underline'
-          }`}
+        </NavLink>
+        <NavLink
+          to="/about-us"
+          style={({ isActive }) =>
+            isActive ? activeLinkStyles : defaultLinkStyles
+          }
         >
           About Us
-        </button>
-        {/* <button
-          type="button"
-          onClick={() => handleNavigate('/community')}
-          className={`text-only-button ${
-            isActive('/community') ? 'white-underline' : 'gray-underline'
-          }`}
-        >
-          Community
-        </button> */}
-        <button
-          type="button"
-          onClick={() => handleNavigate('/contact-us')}
-          className={`text-only-button ${
-            isActive('/contact-us') ? 'white-underline' : 'gray-underline'
-          }`}
+        </NavLink>
+        <NavLink
+          to="/contact-us"
+          style={({ isActive }) =>
+            isActive ? activeLinkStyles : defaultLinkStyles
+          }
         >
           Contact Us
-        </button>
-      </div>
-      <MenuOutlined className="menu gray" onClick={() => setIsOpen(!isOpen)} />
-    </nav>
+        </NavLink>
+      </Flex>
+    </Flex>
   );
 }
 

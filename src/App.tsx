@@ -7,18 +7,19 @@ import MainPage from 'pages/MainPage';
 import KathakaliPage from 'pages/CulturesKathakaliPage';
 import KootiyattamPage from 'pages/CulturesKootiyattamPage';
 import Navbar from 'components/Common/Navbar';
-import './styles';
-import './app.css';
-import { ConfigProvider } from 'antd';
+import DropdownNavbar from 'components/Common/DropdownNavbar';
+import useIsMobile from 'utils/isMobile';
+import { ConfigProvider, Flex } from 'antd';
 import themeStyles from './themeStyles'; // Import your custom theme
 
 function App() {
+  const isMobile = useIsMobile();
   return (
     <BrowserRouter>
       <ConfigProvider theme={themeStyles}>
-        <div className="appContainer">
-          <Navbar />
-          <div className="px-xlarge overflow-auto">
+        <Flex vertical>
+          {isMobile ? <DropdownNavbar /> : <Navbar />}
+          <Flex vertical>
             <Routes>
               <Route path="/" element={<MainPage />} />
               <Route path="/about-us" element={<AboutUsPage />} />
@@ -31,8 +32,8 @@ function App() {
                 element={<KootiyattamPage />}
               />
             </Routes>
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       </ConfigProvider>
     </BrowserRouter>
   );
