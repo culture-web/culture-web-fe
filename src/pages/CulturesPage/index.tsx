@@ -10,7 +10,7 @@ function CulturesPage() {
   const styleToken = useStyleToken();
   const isMobile = useIsMobile();
   return (
-    <Flex vertical>
+    <Flex vertical align="center">
       <Title style={styleToken.pageHeadingTextStyle}>Cultures</Title>
       <Flex justify="center" align="center" gap="large" vertical={isMobile}>
         {cultureData.map((culture) => (

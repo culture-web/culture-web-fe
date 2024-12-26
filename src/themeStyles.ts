@@ -23,11 +23,44 @@ export const useColourToken = () => ({
   ...colours,
 });
 
+// Navigation Bar Styles
+
+const navigationBarStyle = {
+  marginTop: '1rem',
+  justifyContent: 'space-between',
+  padding: '0 2rem',
+  backgroundColor: colours.primary,
+};
+
+const navigationBarKathakalAIButtonStyle = {
+  color: colours.pinkLight,
+  fontSize: '1.5rem',
+  fontWeight: 'bold',
+  backgroundColor: 'transparent',
+  display: 'flex',
+  alignItems: 'center',
+  padding: 0,
+  border: 'none',
+  outline: 'none',
+};
+
+const navigationBarActiveLinkStyle = {
+  fontSize: '1.5rem',
+  textDecoration: 'underline',
+  color: colours.white,
+};
+
+const navigationBarDefaultLinkStyle = {
+  fontSize: '1.5rem',
+  color: colours.gray,
+  textDecoration: 'none',
+};
+
 // Page Headings, such as Home, Cultures, etc...
 const pageHeadingTextStyle = {
   color: colours.white,
   fontSize: '3.5rem',
-  marginBottom: '1rem',
+  marginBottom: '2rem',
 };
 
 const cultureLinkTextStylePink = {
@@ -71,6 +104,12 @@ export const useStyleToken = () => {
     thankyouTextStyle,
     cultureLinkTextStylePink,
     cultureLinkTextStyleWhite,
+    navigationBar: {
+      navigationBarStyle,
+      kathakalAIButtonStyle: navigationBarKathakalAIButtonStyle,
+      activeLinkStyle: navigationBarActiveLinkStyle,
+      defaultLinkStyle: navigationBarDefaultLinkStyle,
+    },
   };
 };
 

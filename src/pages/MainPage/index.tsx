@@ -16,10 +16,10 @@ function MainPage() {
   const isMobile = useIsMobile();
 
   return (
-    <Flex vertical>
+    <Flex vertical align="center" style={{ margin: '0 2rem' }}>
       <Title style={styleToken.pageHeadingTextStyle}>Home</Title>
       <Flex align="center" gap="large" vertical={isMobile}>
-        <Flex vertical align="center">
+        <Flex vertical align="left">
           <Title style={styleToken.pageHeadingTextStyle}>
             Discover the World of Cultures at KathakalAI
           </Title>
@@ -27,7 +27,7 @@ function MainPage() {
             Experience the beauty and diversity of cultures from all around the
             globe.
           </Text>
-          <Flex justify="center" gap="large">
+          <Flex gap="large">
             <Button onClick={() => handleNavigate('/cultures')}>
               Get Started
             </Button>
