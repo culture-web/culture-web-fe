@@ -27,6 +27,27 @@ test('Clicking on Kathakali Read More brings us to Kathakali Information page', 
   expect(page.url()).toBe(`${baseUrl}/cultures/kathakali`);
 });
 
+test('Clicking on Kootiyattam Read More brings us to Kootiyattam Information page', async ({
+  page,
+}) => {
+  await page.goto('/cultures');
+  await expect(
+    page
+      .locator('div')
+      .filter({ hasText: /^PreviewKootiyattamREAD MORE →$/ })
+      .getByRole('button'),
+  ).toBeVisible();
+  await page
+    .locator('div')
+    .filter({ hasText: /^PreviewKootiyattamREAD MORE →$/ })
+    .getByRole('button')
+    .click();
+  await expect(page.getByText('Kootiyattam', { exact: true })).toBeVisible();
+
+  // Check url is /cultures/kootiyattam
+  expect(page.url()).toBe(`${baseUrl}/cultures/kootiyattam`);
+});
+
 // TODO: Test able to upload Character Recognition File
 
 // TODO: Test able to upload Expression Recognition File
