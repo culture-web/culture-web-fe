@@ -8,7 +8,7 @@ import type { UploadFile } from 'antd';
 import './index.css';
 import { useColourToken } from 'themeStyles';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface ImageUploadProps {
   isOpen: boolean;

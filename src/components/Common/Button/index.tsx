@@ -29,7 +29,7 @@ const Button: React.FC<ButtonProps> = ({
       style={{
         backgroundColor: disabled ? colourToken.gray : bgColor,
         color: disabled ? colourToken.black : colourToken.white,
-        width: width,
+        width,
       }}
       onMouseEnter={() => setBgColor(colourToken.pinkLight)} // Change color on hover
       onMouseLeave={() => setBgColor(colourToken.pink)} // Revert to original color

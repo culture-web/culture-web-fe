@@ -5,8 +5,8 @@ import charactersData from 'assets/data/characters.json';
 import Button from 'components/Common/Button';
 import { PredictionMultiple, Character } from 'types/interface';
 import toPascalCase from 'utils/toPascalCase';
-import * as characterImages from './images';
 import { useColourToken, useStyleToken } from 'themeStyles';
+import * as characterImages from './images';
 
 const { Title, Text } = Typography;
 
@@ -48,7 +48,7 @@ const RenderCharacterContent: React.FC<{
           ];
 
         return (
-          <Flex align="center" vertical>
+          <Flex align="center" vertical key={characterInfo.name}>
             <Card
               key={characterInfo.name}
               bordered={false}

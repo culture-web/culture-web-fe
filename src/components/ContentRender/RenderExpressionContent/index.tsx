@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Carousel, Card, Flex, Typography, Image } from 'antd';
 import { PredictionMultiple } from 'types/interface';
-import expressionToContent from './expressions';
 import { useColourToken, useStyleToken } from 'themeStyles';
+import expressionToContent from './expressions';
 
 const { Title, Text } = Typography;
 
@@ -32,7 +32,7 @@ const RenderExpressionContent: React.FC<{
           ];
         if (!characterInfo) return null;
         return (
-          <Flex align="center" vertical>
+          <Flex align="center" vertical key={characterInfo.Name}>
             <Card
               key={characterInfo.Name}
               bordered={false}
