@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Modal, Upload, Spin } from 'antd';
+import { Modal, Upload, Spin, Flex, Typography } from 'antd';
+import Button from 'components/Common/Button';
 import ImgCrop from 'antd-img-crop';
 import { UploadOutlined, LoadingOutlined } from '@ant-design/icons';
-import Button from 'components/Common/Button';
 import { PredictionMultiple } from 'types/interface';
 import type { UploadFile } from 'antd';
 import './index.css';
+import { useColourToken } from 'themeStyles';
+
+const { Text, Title } = Typography;
 
 interface ImageUploadProps {
   isOpen: boolean;
@@ -26,6 +29,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [error, setError] = useState('');
   const [content, setContent] = useState<PredictionMultiple | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const colourToken = useColourToken();
 
   const beforeUpload = (file: File): boolean => {
     setImage(file);
@@ -85,22 +89,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   return (
     <Modal
-      className="text-center"
-      styles={{
-        content: { backgroundColor: '#2b2d38' },
-      }}
       open={isOpen}
       onCancel={onClose}
       footer={[
-        <Button key="back" onClick={onClose}>
+        <Button width="20%" key="back" onClick={onClose}>
           Close
         </Button>,
       ]}
     >
-      <div className="align-center justify-center p-large">
+      <Flex vertical gap="small" align="center">
         <ImgCrop rotationSlider>
           <Upload
-            className="gray"
             listType="picture-card"
             beforeUpload={beforeUpload}
             onRemove={onRemove}
@@ -110,16 +109,20 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             fileList={fileList}
           >
             {!image && (
-              <Button>
-                <UploadOutlined /> <span>Select Image</span>
+              <Button type="primary" width="auto">
+                <UploadOutlined /> Select Image
               </Button>
             )}
           </Upload>
         </ImgCrop>
-        {error && <div className="red mt-base">{error}</div>}
+        {error && (
+          <Text style={{ fontSize: '20px', color: colourToken.red }}>
+            {error}
+          </Text>
+        )}
         {!isUploaded && (
           <Button
-            className="mt-base"
+            width="auto"
             onClick={handleUploadImage}
             disabled={uploading || !image}
           >
@@ -131,7 +134,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         ) : (
           content && image && renderContent(content, image)
         )}
-      </div>
+      </Flex>
     </Modal>
   );
 };

@@ -10,6 +10,7 @@ interface ButtonProps {
   type?: 'primary' | 'default' | 'dashed' | 'text' | 'link';
   htmlType?: 'submit' | 'reset' | 'button';
   loading?: boolean;
+  width?: string;
 }
 const Button: React.FC<ButtonProps> = ({
   onClick,
@@ -18,6 +19,7 @@ const Button: React.FC<ButtonProps> = ({
   type = 'primary',
   htmlType = 'button',
   loading = false,
+  width = '100%',
 }) => {
   const colourToken = useColourToken();
   const [bgColor, setBgColor] = useState(colourToken.pink);
@@ -25,8 +27,9 @@ const Button: React.FC<ButtonProps> = ({
     <AntButton
       size="large"
       style={{
-        backgroundColor: bgColor,
-        color: colourToken.white,
+        backgroundColor: disabled ? colourToken.gray : bgColor,
+        color: disabled ? colourToken.black : colourToken.white,
+        width: width,
       }}
       onMouseEnter={() => setBgColor(colourToken.pinkLight)} // Change color on hover
       onMouseLeave={() => setBgColor(colourToken.pink)} // Revert to original color

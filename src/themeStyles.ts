@@ -8,6 +8,9 @@ const colours = {
   pink: '#c81f58',
   pinkLight: '#db2a6b',
   green: '#00a86b',
+  black: '#000',
+  red: '#ff474c',
+  darkGray: '#1c1e24',
 };
 
 const themeStyles = {
@@ -56,7 +59,6 @@ const navigationBarDefaultLinkStyle = {
   textDecoration: 'none',
 };
 
-// Page Headings, such as Home, Cultures, etc...
 const pageHeadingTextStyle = {
   color: colours.white,
   fontSize: '3.5rem',
@@ -94,6 +96,34 @@ const thankyouTextStyle = {
   marginBottom: '1rem',
 };
 
+const renderSectionHeadingTextStyle = {
+  color: colours.white,
+  fontSize: '2rem',
+  marginBottom: '1rem',
+};
+
+const renderSectionContentTextStyle = {
+  color: colours.white,
+  fontSize: '1.2rem',
+  marginBottom: '1rem',
+};
+
+const cultureSectionButtonTextStyle = {
+  fontSize: '1.25rem',
+  color: colours.white,
+};
+
+const cultureSectionHeadingTextStyle = {
+  color: colours.white,
+  marginBottom: '1rem',
+  fontSize: '2rem',
+};
+
+const cultureSectionContentTextStyle = {
+  color: colours.gray,
+  fontSize: '1.5rem',
+};
+
 export const useStyleToken = () => {
   const { token } = AntdTheme.useToken();
   return {
@@ -109,6 +139,15 @@ export const useStyleToken = () => {
       kathakalAIButtonStyle: navigationBarKathakalAIButtonStyle,
       activeLinkStyle: navigationBarActiveLinkStyle,
       defaultLinkStyle: navigationBarDefaultLinkStyle,
+    },
+    culture: {
+      cultureSectionButtonTextStyle,
+      cultureSectionHeadingTextStyle,
+      cultureSectionContentTextStyle,
+    },
+    renderContent: {
+      renderSectionHeadingTextStyle,
+      renderSectionContentTextStyle,
     },
   };
 };

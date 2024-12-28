@@ -28,18 +28,18 @@ function KootiyattamPage() {
         <Button
           type="text"
           onClick={handleScrollToSection}
-          style={{ fontSize: '1.25rem', color: '#ffffff' }}
+          style={styleToken.culture.cultureSectionButtonTextStyle}
         >
           Overview
         </Button>
       </Flex>
 
-      <Flex vertical align="center" style={{ maxWidth: '75vw' }}>
+      <Flex vertical align="center" style={{ maxWidth: '75%' }}>
         <Flex vertical ref={overviewRef}>
-          <Title level={2} style={{ color: '#ffffff', marginBottom: '1rem' }}>
+          <Title style={styleToken.culture.cultureSectionHeadingTextStyle}>
             Overview
           </Title>
-          <Text style={{ fontSize: '1.5rem', color: '#ababab' }}>
+          <Text style={styleToken.culture.cultureSectionContentTextStyle}>
             Kootiyattam is one of the oldest traditional theatre forms in India,
             originating in Kerala. It blends ancient Sanskrit theatre with local
             performing traditions, using highly stylized facial expressions,
