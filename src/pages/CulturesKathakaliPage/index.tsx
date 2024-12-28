@@ -32,7 +32,7 @@ function KathakaliPage() {
     <Flex vertical align="center">
       <Title style={styleToken.pageHeadingTextStyle}>Kathakali</Title>
       <Flex style={{ width: '50%' }}>
-        <Image src={kathakaliImage} alt="Kathakali" />
+        <Image src={kathakaliImage} alt="Kathakali" preview={false} />
       </Flex>
 
       <nav>

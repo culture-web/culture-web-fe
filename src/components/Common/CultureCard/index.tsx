@@ -33,6 +33,7 @@ const CultureCard: React.FC<CultureCardProps> = ({ name, url, imageUrl }) => {
           objectFit: 'cover', // Ensures the image scales properly within the box
           borderRadius: '8px', // Optional for rounded corners
         }}
+        preview={false}
       />
       <Text style={styleToken.cultureLinkTextStyleWhite}>{name}</Text>
       <Button onClick={navigateToCulture}>READ MORE →</Button>

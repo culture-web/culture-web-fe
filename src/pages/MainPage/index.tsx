@@ -40,6 +40,7 @@ function MainPage() {
           src={kathakaliImage}
           alt="Cultural"
           style={{ maxWidth: '100%', height: 'auto' }}
+          preview={false}
         />
       </Flex>
     </Flex>

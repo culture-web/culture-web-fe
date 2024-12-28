@@ -22,6 +22,7 @@ function KootiyattamPage() {
         src={kootiyattamImage}
         alt="Kootiyattam"
         style={{ maxWidth: '100%', height: 'auto' }}
+        preview={false}
       />
 
       <Flex>
