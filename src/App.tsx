@@ -18,7 +18,7 @@ function App() {
       <ConfigProvider theme={themeStyles}>
         <Flex vertical>
           {isMobile ? <DropdownNavbar /> : <Navbar />}
-          <Flex vertical>
+          <Flex vertical style={{ padding: '0 2rem' }}>
             <Routes>
               <Route path="/" element={<MainPage />} />
               <Route path="/about-us" element={<AboutUsPage />} />

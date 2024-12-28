@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Carousel, Card } from 'antd';
+import { Carousel, Card, Flex, Typography, Image } from 'antd';
 import { PredictionMultiple } from 'types/interface';
+import { useColourToken, useStyleToken } from 'themeStyles';
 import expressionToContent from './expressions';
-import './index.css';
+
+const { Title, Text } = Typography;
 
 const RenderExpressionContent: React.FC<{
   predictionMultiple: PredictionMultiple;
   file: File;
 }> = ({ predictionMultiple, file }) => {
   const [imageUrl, setImageUrl] = useState('');
+  const colourToken = useColourToken();
+  const styleToken = useStyleToken();
 
   useEffect(() => {
     if (file) {
@@ -28,34 +32,36 @@ const RenderExpressionContent: React.FC<{
           ];
         if (!characterInfo) return null;
         return (
-          <Card
-            key={characterInfo.Name}
-            className="mt-base"
-            bordered={false}
-            styles={{
-              body: { backgroundColor: '#1c1e24' },
-            }}
-          >
-            <div>
-              <div className="font-xlarge white mb-base">
+          <Flex align="center" vertical key={characterInfo.Name}>
+            <Card
+              key={characterInfo.Name}
+              bordered={false}
+              styles={{
+                body: { backgroundColor: colourToken.darkGray },
+              }}
+            >
+              <Title
+                style={styleToken.renderContent.renderSectionHeadingTextStyle}
+              >
                 {characterInfo.Name}
-              </div>
-            </div>
-            <div>
-              <div
+              </Title>
+              <Image
+                src={imageUrl}
                 style={{
-                  // width: `${prediction.location.width}px`,
-                  // height: `${prediction.location.height}px`,
-                  backgroundImage: `url(${imageUrl})`,
-                  backgroundPosition: `-${prediction.location.x}px -${prediction.location.y}px`,
+                  objectFit: 'cover', // Ensures the image fills the container without distorting
+                  objectPosition: `-${prediction.location.x}px -${prediction.location.y}px`, // Adjust the position of the image
+                  width: '100%',
+                  height: '100%', // Adjust as needed (e.g., fixed height or auto)
                 }}
-                className="cropImage"
+                preview={false} // Disables the preview popup on click
               />
-              <div className="font-base gray mb-base">
+              <Text
+                style={styleToken.renderContent.renderSectionContentTextStyle}
+              >
                 {characterInfo.Description}
-              </div>
-            </div>
-          </Card>
+              </Text>
+            </Card>
+          </Flex>
         );
       })}
     </Carousel>

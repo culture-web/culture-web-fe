@@ -13,12 +13,12 @@ test('Clicking on Kathakali Read More brings us to Kathakali Information page', 
   await expect(
     page
       .locator('div')
-      .filter({ hasText: /^PreviewKathakaliREAD MORE →$/ })
+      .filter({ hasText: /^KathakaliREAD MORE →$/ })
       .getByRole('button'),
   ).toBeVisible();
   await page
     .locator('div')
-    .filter({ hasText: /^PreviewKathakaliREAD MORE →$/ })
+    .filter({ hasText: /^KathakaliREAD MORE →$/ })
     .getByRole('button')
     .click();
   await expect(page.getByText('Kathakali', { exact: true })).toBeVisible();
@@ -34,12 +34,12 @@ test('Clicking on Kootiyattam Read More brings us to Kootiyattam Information pag
   await expect(
     page
       .locator('div')
-      .filter({ hasText: /^PreviewKootiyattamREAD MORE →$/ })
+      .filter({ hasText: /^KootiyattamREAD MORE →$/ })
       .getByRole('button'),
   ).toBeVisible();
   await page
     .locator('div')
-    .filter({ hasText: /^PreviewKootiyattamREAD MORE →$/ })
+    .filter({ hasText: /^KootiyattamREAD MORE →$/ })
     .getByRole('button')
     .click();
   await expect(page.getByText('Kootiyattam', { exact: true })).toBeVisible();
