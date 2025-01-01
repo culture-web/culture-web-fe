@@ -7,6 +7,7 @@ import { PredictionMultiple, Character } from 'types/interface';
 import toPascalCase from 'utils/toPascalCase';
 import { useColourToken, useStyleToken } from 'themeStyles';
 import * as characterImages from './images';
+import RenderForOne from './RenderForOne';
 
 const { Title, Text } = Typography;
 
@@ -33,6 +34,15 @@ const RenderCharacterContent: React.FC<{
     return <Spin indicator={<LoadingOutlined spin />} />;
   }
 
+  if (predictionMultiple.prediction.length === 1) {
+    return (
+      <RenderForOne
+        prediction={predictionMultiple.prediction[0]}
+        imageUrl={imageUrl}
+      />
+    );
+  }
+
   return (
     <Carousel arrows>
       {predictionMultiple.prediction.map((prediction) => {
@@ -48,28 +58,26 @@ const RenderCharacterContent: React.FC<{
           ];
 
         return (
-          <Flex align="center" vertical key={characterInfo.name}>
-            <Card
-              key={characterInfo.name}
-              bordered={false}
-              styles={{
-                body: { backgroundColor: colourToken.darkGray },
-              }}
-            >
+          <Card
+            key={characterInfo.name}
+            bordered={false}
+            styles={{
+              body: { backgroundColor: colourToken.darkGray },
+            }}
+          >
+            <Flex align="center" vertical key={characterInfo.name}>
               <Title
                 style={styleToken.renderContent.renderSectionHeadingTextStyle}
               >
                 {characterInfo.name}
               </Title>
-              <Image
-                src={imageUrl}
+              <div
                 style={{
-                  objectFit: 'cover', // To make sure the image covers the area
-                  objectPosition: `-${prediction.location.x}px -${prediction.location.y}px`, // This will adjust the position of the image
-                  width: '100%',
-                  height: '100%', // Optional, adjust as per your design needs
+                  width: `${prediction.location.width + 50}px`,
+                  height: `${prediction.location.height + 50}px`,
+                  backgroundImage: `url(${imageUrl})`,
+                  backgroundPosition: `-${prediction.location.x}px -${prediction.location.y}px`,
                 }}
-                preview={false} // Disables the default Ant Design image preview
               />
               <Text
                 style={styleToken.renderContent.renderSectionContentTextStyle}
@@ -92,8 +100,8 @@ const RenderCharacterContent: React.FC<{
               <Button onClick={() => window.open(characterInfo.url, '_blank')}>
                 Find Out More
               </Button>
-            </Card>
-          </Flex>
+            </Flex>
+          </Card>
         );
       })}
     </Carousel>

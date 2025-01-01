@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Carousel, Card, Flex, Typography, Image } from 'antd';
+import { Card, Flex, Typography, Carousel } from 'antd';
 import { PredictionMultiple } from 'types/interface';
 import { useColourToken, useStyleToken } from 'themeStyles';
 import expressionToContent from './expressions';
+import RenderForOne from './RenderForOne';
 
 const { Title, Text } = Typography;
 
@@ -23,6 +24,16 @@ const RenderExpressionContent: React.FC<{
     return undefined;
   }, [file]);
 
+  // If predictionMultiple length is 1, just return for just 1
+  if (predictionMultiple.prediction.length === 1) {
+    return (
+      <RenderForOne
+        prediction={predictionMultiple.prediction[0]}
+        imageUrl={imageUrl}
+      />
+    );
+  }
+
   return (
     <Carousel arrows>
       {predictionMultiple.prediction.map((prediction) => {
@@ -32,36 +43,34 @@ const RenderExpressionContent: React.FC<{
           ];
         if (!characterInfo) return null;
         return (
-          <Flex align="center" vertical key={characterInfo.Name}>
-            <Card
-              key={characterInfo.Name}
-              bordered={false}
-              styles={{
-                body: { backgroundColor: colourToken.darkGray },
-              }}
-            >
+          <Card
+            key={characterInfo.Name}
+            bordered={false}
+            styles={{
+              body: { backgroundColor: colourToken.darkGray },
+            }}
+          >
+            <Flex align="center" vertical key={characterInfo.Name}>
               <Title
                 style={styleToken.renderContent.renderSectionHeadingTextStyle}
               >
                 {characterInfo.Name}
               </Title>
-              <Image
-                src={imageUrl}
+              <div
                 style={{
-                  objectFit: 'cover', // Ensures the image fills the container without distorting
-                  objectPosition: `-${prediction.location.x}px -${prediction.location.y}px`, // Adjust the position of the image
-                  width: '100%',
-                  height: '100%', // Adjust as needed (e.g., fixed height or auto)
+                  width: `${prediction.location.width + 50}px`,
+                  height: `${prediction.location.height + 50}px`,
+                  backgroundImage: `url(${imageUrl})`,
+                  backgroundPosition: `-${prediction.location.x}px -${prediction.location.y}px`,
                 }}
-                preview={false} // Disables the preview popup on click
               />
               <Text
                 style={styleToken.renderContent.renderSectionContentTextStyle}
               >
                 {characterInfo.Description}
               </Text>
-            </Card>
-          </Flex>
+            </Flex>
+          </Card>
         );
       })}
     </Carousel>
