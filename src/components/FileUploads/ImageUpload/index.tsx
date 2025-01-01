@@ -132,7 +132,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         {uploading ? (
           <Spin indicator={<LoadingOutlined spin />} />
         ) : (
-          content && image && renderContent(content, image)
+          content &&
+          image && (
+            <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+              {renderContent(content, image)}
+            </div>
+          )
         )}
       </Flex>
     </Modal>

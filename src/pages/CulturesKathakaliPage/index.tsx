@@ -3,8 +3,10 @@ import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali6.jpg'
 import ImageUpload from 'components/FileUploads/ImageUpload';
 import { Image, Flex, Typography, Button } from 'antd';
 import {
-  uploadImgToCharRecBE,
-  uploadImgToExpressionRecBE,
+  uploadImgToCharRecBEMultiple,
+  uploadImgToCharRecBESingle,
+  uploadImgToExpressionRecBEMultiple,
+  uploadImgToExpressionRecBESingle,
 } from 'utils/invokeBackend';
 import RenderCharacterContent from 'components/ContentRender/RenderCharacterContent';
 import RenderExpressionContent from 'components/ContentRender/RenderExpressionContent';
@@ -13,8 +15,15 @@ import { useStyleToken } from 'themeStyles';
 const { Text, Title } = Typography;
 
 function KathakaliPage() {
-  const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
-  const [isExpressionModalOpen, setIsExpressionModalOpen] = useState(false);
+  const [isCharacterModalSingleOpen, setIsCharacterModalSingleOpen] =
+    useState(false);
+  const [isExpressionModalSingleOpen, setIsExpressionModalSingleOpen] =
+    useState(false);
+  const [isCharacterModalMultipleOpen, setIsCharacterModalMultipleOpen] =
+    useState(false);
+  const [isExpressionModalMultipleOpen, setIsExpressionModalMultipleOpen] =
+    useState(false);
+
   const styleToken = useStyleToken();
 
   const handleNavigation = (
@@ -102,9 +111,14 @@ function KathakaliPage() {
               </a>
               .
             </Text>
-            <Button onClick={() => setIsCharacterModalOpen(true)}>
-              Upload Image
-            </Button>
+            <Flex gap="large">
+              <Button onClick={() => setIsCharacterModalSingleOpen(true)}>
+                Upload Image
+              </Button>
+              <Button onClick={() => setIsCharacterModalMultipleOpen(true)}>
+                Upload Image Multiple (BETA)
+              </Button>
+            </Flex>
           </Flex>
           <Text style={styleToken.culture.cultureSectionContentTextStyle}>
             The algorithm uses image recognition to identify the characters and
@@ -130,9 +144,14 @@ function KathakaliPage() {
             <Text style={styleToken.culture.cultureSectionContentTextStyle}>
               This research is accepted for IEEE SPICES 2024, India.
             </Text>
-            <Button onClick={() => setIsExpressionModalOpen(true)}>
-              Upload Image
-            </Button>
+            <Flex gap="large">
+              <Button onClick={() => setIsExpressionModalSingleOpen(true)}>
+                Upload Image
+              </Button>
+              <Button onClick={() => setIsExpressionModalMultipleOpen(true)}>
+                Upload Image Multiple (BETA)
+              </Button>
+            </Flex>
             <Text style={styleToken.culture.cultureSectionContentTextStyle}>
               The algorithm uses image recognition to identify the expressions
               and display the name of the expression. Simply upload an image of
@@ -141,11 +160,11 @@ function KathakaliPage() {
           </Flex>
         </section>
       </Flex>
-      {isExpressionModalOpen && (
+      {isExpressionModalSingleOpen && (
         <ImageUpload
-          isOpen={isExpressionModalOpen}
-          onClose={() => setIsExpressionModalOpen(false)}
-          uploadFunction={uploadImgToExpressionRecBE}
+          isOpen={isExpressionModalSingleOpen}
+          onClose={() => setIsExpressionModalSingleOpen(false)}
+          uploadFunction={uploadImgToExpressionRecBESingle}
           renderContent={(prediction, file) => (
             <RenderExpressionContent
               predictionMultiple={prediction}
@@ -154,11 +173,37 @@ function KathakaliPage() {
           )}
         />
       )}
-      {isCharacterModalOpen && (
+      {isExpressionModalMultipleOpen && (
         <ImageUpload
-          isOpen={isCharacterModalOpen}
-          onClose={() => setIsCharacterModalOpen(false)}
-          uploadFunction={uploadImgToCharRecBE}
+          isOpen={isExpressionModalMultipleOpen}
+          onClose={() => setIsExpressionModalMultipleOpen(false)}
+          uploadFunction={uploadImgToExpressionRecBEMultiple}
+          renderContent={(prediction, file) => (
+            <RenderExpressionContent
+              predictionMultiple={prediction}
+              file={file}
+            />
+          )}
+        />
+      )}
+      {isCharacterModalSingleOpen && (
+        <ImageUpload
+          isOpen={isCharacterModalSingleOpen}
+          onClose={() => setIsCharacterModalSingleOpen(false)}
+          uploadFunction={uploadImgToCharRecBESingle}
+          renderContent={(prediction, file) => (
+            <RenderCharacterContent
+              predictionMultiple={prediction}
+              file={file}
+            />
+          )}
+        />
+      )}
+      {isCharacterModalMultipleOpen && (
+        <ImageUpload
+          isOpen={isCharacterModalMultipleOpen}
+          onClose={() => setIsCharacterModalMultipleOpen(false)}
+          uploadFunction={uploadImgToCharRecBEMultiple}
           renderContent={(prediction, file) => (
             <RenderCharacterContent
               predictionMultiple={prediction}

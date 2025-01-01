@@ -1,5 +1,5 @@
 import BACKEND_URI from 'configs/env.config';
-import { PredictionMultiple, Prediction, Location } from 'types/interface';
+import { PredictionMultiple, Prediction } from 'types/interface';
 
 const getImageDimensions = (
   imageFile: File,
@@ -22,10 +22,13 @@ const getImageDimensions = (
 const uploadImage = async (
   imageFile: File,
   endpoint: string,
+  isMultipleRecognition: boolean,
 ): Promise<PredictionMultiple> => {
   const formData = new FormData();
   const { width, height } = await getImageDimensions(imageFile);
   formData.append('image', imageFile);
+  formData.append('isMultipleRecognition', String(isMultipleRecognition)); // Append boolean as a string
+
   const response = await fetch(`${BACKEND_URI}/kathakali/${endpoint}`, {
     method: 'POST',
     body: formData,
@@ -36,28 +39,46 @@ const uploadImage = async (
     });
 
   const toReturn: Prediction[] = response.map(
-    (value: {
-      prediction: string;
-      location: Location[];
-      accuracy: number[];
-    }) => ({
-      prediction: value.prediction,
-      location: {
-        x: 0,
-        y: 0,
-        width,
-        height,
-        probability: value.accuracy,
-      },
-    }),
+    (value: { prediction: string; location: number[]; accuracy: number[] }) =>
+      !isMultipleRecognition
+        ? {
+            prediction: value.prediction,
+            location: {
+              x: 0,
+              y: 0,
+              width,
+              height,
+              probability: value.accuracy,
+            },
+          }
+        : {
+            prediction: value.prediction,
+            location: {
+              x: value.location[0],
+              y: value.location[1],
+              width: value.location[2] - value.location[0],
+              height: value.location[3] - value.location[1],
+              probability: value.accuracy,
+            },
+          },
   );
   return { prediction: toReturn };
 };
 
-export const uploadImgToExpressionRecBE = async (
+export const uploadImgToExpressionRecBESingle = async (
   imageFile: File,
-): Promise<PredictionMultiple> => uploadImage(imageFile, 'classify-expression');
+): Promise<PredictionMultiple> =>
+  uploadImage(imageFile, 'classify-expression', false);
 
-export const uploadImgToCharRecBE = async (
+export const uploadImgToExpressionRecBEMultiple = async (
   imageFile: File,
-): Promise<PredictionMultiple> => uploadImage(imageFile, '');
+): Promise<PredictionMultiple> =>
+  uploadImage(imageFile, 'classify-expression', true);
+
+export const uploadImgToCharRecBESingle = async (
+  imageFile: File,
+): Promise<PredictionMultiple> => uploadImage(imageFile, '', false);
+
+export const uploadImgToCharRecBEMultiple = async (
+  imageFile: File,
+): Promise<PredictionMultiple> => uploadImage(imageFile, '', true);
