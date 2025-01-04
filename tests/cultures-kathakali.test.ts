@@ -6,36 +6,24 @@ import { fileURLToPath } from 'url';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-const testSingleImageUpload = async (page, algorithm) => {
+const testSingleImageUpload = async (page, algorithmTitle) => {
   await page
-    .locator(algorithm)
+    .locator(algorithmTitle)
     .getByRole('button', { name: 'Upload Image', exact: true })
     .click();
-  await expect(
-    page.getByRole('dialog').getByRole('button', { name: 'Upload Image' }),
-  ).not.toBeEnabled();
-
-  const filePath = path.resolve(dirname, 'pacha.png');
-
-  // Wait for the file input to be available, then set the file
-  const fileInput = await page.locator('input[type="file"]');
-  await fileInput.setInputFiles(filePath);
-  await page.getByRole('button', { name: 'OK' }).click();
-
-  // Check if the upload button is enabled after the image is selected
-  await expect(
-    page.getByRole('dialog').getByRole('button', { name: 'Upload Image' }),
-  ).toBeEnabled();
-
-  await page.locator('button').filter({ hasText: 'Close' }).click();
+  await checkButtonEnabledAndCloseUpload(page);
 };
 
-const testMuiltipleImageUpload = async (page, algorithm) => {
+const testMuiltipleImageUpload = async (page, algorithmTitle) => {
   await page
-    .locator(algorithm)
+    .locator(algorithmTitle)
     .getByRole('button', { name: 'Upload Image Multiple (BETA)' })
     .click();
 
+  await checkButtonEnabledAndCloseUpload(page);
+};
+
+const checkButtonEnabledAndCloseUpload = async (page) => {
   await expect(
     page.getByRole('dialog').getByRole('button', { name: 'Upload Image' }),
   ).not.toBeEnabled();
