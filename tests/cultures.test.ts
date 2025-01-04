@@ -47,7 +47,3 @@ test('Clicking on Kootiyattam Read More brings us to Kootiyattam Information pag
   // Check url is /cultures/kootiyattam
   expect(page.url()).toBe(`${baseUrl}/cultures/kootiyattam`);
 });
-
-// TODO: Test able to upload Character Recognition File
-
-// TODO: Test able to upload Expression Recognition File
