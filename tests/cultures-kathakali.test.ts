@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { baseUrl } from '../playwright.config';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 // Polyfill for __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 test('Cultures Kathakali Page has KathakalAI Button in title', async ({
   page,
@@ -26,7 +25,7 @@ test('Character Recognition Algorithm', async ({ page }) => {
     page.getByRole('dialog').getByRole('button', { name: 'Upload Image' }),
   ).not.toBeEnabled();
 
-  const filePath = path.resolve(__dirname, 'pacha.png');
+  const filePath = path.resolve(dirname, 'pacha.png');
 
   // Wait for the file input to be available, then set the file
   const fileInput = await page.locator('input[type="file"]');
@@ -73,7 +72,7 @@ test('Expression Recognition Algorithm', async ({ page }) => {
     page.getByRole('dialog').getByRole('button', { name: 'Upload Image' }),
   ).not.toBeEnabled();
 
-  const filePath = path.resolve(__dirname, 'pacha.png');
+  const filePath = path.resolve(dirname, 'pacha.png');
 
   // Wait for the file input to be available, then set the file
   const fileInput = await page.locator('input[type="file"]');
