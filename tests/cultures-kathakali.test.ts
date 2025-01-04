@@ -6,23 +6,6 @@ import { fileURLToPath } from 'url';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-const testSingleImageUpload = async (page, algorithmTitle) => {
-  await page
-    .locator(algorithmTitle)
-    .getByRole('button', { name: 'Upload Image', exact: true })
-    .click();
-  await checkButtonEnabledAndCloseUpload(page);
-};
-
-const testMuiltipleImageUpload = async (page, algorithmTitle) => {
-  await page
-    .locator(algorithmTitle)
-    .getByRole('button', { name: 'Upload Image Multiple (BETA)' })
-    .click();
-
-  await checkButtonEnabledAndCloseUpload(page);
-};
-
 const checkButtonEnabledAndCloseUpload = async (page) => {
   await expect(
     page.getByRole('dialog').getByRole('button', { name: 'Upload Image' }),
@@ -42,6 +25,23 @@ const checkButtonEnabledAndCloseUpload = async (page) => {
   ).toBeEnabled();
 
   await page.locator('button').filter({ hasText: 'Close' }).click();
+};
+
+const testSingleImageUpload = async (page, algorithmTitle) => {
+  await page
+    .locator(algorithmTitle)
+    .getByRole('button', { name: 'Upload Image', exact: true })
+    .click();
+  await checkButtonEnabledAndCloseUpload(page);
+};
+
+const testMuiltipleImageUpload = async (page, algorithmTitle) => {
+  await page
+    .locator(algorithmTitle)
+    .getByRole('button', { name: 'Upload Image Multiple (BETA)' })
+    .click();
+
+  await checkButtonEnabledAndCloseUpload(page);
 };
 
 test('Cultures Kathakali Page has KathakalAI Button in title', async ({
