@@ -1,9 +1,6 @@
-name: Build and Deploy Image CI
+name: Build Image CI
 
 on:
-  push:
-    branches:
-      - production
   workflow_dispatch:
     inputs:
       image-tag:
@@ -16,50 +13,25 @@ on:
         default: 'https://kathakali.comp.nus.edu.sg/api'
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Use Node.js 21.x
         uses: actions/setup-node@v3
         with:
-          node-version: 21
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
-
       - name: Setup environment variables
         run: |
-          echo "VITE_BACKEND_URI=${{ github.event.inputs.backend-uri || 'https://kathakali.comp.nus.edu.sg/api' }}" >> $GITHUB_ENV
+          echo "VITE_BACKEND_URI=${{ github.event.inputs.backend-uri }}" >> $GITHUB_ENV
           echo "VITE_EMAIL_API_KEY=${{ secrets.VITE_EMAIL_API_KEY }}" >> $GITHUB_ENV
-
       - run: npm ci
-
       - name: Build the app
         run: npm run build
-
       - name: Login to DockerHub
         run: echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u culture4web --password-stdin
-
-      - name: Generate Unique Image Tag
-        run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
-      - name: Build and Push Docker Image
-        run: |
-          docker build -t culture4web/culture-web-fe:${{ env.IMAGE_TAG }} .
-          docker push culture4web/culture-web-fe:${{ env.IMAGE_TAG }}
-          docker tag culture4web/culture-web-fe:${{ env.IMAGE_TAG }} culture4web/culture-web-fe:latest
-          docker push culture4web/culture-web-fe:latest
-
-      - name: Deploy to Server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key sadm@kathakali-i.comp.nus.edu.sg << 'EOF'
-            cd /home/sadm/CP4101/cd
-            docker pull culture4web/culture-web-fe:${{ env.IMAGE_TAG }}
-            docker tag culture4web/culture-web-fe:${{ env.IMAGE_TAG }} culture4web/culture-web-fe:latest
-            docker-compose down
-            docker-compose up -d
-          EOF
-          rm -f private_key
+      - name: Build the Docker image
+        run: docker build -t culture4web/culture-web-fe:${{ github.event.inputs.image-tag }} .
+      - name: Push the Docker image
+        run: docker push culture4web/culture-web-fe:${{ github.event.inputs.image-tag }}
