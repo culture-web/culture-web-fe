@@ -35,14 +35,14 @@ const testSingleImageUpload = async (page, algorithmTitle) => {
   await checkButtonEnabledAndCloseUpload(page);
 };
 
-const testMuiltipleImageUpload = async (page, algorithmTitle) => {
-  await page
-    .locator(algorithmTitle)
-    .getByRole('button', { name: 'Upload Image Multiple (BETA)' })
-    .click();
+// const testMuiltipleImageUpload = async (page, algorithmTitle) => {
+//   await page
+//     .locator(algorithmTitle)
+//     .getByRole('button', { name: 'Upload Image Multiple (BETA)' })
+//     .click();
 
-  await checkButtonEnabledAndCloseUpload(page);
-};
+//   await checkButtonEnabledAndCloseUpload(page);
+// };
 
 test('Cultures Kathakali Page has KathakalAI Button in title', async ({
   page,
@@ -57,8 +57,8 @@ test('Character Recognition Algorithm', async ({ page }) => {
   // Test single image upload functionality
   await testSingleImageUpload(page, '#algorithm1');
 
-  // Test multiple face upload functionality
-  await testMuiltipleImageUpload(page, '#algorithm1');
+  // // Test multiple face upload functionality
+  // await testMuiltipleImageUpload(page, '#algorithm1');
 });
 
 test('Expression Recognition Algorithm', async ({ page }) => {
@@ -67,6 +67,6 @@ test('Expression Recognition Algorithm', async ({ page }) => {
   // Test single image upload functionality
   await testSingleImageUpload(page, '#algorithm2');
 
-  // Test multiple face upload functionality
-  await testMuiltipleImageUpload(page, '#algorithm2');
+  // // Test multiple face upload functionality
+  // await testMuiltipleImageUpload(page, '#algorithm2');
 });

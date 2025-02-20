@@ -115,9 +115,9 @@ function KathakaliPage() {
               <Button onClick={() => setIsCharacterModalSingleOpen(true)}>
                 Upload Image
               </Button>
-              <Button onClick={() => setIsCharacterModalMultipleOpen(true)}>
+              {/* <Button onClick={() => setIsCharacterModalMultipleOpen(true)}>
                 Upload Image Multiple (BETA)
-              </Button>
+              </Button> */}
             </Flex>
           </Flex>
           <Text style={styleToken.culture.cultureSectionContentTextStyle}>
@@ -148,9 +148,9 @@ function KathakaliPage() {
               <Button onClick={() => setIsExpressionModalSingleOpen(true)}>
                 Upload Image
               </Button>
-              <Button onClick={() => setIsExpressionModalMultipleOpen(true)}>
+              {/* <Button onClick={() => setIsExpressionModalMultipleOpen(true)}>
                 Upload Image Multiple (BETA)
-              </Button>
+              </Button> */}
             </Flex>
             <Text style={styleToken.culture.cultureSectionContentTextStyle}>
               The algorithm uses image recognition to identify the expressions
