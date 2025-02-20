@@ -35,14 +35,14 @@ const testSingleImageUpload = async (page, algorithmTitle) => {
   await checkButtonEnabledAndCloseUpload(page);
 };
 
-const testMuiltipleImageUpload = async (page, algorithmTitle) => {
-  await page
-    .locator(algorithmTitle)
-    .getByRole('button', { name: 'Upload Image Multiple (BETA)' })
-    .click();
+// const testMuiltipleImageUpload = async (page, algorithmTitle) => {
+//   await page
+//     .locator(algorithmTitle)
+//     .getByRole('button', { name: 'Upload Image Multiple (BETA)' })
+//     .click();
 
-  await checkButtonEnabledAndCloseUpload(page);
-};
+//   await checkButtonEnabledAndCloseUpload(page);
+// };
 
 test('Cultures Kathakali Page has KathakalAI Button in title', async ({
   page,
