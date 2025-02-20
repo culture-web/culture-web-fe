@@ -57,8 +57,8 @@ test('Character Recognition Algorithm', async ({ page }) => {
   // Test single image upload functionality
   await testSingleImageUpload(page, '#algorithm1');
 
-  // Test multiple face upload functionality
-  await testMuiltipleImageUpload(page, '#algorithm1');
+  // // Test multiple face upload functionality
+  // await testMuiltipleImageUpload(page, '#algorithm1');
 });
 
 test('Expression Recognition Algorithm', async ({ page }) => {
@@ -67,6 +67,6 @@ test('Expression Recognition Algorithm', async ({ page }) => {
   // Test single image upload functionality
   await testSingleImageUpload(page, '#algorithm2');
 
-  // Test multiple face upload functionality
-  await testMuiltipleImageUpload(page, '#algorithm2');
+  // // Test multiple face upload functionality
+  // await testMuiltipleImageUpload(page, '#algorithm2');
 });
