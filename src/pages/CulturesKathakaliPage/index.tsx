@@ -7,6 +7,7 @@ import {
   uploadImgToCharRecBESingle,
   uploadImgToExpressionRecBEMultiple,
   uploadImgToExpressionRecBESingle,
+  uploadCharacterDataToBE,
 } from 'utils/invokeBackend';
 import RenderCharacterContent from 'components/ContentRender/RenderCharacterContent';
 import RenderExpressionContent from 'components/ContentRender/RenderExpressionContent';
@@ -23,6 +24,8 @@ function KathakaliPage() {
     useState(false);
   const [isExpressionModalMultipleOpen, setIsExpressionModalMultipleOpen] =
     useState(false);
+
+  const [isCharacterDataModalOpen, setIsCharacterDataModalOpen] = useState(false);
 
   const styleToken = useStyleToken();
 
@@ -115,6 +118,9 @@ function KathakaliPage() {
               <Button onClick={() => setIsCharacterModalSingleOpen(true)}>
                 Upload Image
               </Button>
+              <Button onClick={() => setIsCharacterDataModalOpen(true)}>
+                Upload Character Data
+              </Button>
               {/* <Button onClick={() => setIsCharacterModalMultipleOpen(true)}>
                 Upload Image Multiple (BETA)
               </Button> */}
@@ -204,6 +210,19 @@ function KathakaliPage() {
           isOpen={isCharacterModalMultipleOpen}
           onClose={() => setIsCharacterModalMultipleOpen(false)}
           uploadFunction={uploadImgToCharRecBEMultiple}
+          renderContent={(prediction, file) => (
+            <RenderCharacterContent
+              predictionMultiple={prediction}
+              file={file}
+            />
+          )}
+        />
+      )}
+      {isCharacterDataModalOpen && (
+        <ImageUpload
+          isOpen={isCharacterDataModalOpen}
+          onClose={() => setIsCharacterDataModalOpen(false)}
+          uploadFunction={uploadCharacterDataToBE}
           renderContent={(prediction, file) => (
             <RenderCharacterContent
               predictionMultiple={prediction}
