@@ -21,7 +21,7 @@ function MainPage() {
       <Flex align="center" gap="large" vertical={isMobile}>
         <Flex vertical align="left">
           <Title style={styleToken.pageHeadingTextStyle}>
-            Discover the World of Cultures at KathakalAI testing
+            Discover the World of Cultures at KathakalAI
           </Title>
           <Text style={styleToken.subtitleTextStyle}>
             Experience the beauty and diversity of cultures from all around the
