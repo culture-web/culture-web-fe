@@ -3,9 +3,9 @@ import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali6.jpg'
 import ImageUpload from 'components/FileUploads/ImageUpload';
 import { Image, Flex, Typography, Button } from 'antd';
 import {
-  uploadImgToCharRecBEMultiple,
+  // uploadImgToCharRecBEMultiple,
   uploadImgToCharRecBESingle,
-  uploadImgToExpressionRecBEMultiple,
+  // uploadImgToExpressionRecBEMultiple,
   uploadImgToExpressionRecBESingle,
   uploadCharacterDataToBE,
 } from 'utils/invokeBackend';
@@ -20,12 +20,10 @@ function KathakaliPage() {
     useState(false);
   const [isExpressionModalSingleOpen, setIsExpressionModalSingleOpen] =
     useState(false);
-  const [isCharacterModalMultipleOpen, setIsCharacterModalMultipleOpen] =
-    useState(false);
-  const [isExpressionModalMultipleOpen, setIsExpressionModalMultipleOpen] =
-    useState(false);
-
-  const [isCharacterDataModalOpen, setIsCharacterDataModalOpen] = useState(false);
+  // const [isCharacterModalMultipleOpen, setIsCharacterModalMultipleOpen] =
+  //   useState(false);
+  // const [isExpressionModalMultipleOpen, setIsExpressionModalMultipleOpen] =
+  //   useState(false);
 
   const styleToken = useStyleToken();
 
@@ -118,9 +116,6 @@ function KathakaliPage() {
               <Button onClick={() => setIsCharacterModalSingleOpen(true)}>
                 Upload Image
               </Button>
-              <Button onClick={() => setIsCharacterDataModalOpen(true)}>
-                Upload Character Data
-              </Button>
               {/* <Button onClick={() => setIsCharacterModalMultipleOpen(true)}>
                 Upload Image Multiple (BETA)
               </Button> */}
@@ -170,6 +165,7 @@ function KathakaliPage() {
         <ImageUpload
           isOpen={isExpressionModalSingleOpen}
           onClose={() => setIsExpressionModalSingleOpen(false)}
+          uploadFeedbackFunction={uploadCharacterDataToBE}
           uploadFunction={uploadImgToExpressionRecBESingle}
           renderContent={(prediction, file) => (
             <RenderExpressionContent
@@ -177,9 +173,22 @@ function KathakaliPage() {
               file={file}
             />
           )}
+          modalText="What should be the expression?"
+          modalSelections={[
+            'Raudra',
+            'Sringara',
+            'Bibatsa',
+            'Karuna',
+            'Shanta',
+            'Adbhuta',
+            'Vira',
+            'Bhayanaka',
+            'Hasya',
+          ]}
+          type="expression"
         />
       )}
-      {isExpressionModalMultipleOpen && (
+      {/* {isExpressionModalMultipleOpen && (
         <ImageUpload
           isOpen={isExpressionModalMultipleOpen}
           onClose={() => setIsExpressionModalMultipleOpen(false)}
@@ -191,21 +200,32 @@ function KathakaliPage() {
             />
           )}
         />
-      )}
+      )} */}
       {isCharacterModalSingleOpen && (
         <ImageUpload
           isOpen={isCharacterModalSingleOpen}
           onClose={() => setIsCharacterModalSingleOpen(false)}
           uploadFunction={uploadImgToCharRecBESingle}
+          uploadFeedbackFunction={uploadCharacterDataToBE}
           renderContent={(prediction, file) => (
             <RenderCharacterContent
               predictionMultiple={prediction}
               file={file}
             />
           )}
+          modalText="What should be the character?"
+          modalSelections={[
+            'Red-beard',
+            'Kari-Male',
+            'Pacha',
+            'Kathi',
+            'White-beard',
+            'Minukku-Female',
+          ]}
+          type="character"
         />
       )}
-      {isCharacterModalMultipleOpen && (
+      {/* {isCharacterModalMultipleOpen && (
         <ImageUpload
           isOpen={isCharacterModalMultipleOpen}
           onClose={() => setIsCharacterModalMultipleOpen(false)}
@@ -217,20 +237,7 @@ function KathakaliPage() {
             />
           )}
         />
-      )}
-      {isCharacterDataModalOpen && (
-        <ImageUpload
-          isOpen={isCharacterDataModalOpen}
-          onClose={() => setIsCharacterDataModalOpen(false)}
-          uploadFunction={uploadCharacterDataToBE}
-          renderContent={(prediction, file) => (
-            <RenderCharacterContent
-              predictionMultiple={prediction}
-              file={file}
-            />
-          )}
-        />
-      )}
+      )} */}
     </Flex>
   );
 }

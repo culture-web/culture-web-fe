@@ -19,29 +19,33 @@ const getImageDimensions = (
     reader.readAsDataURL(imageFile);
   });
 
-  const uploadCharacterData = async (
-    imageFile: File,
-    text1: string,
-    text2: string,
-  ): Promise<PredictionMultiple> => {
-    const formData = new FormData();
-    formData.append('image', imageFile);
-    formData.append('text1', text1);
-    formData.append('text2', text2);
-  
-    const response = await fetch(`${BACKEND_URI}/kathakali/upload-training-data`, {
+const uploadCharacterData = async (
+  imageFile: File,
+  predicted: string,
+  actual: string,
+  type: string,
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  formData.append('predicted', predicted);
+  formData.append('actual', actual);
+  formData.append('type', type);
+
+  const response = await fetch(
+    `${BACKEND_URI}/kathakali/upload-training-data`,
+    {
       method: 'POST',
       body: formData,
-    });
-  
-    if (!response.ok) {
-      throw new Error('Failed to upload character data.');
-    }
+    },
+  );
 
-    // Return empty
-    return { prediction: [] };
-  };
+  if (!response.ok) {
+    throw new Error('Failed to upload character data.');
+  }
+
+  // Return empty
   
+};
 
 const uploadImage = async (
   imageFile: File,
@@ -109,4 +113,7 @@ export const uploadImgToCharRecBEMultiple = async (
 
 export const uploadCharacterDataToBE = async (
   imageFile: File,
-): Promise<PredictionMultiple> => uploadCharacterData(imageFile, 'text1', 'text2');
+  predicted: string,
+  actual: string,
+  type: string,
+): Promise<void> => uploadCharacterData(imageFile, predicted, actual, type);
