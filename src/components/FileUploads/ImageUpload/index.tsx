@@ -190,6 +190,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         }}
         modalText={modalText}
         modalSelections={modalSelections}
+        type={type}
       />
     </>
   );

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Modal, Select, Typography, message , Flex } from 'antd';
+import { Modal, Select, Typography, message, Flex, Input } from 'antd';
 import Button from 'components/Common/Button';
 import { useColourToken } from 'themeStyles';
-
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -11,6 +10,7 @@ interface FeedbackModalProps {
   visible: boolean;
   modalText: string;
   modalSelections: string[];
+  type: string;
   onCancel: () => void;
   onSubmit: (feedbackValue: string) => void;
 }
@@ -19,18 +19,28 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
   visible,
   modalText,
   modalSelections,
+  type,
   onCancel,
   onSubmit,
 }) => {
   const [feedbackValue, setFeedbackValue] = useState<string>('');
+  const [otherText, setOtherText] = useState<string>('');
   const colourToken = useColourToken();
 
   const handleSubmit = () => {
-    if (feedbackValue) {
-      onSubmit(feedbackValue);
-      // Show a green success toast on top
+    let finalValue = feedbackValue;
+    if (type === 'character' && feedbackValue === 'Others') {
+      if (!otherText.trim()) {
+        message.error('Please enter a specific value for "Others"');
+        return;
+      }
+      finalValue = otherText;
+    }
+    if (finalValue) {
+      onSubmit(finalValue);
       message.success('Thank you for your feedback!', 3);
       setFeedbackValue('');
+      setOtherText('');
       onCancel();
     }
   };
@@ -52,7 +62,20 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
               {selection}
             </Option>
           ))}
+          {type === 'character' && (
+            <Option key="Others" value="Others">
+              Others
+            </Option>
+          )}
         </Select>
+        {type === 'character' && feedbackValue === 'Others' && (
+          <Input
+            placeholder="Please specify"
+            value={otherText}
+            onChange={(e) => setOtherText(e.target.value)}
+            style={{ width: '100%', marginTop: 10 }}
+          />
+        )}
         <Button key="cancel" onClick={onCancel}>
           Cancel
         </Button>
