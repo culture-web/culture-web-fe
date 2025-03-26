@@ -12,13 +12,14 @@ function CulturesPage() {
   return (
     <Flex vertical align="center">
       <Title style={styleToken.pageHeadingTextStyle}>Cultures</Title>
-      <Flex justify="center" align="center" gap="large" vertical={isMobile}>
+      <Flex gap="2rem" vertical={isMobile} style={{ marginBottom: isMobile ? '2rem' : '0rem' }}>
         {cultureData.map((culture) => (
           <CultureCard
             key={culture.name}
             name={culture.name}
             url={culture.url}
             imageUrl={culture.imageUrl}
+            description={culture.description}
           />
         ))}
       </Flex>

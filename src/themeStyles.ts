@@ -66,6 +66,12 @@ const pageHeadingTextStyle = {
   marginBottom: '2rem',
 };
 
+const pageHeadingTextStyleMobile = {
+  color: colours.white,
+  fontSize: '2rem',
+  marginBottom: '1rem',
+};
+
 const cultureLinkTextStylePink = {
   color: colours.pinkLight,
   fontSize: '2rem',
@@ -76,7 +82,13 @@ const cultureLinkTextStylePink = {
 const cultureLinkTextStyleWhite = {
   color: colours.white,
   fontSize: '2rem',
-  marginBottom: '0.5rem',
+  marginBottom: '0rem',
+};
+
+const cultureLinkTextStyleDescriptionWhite = {
+  color: colours.gray,
+  fontSize: '1.3rem',
+  marginBottom: '0.2rem',
 };
 
 const titleTextStyle = {
@@ -85,9 +97,21 @@ const titleTextStyle = {
   marginBottom: '1rem',
 };
 
+const titleTextStyleMobile = {
+  color: colours.white,
+  fontSize: '2rem',
+  marginBottom: '1rem',
+};
+
 const subtitleTextStyle = {
   color: colours.gray,
   fontSize: '1.5rem',
+  marginBottom: '1rem',
+};
+
+const subtitleTextStyleMobile = {
+  color: colours.gray,
+  fontSize: '1rem',
   marginBottom: '1rem',
 };
 
@@ -120,9 +144,20 @@ const cultureSectionHeadingTextStyle = {
   fontSize: '2rem',
 };
 
+const cultureSectionHeadingTextStyleMobile = {
+  color: colours.white,
+  marginBottom: '1rem',
+  fontSize: '1rem',
+};
+
 const cultureSectionContentTextStyle = {
   color: colours.gray,
-  fontSize: '1.5rem',
+  fontSize: '1.3rem',
+};
+
+const cultureSectionContentTextStyleMobile = {
+  color: colours.gray,
+  fontSize: '0.8rem',
 };
 
 export const useStyleToken = () => {
@@ -130,11 +165,15 @@ export const useStyleToken = () => {
   return {
     ...token,
     pageHeadingTextStyle,
+    pageHeadingTextStyleMobile,
     titleTextStyle,
+    titleTextStyleMobile,
     subtitleTextStyle,
+    subtitleTextStyleMobile,
     thankyouTextStyle,
     cultureLinkTextStylePink,
     cultureLinkTextStyleWhite,
+    cultureLinkTextStyleDescriptionWhite,
     navigationBar: {
       navigationBarStyle,
       kathakalAIButtonStyle: navigationBarKathakalAIButtonStyle,
@@ -145,6 +184,9 @@ export const useStyleToken = () => {
       cultureSectionButtonTextStyle,
       cultureSectionHeadingTextStyle,
       cultureSectionContentTextStyle,
+      cultureSectionHeadingTextStyleMobile,
+      cultureSectionContentTextStyleMobile
+
     },
     renderContent: {
       renderSectionHeadingTextStyle,

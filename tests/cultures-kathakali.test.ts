@@ -27,10 +27,10 @@ const checkButtonEnabledAndCloseUpload = async (page) => {
   await page.locator('button').filter({ hasText: 'Close' }).click();
 };
 
-const testSingleImageUpload = async (page, algorithmTitle) => {
+const testSingleImageUpload = async (page, algorithmTitle, buttonName) => {
   await page
     .locator(algorithmTitle)
-    .getByRole('button', { name: 'Upload Image', exact: true })
+    .getByRole('button', { name: buttonName, exact: true })
     .click();
   await checkButtonEnabledAndCloseUpload(page);
 };
@@ -55,7 +55,7 @@ test('Character Recognition Algorithm', async ({ page }) => {
   await page.goto('/cultures/kathakali');
 
   // Test single image upload functionality
-  await testSingleImageUpload(page, '#algorithm1');
+  await testSingleImageUpload(page, '#algorithm1', 'Upload Character Image');
 
   // // Test multiple face upload functionality
   // await testMuiltipleImageUpload(page, '#algorithm1');
@@ -65,7 +65,7 @@ test('Expression Recognition Algorithm', async ({ page }) => {
   await page.goto('/cultures/kathakali');
 
   // Test single image upload functionality
-  await testSingleImageUpload(page, '#algorithm2');
+  await testSingleImageUpload(page, '#algorithm2', 'Upload Expression Image');
 
   // // Test multiple face upload functionality
   // await testMuiltipleImageUpload(page, '#algorithm2');

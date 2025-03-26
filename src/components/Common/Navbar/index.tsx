@@ -28,6 +28,7 @@ function Navbar() {
             height: '60px',
             marginRight: '0.5rem', // Space between the logo and text
           }}
+          preview={false} // Disables the preview popup on click
         />
         KathakalAI
       </Button>

@@ -11,12 +11,15 @@ interface CultureCardProps {
   name: string;
   url: string;
   imageUrl: string;
+  description: string;
 }
 
-const CultureCard: React.FC<CultureCardProps> = ({ name, url, imageUrl }) => {
+const CultureCard: React.FC<CultureCardProps> = ({ name, url, imageUrl, description }) => {
   const navigate = useNavigate();
   const styleToken = useStyleToken();
   const isMobile = useIsMobile();
+
+  const buttonText = `Read More About ${name}`;
 
   const navigateToCulture = () => {
     navigate(`/cultures/${url.toLowerCase()}`);
@@ -32,11 +35,14 @@ const CultureCard: React.FC<CultureCardProps> = ({ name, url, imageUrl }) => {
           height: isMobile ? '300px' : '400px',
           objectFit: 'cover', // Ensures the image scales properly within the box
           borderRadius: '8px', // Optional for rounded corners
+          border: '2px solid #ccc', // Added border property
+
         }}
         preview={false}
       />
       <Text style={styleToken.cultureLinkTextStyleWhite}>{name}</Text>
-      <Button onClick={navigateToCulture}>READ MORE →</Button>
+      <Text style={styleToken.cultureLinkTextStyleDescriptionWhite}>{description}</Text>
+      <Button onClick={navigateToCulture}>{buttonText}</Button>
     </Flex>
   );
 };

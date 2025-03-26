@@ -82,12 +82,12 @@ const QuizPage: React.FC = () => {
         <Button
           type="primary"
           onClick={() => generateQuiz(CHARACTER)}
-          style={{ marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '200px' }}
+          style={{ marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
         >
-          Generate Quiz Character
+          Generate Quiz For Characters
         </Button>
-        <Button type="primary" style={{ width: '200px' }} onClick={() => generateQuiz(EXPRESSION)}>
-          Generate Quiz Expression
+        <Button type="primary" style={{ width: '250px' }} onClick={() => generateQuiz(EXPRESSION)}>
+          Generate Quiz For Expressions
         </Button>
       </div>
 
@@ -155,9 +155,9 @@ const QuizPage: React.FC = () => {
       )}
 
       {/* Score display */}
-      <div style={{ marginTop: 24 }}>
+      {quizItems.length > 0 &&<div style={{ marginTop: 24 }}>
         <h3>Total Score: {score}</h3>
-      </div>
+      </div>}
     </div>
   );
 };
