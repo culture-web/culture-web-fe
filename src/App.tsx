@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AboutUsPage from 'pages/AboutUsPage';
 import ContactUsPage from 'pages/ContactUsPage';
 import CulturesPage from 'pages/CulturesPage';
+import QuizPage from 'pages/QuizPage';
 import MainPage from 'pages/MainPage';
 import KathakaliPage from 'pages/CulturesKathakaliPage';
 import KootiyattamPage from 'pages/CulturesKootiyattamPage';
@@ -23,6 +24,7 @@ function App() {
               <Route path="/" element={<MainPage />} />
               <Route path="/about-us" element={<AboutUsPage />} />
               <Route path="/contact-us" element={<ContactUsPage />} />
+              <Route path="/quiz" element={<QuizPage />} />
               <Route path="/cultures" element={<CulturesPage />} />
               <Route path="/cultures/kathakali" element={<KathakaliPage />} />
               <Route

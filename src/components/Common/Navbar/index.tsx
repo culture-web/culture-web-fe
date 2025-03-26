@@ -57,6 +57,15 @@ function Navbar() {
           About Us
         </NavLink>
         <NavLink
+            to="/quiz"
+            onClick={() => handleNavigate('/quiz')}
+            style={({ isActive }) =>
+              isActive ? activeLinkStyles : defaultLinkStyles
+            }
+          >
+            Quiz
+          </NavLink>
+        <NavLink
           to="/contact-us"
           style={({ isActive }) =>
             isActive ? activeLinkStyles : defaultLinkStyles

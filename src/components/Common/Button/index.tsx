@@ -11,6 +11,8 @@ interface ButtonProps {
   htmlType?: 'submit' | 'reset' | 'button';
   loading?: boolean;
   width?: string;
+  height?: string;
+  fontSize?: string;
 }
 const Button: React.FC<ButtonProps> = ({
   onClick,
@@ -20,6 +22,8 @@ const Button: React.FC<ButtonProps> = ({
   htmlType = 'button',
   loading = false,
   width = '100%',
+  height = '2.5rem',
+  fontSize = '1rem',
 }) => {
   const colourToken = useColourToken();
   const [bgColor, setBgColor] = useState(colourToken.pink);
@@ -30,6 +34,8 @@ const Button: React.FC<ButtonProps> = ({
         backgroundColor: disabled ? colourToken.gray : bgColor,
         color: disabled ? colourToken.black : colourToken.white,
         width,
+        height,
+        fontSize,
       }}
       onMouseEnter={() => setBgColor(colourToken.pinkLight)} // Change color on hover
       onMouseLeave={() => setBgColor(colourToken.pink)} // Revert to original color

@@ -75,6 +75,15 @@ function DropdownNavbar() {
             About Us
           </NavLink>
           <NavLink
+            to="/quiz"
+            onClick={() => handleNavigate('/quiz')}
+            style={({ isActive }) =>
+              isActive ? activeLinkStyles : defaultLinkStyles
+            }
+          >
+            Quiz
+          </NavLink>
+          <NavLink
             to="/contact-us"
             onClick={() => handleNavigate('/contact-us')}
             style={({ isActive }) =>
