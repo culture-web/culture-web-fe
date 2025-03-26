@@ -19,9 +19,9 @@ test('Clicking on Get Started brings us to cultures', async ({ page }) => {
 test('Clicking on Learn More brings us to About Us', async ({ page }) => {
   await page.goto('/');
   await expect(
-    page.getByRole('button', { name: 'Learn More →' }),
+    page.getByRole('button', { name: 'Learn More' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Learn More →' }).click();
+  await page.getByRole('button', { name: 'Learn More' }).click();
   await expect(page.getByRole('heading', { name: 'About Us' })).toBeVisible();
 
   // Check url is /about-us

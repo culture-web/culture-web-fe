@@ -32,7 +32,7 @@ function MainPage() {
               Get Started
             </Button>
             <Button onClick={() => handleNavigate('/about-us')}>
-              Learn More →
+              Learn More
             </Button>
           </Flex>
         </Flex>

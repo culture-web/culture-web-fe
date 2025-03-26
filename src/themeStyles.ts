@@ -11,6 +11,7 @@ const colours = {
   black: '#000',
   red: '#ff474c',
   darkGray: '#1c1e24',
+  lightGray: '#f5f5f5',
 };
 
 const themeStyles = {
