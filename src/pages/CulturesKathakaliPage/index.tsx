@@ -80,7 +80,7 @@ function KathakaliPage() {
           Expression Recognition Algorithm
         </Button>
       </nav>
-      <Flex vertical align="center" style={{ maxWidth: '90%' }}>
+      <Flex vertical align="center" style={{ maxWidth: isMobile ? '90%' : '75%' }}>
         <section id="overview">
           <Title style={headingStyle}>
             Overview
