@@ -11,15 +11,9 @@ test('Clicking on Kathakali Read More brings us to Kathakali Information page', 
 }) => {
   await page.goto('/cultures');
   await expect(
-    page
-      .locator('div')
-      .filter({ hasText: /^KathakaliREAD MORE →$/ })
-      .getByRole('button'),
-  ).toBeVisible();
+    page.getByRole('button', { name: 'Read More About Kathakali' })).toBeVisible()
   await page
-    .locator('div')
-    .filter({ hasText: /^KathakaliREAD MORE →$/ })
-    .getByRole('button')
+    .getByRole('button', { name: 'Read More About Kathakali' })
     .click();
   await expect(page.getByText('Kathakali', { exact: true })).toBeVisible();
 
@@ -33,14 +27,10 @@ test('Clicking on Kootiyattam Read More brings us to Kootiyattam Information pag
   await page.goto('/cultures');
   await expect(
     page
-      .locator('div')
-      .filter({ hasText: /^KootiyattamREAD MORE →$/ })
-      .getByRole('button'),
+    .getByRole('button', { name: 'Read More About Kootiyattam' })
   ).toBeVisible();
   await page
-    .locator('div')
-    .filter({ hasText: /^KootiyattamREAD MORE →$/ })
-    .getByRole('button')
+    .getByRole('button', { name: 'Read More About Kootiyattam' })
     .click();
   await expect(page.getByText('Kootiyattam', { exact: true })).toBeVisible();
 

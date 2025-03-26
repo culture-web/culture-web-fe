@@ -12,6 +12,7 @@ import {
 import RenderCharacterContent from 'components/ContentRender/RenderCharacterContent';
 import RenderExpressionContent from 'components/ContentRender/RenderExpressionContent';
 import { useStyleToken } from 'themeStyles';
+import useIsMobile from 'utils/isMobile';
 
 const { Text, Title } = Typography;
 
@@ -24,8 +25,13 @@ function KathakaliPage() {
   //   useState(false);
   // const [isExpressionModalMultipleOpen, setIsExpressionModalMultipleOpen] =
   //   useState(false);
+  
 
   const styleToken = useStyleToken();
+  const isMobile = useIsMobile();
+
+  const headingStyle = isMobile ? styleToken.culture.cultureSectionHeadingTextStyleMobile : styleToken.culture.cultureSectionHeadingTextStyle;
+  const contentStyle = isMobile ? styleToken.culture.cultureSectionContentTextStyleMobile : styleToken.culture.cultureSectionContentTextStyle;
 
   const handleNavigation = (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -74,12 +80,12 @@ function KathakaliPage() {
           Expression Recognition Algorithm
         </Button>
       </nav>
-      <Flex vertical align="center" style={{ maxWidth: '75%' }}>
+      <Flex vertical align="center" style={{ maxWidth: '90%' }}>
         <section id="overview">
-          <Title style={styleToken.culture.cultureSectionHeadingTextStyle}>
+          <Title style={headingStyle}>
             Overview
           </Title>
-          <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+          <Text style={contentStyle}>
             Kathakali is a classical dance-drama form from Kerala, India,
             renowned for its vibrant costumes, elaborate makeup, and dramatic
             storytelling. It combines dance, music, and acting to depict stories
@@ -93,15 +99,15 @@ function KathakaliPage() {
         </section>
         <section id="algorithm1">
           <Flex vertical>
-            <Title style={styleToken.culture.cultureSectionHeadingTextStyle}>
+            <Title style={headingStyle}>
               Character Recognition Algorithm
             </Title>
-            <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+            <Text style={contentStyle}>
               This is an AI algorithm that helps users understand the major
               types of Kathakali characters, namely: Pacha, Kathi,
               Minukku-Female, Chuvanna-Thadi, Vella-Thadi and Kari-Male.
             </Text>
-            <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+            <Text style={contentStyle}>
               To learn more about this research,{' '}
               <a
                 href="https://www.sciencedirect.com/science/article/abs/pii/S2212054823000450"
@@ -112,16 +118,16 @@ function KathakaliPage() {
               </a>
               .
             </Text>
-            <Flex gap="large">
+            <Flex gap="large" style={{ margin: '0.5rem 0rem' }}>
               <Button onClick={() => setIsCharacterModalSingleOpen(true)}>
-                Upload Image
+                Upload Character Image
               </Button>
               {/* <Button onClick={() => setIsCharacterModalMultipleOpen(true)}>
                 Upload Image Multiple (BETA)
               </Button> */}
             </Flex>
           </Flex>
-          <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+          <Text style={contentStyle}>
             The algorithm uses image recognition to identify the characters and
             display the name of the character. Simply upload an image of a
             Kathakali character to see the result.
@@ -130,30 +136,30 @@ function KathakaliPage() {
 
         <section id="algorithm2">
           <Flex vertical>
-            <Title style={styleToken.culture.cultureSectionHeadingTextStyle}>
+            <Title style={headingStyle}>
               Expression Recognition Algorithm
             </Title>
-            <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+            <Text style={contentStyle}>
               This is an AI algorithm that helps users understand the
               Navarasasas (9 Types of Facial Expressions of Kathakali).
             </Text>
-            <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+            <Text style={contentStyle}>
               These are: Raudra (Anger), Sringara (Love), Bibatsa (Odious),
               Karuna (Pity), Shanta (Peace), Adbhuta (Wonder), Vira (Heroic),
               Bhayanaka (Terrible) and Hasya (Comic).
             </Text>
-            <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+            <Text style={contentStyle}>
               This research is accepted for IEEE SPICES 2024, India.
             </Text>
-            <Flex gap="large">
+            <Flex gap="large" style={{ margin: '0.5rem 0rem' }}>
               <Button onClick={() => setIsExpressionModalSingleOpen(true)}>
-                Upload Image
+                Upload Expression Image
               </Button>
               {/* <Button onClick={() => setIsExpressionModalMultipleOpen(true)}>
                 Upload Image Multiple (BETA)
               </Button> */}
             </Flex>
-            <Text style={styleToken.culture.cultureSectionContentTextStyle}>
+            <Text style={contentStyle}>
               The algorithm uses image recognition to identify the expressions
               and display the name of the expression. Simply upload an image of
               a Kathakali expression to see the result.

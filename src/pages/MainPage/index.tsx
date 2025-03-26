@@ -15,31 +15,40 @@ function MainPage() {
   const styleToken = useStyleToken();
   const isMobile = useIsMobile();
 
+  const pageHeadingStyle = isMobile ? styleToken.pageHeadingTextStyleMobile : styleToken.pageHeadingTextStyle;
+  const subtitleStyle = isMobile ? styleToken.subtitleTextStyleMobile : styleToken.subtitleTextStyle;
+
   return (
-    <Flex vertical align="center" style={{ margin: '0 2rem' }}>
+    <Flex vertical align="center" style={{ width: '100%' }}>
       <Title style={styleToken.pageHeadingTextStyle}>Home</Title>
-      <Flex align="center" gap="large" vertical={isMobile}>
+      <Flex align="center" gap="3rem" vertical={isMobile}>
         <Flex vertical align="left">
-          <Title style={styleToken.pageHeadingTextStyle}>
+          <Title style={pageHeadingStyle}>
             Discover the World of Cultures at KathakalAI
           </Title>
-          <Text style={styleToken.subtitleTextStyle}>
+          <Text style={subtitleStyle}>
             Experience the beauty and diversity of cultures from all around the
             globe.
           </Text>
-          <Flex gap="large">
+          <Flex gap="large" vertical={isMobile}>
             <Button onClick={() => handleNavigate('/cultures')}>
-              Get Started
+              Learn More About Other Cultures
             </Button>
             <Button onClick={() => handleNavigate('/about-us')}>
-              Learn More
+              Learn More About KathakalAI
             </Button>
           </Flex>
         </Flex>
         <Image
           src={kathakaliImage}
           alt="Cultural"
-          style={{ maxWidth: '100%', height: 'auto' }}
+          style={{ 
+            maxWidth: '100%', 
+            height: 'auto', 
+            borderRadius: '8px', // Optional for rounded corners
+            border: '2px solid #ccc', // Added border property
+            marginBottom: isMobile ? '2rem' : '0', // Added margin bottom for mobile
+           }}
           preview={false}
         />
       </Flex>
