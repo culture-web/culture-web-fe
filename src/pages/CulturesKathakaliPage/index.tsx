@@ -67,7 +67,7 @@ function KathakaliPage() {
           <div className="font-4xlarge white mb-base">Overview</div>
           <div className="font-2xlarge gray">
             Kathakali is a classical dance-drama form from Kerala, India,
-            renowned for its vibrant costumes, elaborate makeup, and dramatic
+            renowned the vibrant costumes, elaborate makeup, and dramatic
             storytelling. It combines dance, music, and acting to depict stories
             from Hindu epics like the Mahabharata and Ramayana. The performers
             use expressive facial expressions, detailed hand gestures (mudras),
