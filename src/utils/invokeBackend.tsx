@@ -117,3 +117,38 @@ export const uploadCharacterDataToBE = async (
   actual: string,
   type: string,
 ): Promise<void> => uploadCharacterData(imageFile, predicted, actual, type);
+
+export const sendChatQuery = async (
+  query: string,
+  imageFile?: File,
+  imageAnalysis?: string,
+): Promise<string> => {
+  try {
+    // Always use FormData to be consistent with backend multer middleware
+    const formData = new FormData();
+    formData.append('query', query);
+    
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    
+    if (imageAnalysis) {
+      formData.append('imageAnalysis', imageAnalysis);
+    }
+
+    const response = await fetch(`${BACKEND_URI}/kathakali/chat`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get chat response: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
+  } catch (error) {
+    console.error('Chat API Error:', error);
+    throw new Error('Failed to communicate with the AI assistant');
+  }
+};
