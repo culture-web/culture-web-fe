@@ -226,8 +226,20 @@ function KathakaliPage() {
         footer={null}
         width={isMobile ? '95%' : '90%'}
         style={{ maxWidth: '900px' }}
+        styles={{ 
+          body: { padding: 0, backgroundColor: 'transparent' },
+          content: { backgroundColor: 'transparent', boxShadow: 'none', padding: 0 },
+          mask: { backgroundColor: 'rgba(0, 0, 0, 0.2)' }
+        }}
         centered
         destroyOnClose
+        maskClosable
+        closable={false}
+        modalRender={(modal) => (
+          <div style={{ backgroundColor: 'transparent' }}>
+            {modal}
+          </div>
+        )}
       >
         <AIChat onClose={() => setIsChatModalOpen(false)} />
       </Modal>
