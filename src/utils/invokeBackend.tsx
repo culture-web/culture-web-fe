@@ -147,8 +147,8 @@ export const sendChatQuery = async (
 
     const data = await response.json();
     return data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
-  } catch (error) {
-    console.error('Chat API Error:', error);
+  } catch {
+    // Chat API Error
     throw new Error('Failed to communicate with the AI assistant');
   }
 };

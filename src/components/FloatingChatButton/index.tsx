@@ -27,13 +27,6 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ onClick, isMobi
     fontSize: isMobile ? '20px' : '24px',
   };
 
-  const hoverStyle = {
-    '&:hover': {
-      transform: 'scale(1.1)',
-      boxShadow: '0 6px 20px rgba(200, 31, 88, 0.4)',
-    }
-  };
-
   return (
     <Button
       type="primary"

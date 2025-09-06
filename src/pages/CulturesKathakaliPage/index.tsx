@@ -37,6 +37,12 @@ function KathakaliPage() {
   const headingStyle = isMobile ? styleToken.culture.cultureSectionHeadingTextStyleMobile : styleToken.culture.cultureSectionHeadingTextStyle;
   const contentStyle = isMobile ? styleToken.culture.cultureSectionContentTextStyleMobile : styleToken.culture.cultureSectionContentTextStyle;
 
+  const modalRender = (modal: React.ReactNode) => (
+    <div style={{ backgroundColor: 'transparent' }}>
+      {modal}
+    </div>
+  );
+
   const handleNavigation = (
     e: React.MouseEvent<HTMLButtonElement>,
     sectionId: string,
@@ -194,7 +200,7 @@ function KathakaliPage() {
             <ul style={{ ...contentStyle, marginLeft: '2rem', marginTop: '0.5rem' }}>
               <li>What character is this and what story are they from?</li>
               <li>What does this expression mean in Kathakali?</li>
-              <li>Tell me about the significance of this character's makeup</li>
+              <li>Tell me about the significance of this character&apos;s makeup</li>
               <li>What emotions is this performer conveying?</li>
             </ul>
             <Flex gap="large" style={{ margin: '1rem 0rem' }}>
@@ -235,11 +241,7 @@ function KathakaliPage() {
         destroyOnClose
         maskClosable
         closable={false}
-        modalRender={(modal) => (
-          <div style={{ backgroundColor: 'transparent' }}>
-            {modal}
-          </div>
-        )}
+        modalRender={modalRender}
       >
         <AIChat onClose={() => setIsChatModalOpen(false)} />
       </Modal>
