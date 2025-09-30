@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, Divider } from 'antd';
 import useIsMobile from 'utils/isMobile';
 import { AIChatProps } from './types';
-import { useChatMessages } from './hooks/useChatMessages';
+import useChatMessages from './hooks/useChatMessages';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
@@ -12,7 +12,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose }) => {
     messages,
     inputValue,
     setInputValue,
-    uploadedFile,
+    uploadedImages,
     isLoading,
     handleImageUpload,
     removeImage,
@@ -46,10 +46,9 @@ const AIChat: React.FC<AIChatProps> = ({ onClose }) => {
         onChange={setInputValue}
         onSend={handleSendMessage}
         onImageUpload={handleImageUpload}
-        uploadedFileName={uploadedFile?.name}
         onRemoveImage={removeImage}
         isLoading={isLoading}
-        hasUploadedFile={!!uploadedFile}
+        uploadedImages={uploadedImages}
       />
     </Card>
   );

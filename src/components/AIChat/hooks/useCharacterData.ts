@@ -1,6 +1,6 @@
 import { CharacterData, ExpressionData } from '../types';
 
-export const useCharacterData = () => {
+const useCharacterData = () => {
   const getCharacterInfo = (character: string): string => {
     const characterData: CharacterData = {
       'Pacha': 'Pacha characters represent noble, virtuous heroes like Rama, Krishna, or Arjuna. They have green face makeup and are typically the protagonists in Kathakali stories.',
@@ -30,3 +30,5 @@ export const useCharacterData = () => {
 
   return { getCharacterInfo, getExpressionInfo };
 };
+
+export default useCharacterData;

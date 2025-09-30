@@ -2,9 +2,9 @@ import {
   uploadImgToCharRecBESingle,
   uploadImgToExpressionRecBESingle,
 } from 'utils/invokeBackend';
-import { useCharacterData } from './useCharacterData';
+import useCharacterData from './useCharacterData';
 
-export const useImageAnalysis = () => {
+const useImageAnalysis = () => {
   const { getCharacterInfo, getExpressionInfo } = useCharacterData();
 
   const processImageWithAI = async (imageFile: File): Promise<string> => {
@@ -54,3 +54,5 @@ export const useImageAnalysis = () => {
 
   return { processImageWithAI };
 };
+
+export default useImageAnalysis;

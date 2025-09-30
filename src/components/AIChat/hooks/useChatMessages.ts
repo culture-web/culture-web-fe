@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { UploadFile } from 'antd';
 import { message } from 'antd';
 import { sendChatQuery } from 'utils/invokeBackend';
-import { Message } from '../types';
-import { useImageAnalysis } from './useImageAnalysis';
+import { Message, UploadedImage } from '../types';
+import useImageAnalysis from './useImageAnalysis';
 
 const getInitialMessage = (): Message => ({
   id: '1',
@@ -35,64 +35,110 @@ Feel free to upload images and ask anything about Kathakali!`,
   timestamp: new Date(),
 });
 
-export const useChatMessages = () => {
+const useChatMessages = () => {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
   const [inputValue, setInputValue] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<UploadFile | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
   const { processImageWithAI } = useImageAnalysis();
 
-  const handleImageUpload = (file: File) => {
-    const uploadFile: UploadFile = {
-      uid: Date.now().toString(),
-      name: file.name,
-      status: 'done',
-      originFileObj: file as any, // Type assertion for file compatibility
+  // Cleanup effect to revoke object URLs on unmount
+  useEffect(() => {
+    return () => {
+      uploadedImages.forEach(image => {
+        URL.revokeObjectURL(image.url);
+      });
     };
-    setUploadedFile(uploadFile);
+  }, [uploadedImages]);
+
+  const handleImageUpload = async (file: File) => {
+    console.log('handleImageUpload called with file:', file); // Debug log
+    const imageId = Date.now().toString();
+    const imageUrl = URL.createObjectURL(file);
+    
+    const newImage: UploadedImage = {
+      id: imageId,
+      file,
+      url: imageUrl,
+      name: file.name,
+      isAnalyzing: true
+    };
+    
+    console.log('Adding new image to state:', newImage); // Debug log
+    setUploadedImages(prev => {
+      const updated = [...prev, newImage];
+      console.log('Updated uploadedImages:', updated); // Debug log
+      return updated;
+    });
+    
+    // Analyze the image in the background
+    try {
+      const analysisResult = await processImageWithAI(file);
+      setUploadedImages(prev => 
+        prev.map(img => 
+          img.id === imageId 
+            ? { ...img, analysisResult, isAnalyzing: false }
+            : img
+        )
+      );
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      setUploadedImages(prev => 
+        prev.map(img => 
+          img.id === imageId 
+            ? { ...img, analysisResult: 'Analysis failed', isAnalyzing: false }
+            : img
+        )
+      );
+    }
   };
 
-  const removeImage = () => {
-    setUploadedFile(null);
+  const removeImage = (imageId: string) => {
+    setUploadedImages(prev => {
+      const imageToRemove = prev.find(img => img.id === imageId);
+      if (imageToRemove) {
+        URL.revokeObjectURL(imageToRemove.url);
+      }
+      return prev.filter(img => img.id !== imageId);
+    });
   };
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() && !uploadedFile) return;
+    if (!inputValue.trim() && uploadedImages.length === 0) return;
 
     const userMessageId = Date.now().toString();
-    const imageUrl = uploadedFile?.originFileObj 
-      ? URL.createObjectURL(uploadedFile.originFileObj)
-      : undefined;
-
-    // Add user message
+    
+    // Create message with images if any
     const userMessage: Message = {
       id: userMessageId,
       type: 'user',
-      content: inputValue.trim() || 'Analyze this image',
-      image: imageUrl,
+      content: inputValue.trim() || 'Analyze these images',
       timestamp: new Date(),
     };
 
     setMessages(prev => [...prev, userMessage]);
     
-    // Clear input and file
+    // Clear input
     const currentInput = inputValue;
-    const currentFile = uploadedFile?.originFileObj;
+    const currentImages = [...uploadedImages];
     setInputValue('');
-    setUploadedFile(null);
     setIsLoading(true);
 
     try {
-      let imageAnalysis = '';
+      let combinedAnalysis = '';
       
-      // Process image if uploaded
-      if (currentFile) {
-        imageAnalysis = await processImageWithAI(currentFile);
+      // If we have uploaded images, use their analysis results
+      if (currentImages.length > 0) {
+        combinedAnalysis = currentImages
+          .filter(img => img.analysisResult && img.analysisResult !== 'Analysis failed')
+          .map((img, index) => `Image ${index + 1}: ${img.analysisResult}`)
+          .join('\\n\\n');
       }
 
-      // Send to chat API with context
-      const chatResponse = await sendChatQuery(currentInput, currentFile, imageAnalysis);
+      // Send to chat API with context - use the first image file for compatibility
+      const firstImageFile = currentImages.length > 0 ? currentImages[0].file : undefined;
+      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis);
 
       // Add AI response
       const aiMessage: Message = {
@@ -135,7 +181,7 @@ export const useChatMessages = () => {
     messages,
     inputValue,
     setInputValue,
-    uploadedFile,
+    uploadedImages,
     isLoading,
     handleImageUpload,
     removeImage,
@@ -143,3 +189,5 @@ export const useChatMessages = () => {
     handleImageUploadError,
   };
 };
+
+export default useChatMessages;

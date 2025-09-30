@@ -12,17 +12,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onChange,
   onSend,
   onImageUpload,
-  uploadedFileName,
   onRemoveImage,
   isLoading,
-  hasUploadedFile
+  uploadedImages
 }) => {
-  const handleImageUpload: UploadProps['onChange'] = (info) => {
-    if (info.file.status === 'done' || info.file.originFileObj) {
-      onImageUpload(info.file.originFileObj!);
-    }
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -32,20 +25,31 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div style={{ padding: '16px 20px', background: '#fff' }}>
-      {hasUploadedFile && uploadedFileName && (
+      {uploadedImages.length > 0 && (
         <ImageUploadPreview 
-          fileName={uploadedFileName}
+          images={uploadedImages}
           onRemove={onRemoveImage}
         />
       )}
       
       <Flex gap="middle">
         <Upload
-          beforeUpload={() => false}
-          onChange={handleImageUpload}
+          beforeUpload={(file) => {
+            console.log('Before upload file:', file); // Debug log
+            // Validate file type
+            const isImage = file.type.startsWith('image/');
+            if (!isImage) {
+              console.error('File is not an image:', file.type);
+              return false;
+            }
+            console.log('File type accepted:', file.type);
+            // Trigger the image upload handler
+            onImageUpload(file);
+            return false; // Prevent actual upload
+          }}
           accept="image/*"
           showUploadList={false}
-          maxCount={1}
+          multiple={false}
         >
           <Button 
             icon={<PictureOutlined />}
@@ -70,7 +74,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="primary"
           icon={<SendOutlined />}
           onClick={onSend}
-          disabled={!value.trim() && !hasUploadedFile || isLoading}
+          disabled={!value.trim() && uploadedImages.length === 0 || isLoading}
           style={{ 
             backgroundColor: '#c81f58',
             borderColor: '#c81f58',
