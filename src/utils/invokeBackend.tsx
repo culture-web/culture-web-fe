@@ -1,5 +1,5 @@
 import BACKEND_URI from 'configs/env.config';
-import { PredictionMultiple, Prediction } from 'types/interface';
+import { PredictionMultiple, Prediction, ChatbotResponse } from 'types/interface';
 
 const getImageDimensions = (
   imageFile: File,
@@ -122,7 +122,7 @@ export const sendChatQuery = async (
   query: string,
   imageFile?: File,
   imageAnalysis?: string,
-): Promise<string> => {
+): Promise<ChatbotResponse> => {
   try {
     // Always use FormData to be consistent with backend multer middleware
     const formData = new FormData();
@@ -146,9 +146,48 @@ export const sendChatQuery = async (
     }
 
     const data = await response.json();
-    return data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
+    
+    // Parse the response format
+    if (data.shortAnswer !== undefined) {
+      // New structured response format
+      return {
+        shortAnswer: data.shortAnswer || 'I apologize, but I couldn\'t generate a response at the moment.',
+        reasoning: data.reasoning || null,
+        sections: data.sections || [],
+        tables: data.tables || [],
+        metadata: data.metadata || {
+          hasStructuredContent: false,
+          responseLength: 0,
+          processingTimestamp: new Date().toISOString(),
+        }
+      };
+    } 
+      // Legacy response format - convert to new format
+      const responseText = data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
+      return {
+        shortAnswer: responseText,
+        reasoning: null,
+        sections: [],
+        tables: [],
+        metadata: {
+          hasStructuredContent: false,
+          responseLength: responseText.length,
+          processingTimestamp: new Date().toISOString(),
+        }
+      };
+    
   } catch {
-    // Chat API Error
-    throw new Error('Failed to communicate with the AI assistant');
+    // Chat API Error - return error response in new format
+    return {
+      shortAnswer: 'Failed to communicate with the AI assistant',
+      reasoning: null,
+      sections: [],
+      tables: [],
+      metadata: {
+        hasStructuredContent: false,
+        responseLength: 0,
+        processingTimestamp: new Date().toISOString(),
+      }
+    };
   }
 };
