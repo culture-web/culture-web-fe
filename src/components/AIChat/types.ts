@@ -1,5 +1,3 @@
-import { ChatbotResponse } from 'types/interface';
-
 export interface Message {
   id: string;
   type: 'user' | 'assistant';
@@ -49,4 +47,30 @@ export interface CharacterData {
 
 export interface ExpressionData {
   [key: string]: string;
+}
+
+export interface ChatbotResponseSection {
+  title: string;
+  content: string;
+  type?: 'info' | 'warning' | 'success' | 'error';
+}
+
+export interface ChatbotResponseTable {
+  headers: string[];
+  rows: string[][];
+  caption?: string;
+}
+
+export interface ChatbotResponseMetadata {
+  hasStructuredContent: boolean;
+  responseLength: number;
+  processingTimestamp: string;
+}
+
+export interface ChatbotResponse {
+  shortAnswer: string;
+  reasoning?: string | null;
+  sections: ChatbotResponseSection[];
+  tables: ChatbotResponseTable[];
+  metadata: ChatbotResponseMetadata;
 }

@@ -16,8 +16,8 @@ import {
   DownOutlined,
   RightOutlined
 } from '@ant-design/icons';
-import { ChatbotResponse } from 'types/interface';
 import FormattedText from 'components/Common/FormattedText';
+import { ChatbotResponse } from '../types';
 
 const { Panel } = Collapse;
 const { Text, Title } = Typography;

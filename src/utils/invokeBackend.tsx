@@ -1,5 +1,6 @@
+import { ChatbotResponse } from 'components/AIChat/types';
 import BACKEND_URI from 'configs/env.config';
-import { PredictionMultiple, Prediction, ChatbotResponse } from 'types/interface';
+import { PredictionMultiple, Prediction } from 'types/interface';
 
 const getImageDimensions = (
   imageFile: File,
