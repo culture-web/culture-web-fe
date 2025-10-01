@@ -4,6 +4,7 @@ import ImageUpload from '../../components/FileUploads/ImageUpload';
 import uploadImgToCharRecBE from '../../utils/invokeBackend';
 import RenderCharacterContent from '../../components/ContentRender/RenderCharacterContent';
 import Button from '../../components/Common/Button';
+import EventsCalendar from '../../components/Common/EventsCalendar';
 import styles from './KathakaliPage.module.css';
 
 function KathakaliPage() {
@@ -34,6 +35,9 @@ function KathakaliPage() {
           onClick={(e) => handleNavigation(e, 'algorithm2')}
         >
           Hand Gesture Algorithm
+        </button>
+        <button type="button" onClick={(e) => handleNavigation(e, 'events')}>
+          Upcoming Events
         </button>
         <button type="button" onClick={(e) => handleNavigation(e, 'connect')}>
           Connect
@@ -79,6 +83,16 @@ function KathakaliPage() {
           text text text text text text text text text text text text text text
         </p>
       </section>
+
+      <section id="events" className={styles.section}>
+        <h2>Upcoming Kathakali Events</h2>
+        <p>
+          Discover and attend upcoming Kathakali performances, workshops, and cultural events. 
+          Click on any date to see event details, or browse the upcoming events list below.
+        </p>
+        <EventsCalendar />
+      </section>
+
       <section id="connect" className={styles.section}>
         <h2>Connect</h2>
         <p>

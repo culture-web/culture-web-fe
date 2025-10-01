@@ -1,0 +1,251 @@
+.eventsCalendar {
+  background-color: #1e1f2b;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.calendarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.navButton {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.navButton:hover {
+  background-color: #db2a6b;
+}
+
+.monthYear {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.calendarGrid {
+  margin-bottom: 24px;
+}
+
+.daysOfWeekHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.dayOfWeek {
+  color: #ababab;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  padding: 8px;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendarDay {
+  background-color: #2b2d38;
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendarDay:hover {
+  background-color: #3a3c49;
+  transform: translateY(-2px);
+}
+
+.calendarDay.selected {
+  background-color: #db2a6b;
+  color: #ffffff;
+}
+
+.calendarDay.hasEvents {
+  border: 2px solid #db2a6b;
+}
+
+.dayNumber {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.eventDot {
+  width: 6px;
+  height: 6px;
+  background-color: #db2a6b;
+  border-radius: 50%;
+  margin-top: 4px;
+}
+
+.selected .eventDot {
+  background-color: #ffffff;
+}
+
+.emptyDay {
+  min-height: 60px;
+}
+
+.eventDetails {
+  background-color: #2b2d38;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.eventDetails h4 {
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+}
+
+.eventCard {
+  background-color: #1e1f2b;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-left: 4px solid #db2a6b;
+}
+
+.eventCard:last-child {
+  margin-bottom: 0;
+}
+
+.eventTitle {
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.eventTime {
+  color: #db2a6b;
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.eventVenue {
+  color: #ababab;
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.eventDescription {
+  color: #ababab;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.upcomingEvents {
+  background-color: #2b2d38;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.upcomingEvents h4 {
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  font-size: 18px;
+}
+
+.eventsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.upcomingEventCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: #1e1f2b;
+  border-radius: 8px;
+  padding: 16px;
+  transition: transform 0.3s ease;
+}
+
+.upcomingEventCard:hover {
+  transform: translateX(4px);
+}
+
+.eventDate {
+  background-color: #db2a6b;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 60px;
+}
+
+.eventInfo h5 {
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.eventInfo p {
+  color: #ababab;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .eventsCalendar {
+    padding: 16px;
+  }
+  
+  .monthYear {
+    font-size: 20px;
+  }
+  
+  .calendarDay {
+    min-height: 50px;
+    padding: 8px 4px;
+  }
+  
+  .dayNumber {
+    font-size: 14px;
+  }
+  
+  .upcomingEventCard {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .eventDate {
+    min-width: auto;
+  }
+}
