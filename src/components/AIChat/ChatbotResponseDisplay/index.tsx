@@ -181,7 +181,7 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                       size="small"
                       scroll={{ x: 'max-content' }}
                       dataSource={table.rows.map((row, rowIndex) => ({
-                        key: `row-${rowIndex}`,
+                        key: `row-${table.caption || 'table'}-${row.join('-').replace(/\s+/g, '-').toLowerCase()}-${rowIndex}`,
                         ...row.reduce((acc, cell, cellIndex) => ({
                           ...acc,
                           [table.headers[cellIndex] || `col${cellIndex}`]: cell
@@ -190,7 +190,7 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                       columns={table.headers.map((header, colIndex) => ({
                         title: header,
                         dataIndex: header,
-                        key: `col-${header}-${colIndex}`,
+                        key: `col-${header.replace(/\s+/g, '-').toLowerCase()}-${table.caption || 'table'}`,
                         render: (text: string) => <TableCellRenderer text={text} />
                       }))}
                       pagination={false}
