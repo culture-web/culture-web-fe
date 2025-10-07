@@ -68,6 +68,10 @@ const TableCellRenderer: React.FC<{ text: string }> = ({ text }) => (
   <FormattedText content={text || ''} />
 );
 
+const ExpandIcon: React.FC<{ isActive?: boolean }> = ({ isActive }) => (
+  isActive ? <DownOutlined /> : <RightOutlined />
+);
+
 const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({ 
   response, 
   style 
@@ -96,9 +100,7 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
             size="small"
             activeKey={activeKeys}
             onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
-            expandIcon={({ isActive }) => 
-              isActive ? <DownOutlined /> : <RightOutlined />
-            }
+            expandIcon={ExpandIcon}
             style={{ 
               background: 'transparent',
               border: 'none'
@@ -140,7 +142,7 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                 {/* Sections */}
                 {response.sections.map((section, index) => (
                   <Card
-                    key={`section-${section.title}-${index}`}
+                    key={`section-${section.title.replace(/\s+/g, '-').toLowerCase()}-${section.type || 'default'}-${index}`}
                     size="small"
                     style={{ 
                       marginBottom: '12px',

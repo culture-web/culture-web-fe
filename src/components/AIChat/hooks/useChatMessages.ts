@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import type { UploadFile } from 'antd';
 import { message } from 'antd';
 import { sendChatQuery } from 'utils/invokeBackend';
 import { Message, UploadedImage } from '../types';

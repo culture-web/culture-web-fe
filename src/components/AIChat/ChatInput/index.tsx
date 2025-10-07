@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button, Upload, Flex, Input } from 'antd';
 import { SendOutlined, PictureOutlined } from '@ant-design/icons';
-import type { UploadProps } from 'antd';
 import { ChatInputProps } from '../types';
 import ImageUploadPreview from '../ImageUploadPreview';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Space, Typography, Card, Spin } from 'antd';
-import { PictureOutlined, CheckCircleOutlined, LoadingOutlined, CloseOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, LoadingOutlined, CloseOutlined } from '@ant-design/icons';
 import { ImageUploadPreviewProps } from '../types';
 
 const { Text } = Typography;
