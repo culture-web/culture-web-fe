@@ -140,9 +140,9 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                 )}
 
                 {/* Sections */}
-                {response.sections.map((section, index) => (
+                {response.sections.map((section) => (
                   <Card
-                    key={`section-${section.title.replace(/\s+/g, '-').toLowerCase()}-${section.type || 'default'}-${index}`}
+                    key={`section-${section.title}-${section.type || 'default'}`}
                     size="small"
                     style={{ 
                       marginBottom: '12px',
@@ -180,17 +180,17 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                     <Table
                       size="small"
                       scroll={{ x: 'max-content' }}
-                      dataSource={table.rows.map((row, rowIndex) => ({
-                        key: `row-${table.caption || 'table'}-${row.join('-').replace(/\s+/g, '-').toLowerCase()}-${rowIndex}`,
+                      dataSource={table.rows.map((row) => ({
+                        key: `row-${row.join('-')}`,
                         ...row.reduce((acc, cell, cellIndex) => ({
                           ...acc,
-                          [table.headers[cellIndex] || `col${cellIndex}`]: cell
+                          [table.headers[cellIndex] || `col-${cellIndex}`]: cell
                         }), {})
                       }))}
-                      columns={table.headers.map((header, colIndex) => ({
+                      columns={table.headers.map((header) => ({
                         title: header,
                         dataIndex: header,
-                        key: `col-${header.replace(/\s+/g, '-').toLowerCase()}-${table.caption || 'table'}`,
+                        key: `col-${header}-${table.caption || 'table'}`,
                         render: (text: string) => <TableCellRenderer text={text} />
                       }))}
                       pagination={false}
