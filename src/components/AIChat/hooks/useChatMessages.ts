@@ -42,7 +42,6 @@ const useChatMessages = () => {
   
   const { processImageWithAI } = useImageAnalysis();
 
-  // Cleanup effect to revoke object URLs on unmount
   useEffect(() => {
     return () => {
       uploadedImages.forEach(image => {
@@ -52,7 +51,6 @@ const useChatMessages = () => {
   }, [uploadedImages]);
 
   const handleImageUpload = async (file: File) => {
-    console.log('handleImageUpload called with file:', file); // Debug log
     const imageId = Date.now().toString();
     const imageUrl = URL.createObjectURL(file);
     
@@ -64,14 +62,11 @@ const useChatMessages = () => {
       isAnalyzing: true
     };
     
-    console.log('Adding new image to state:', newImage); // Debug log
     setUploadedImages(prev => {
       const updated = [...prev, newImage];
-      console.log('Updated uploadedImages:', updated); // Debug log
       return updated;
     });
     
-    // Analyze the image in the background
     try {
       const analysisResult = await processImageWithAI(file);
       setUploadedImages(prev => 

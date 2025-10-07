@@ -24,14 +24,16 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ onClick, isMobi
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'all 0.3s ease',
-    fontSize: isMobile ? '20px' : '24px',
+    fontSize: isMobile ? '24px' : '28px',
+    padding: '0',
+    border: 'none',
   };
 
   return (
     <Button
       type="primary"
       shape="circle"
-      icon={<MessageOutlined />}
+      icon={<MessageOutlined style={{ fontSize: 'inherit', lineHeight: 1 }} />}
       onClick={onClick}
       style={buttonStyle}
       className="floating-chat-button"
