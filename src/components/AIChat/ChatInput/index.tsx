@@ -34,14 +34,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <Flex gap="middle">
         <Upload
           beforeUpload={(file) => {
-            console.log('Before upload file:', file); // Debug log
-            // Validate file type
-            const isImage = file.type.startsWith('image/');
-            if (!isImage) {
-              console.error('File is not an image:', file.type);
-              return false;
-            }
-            console.log('File type accepted:', file.type);
             // Trigger the image upload handler
             onImageUpload(file);
             return false; // Prevent actual upload

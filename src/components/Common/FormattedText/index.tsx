@@ -109,12 +109,12 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
   
   return (
     <div style={style}>
-      {lines.map((line) => {
-        const lineId = `line-${line.substring(0, 10)}-${Math.random().toString(36).substr(2, 9)}`;
+      {lines.map((line, index) => {
+        const lineId = `line-${index}-${line.substring(0, 20).replace(/\s+/g, '-')}`;
         return (
           <div key={lineId}>
             {formatText(line)}
-            {lines.indexOf(line) < lines.length - 1 && <br />}
+            {index < lines.length - 1 && <br />}
           </div>
         );
       })}
