@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Space, Typography, Card, Spin } from 'antd';
 import { CheckCircleOutlined, LoadingOutlined, CloseOutlined } from '@ant-design/icons';
+import FormattedText from 'components/Common/FormattedText';
 import { ImageUploadPreviewProps } from '../types';
 
 const { Text } = Typography;
@@ -100,16 +101,15 @@ const ImageUploadPreview: React.FC<ImageUploadPreviewProps> = ({ images, onRemov
                       </Text>
                       
                       {image.analysisResult && (
-                        <Text 
+                        <FormattedText
+                          content={image.analysisResult}
                           style={{ 
                             fontSize: '11px', 
                             color: '#c81f58',
                             fontWeight: 500,
                             display: 'block'
                           }}
-                        >
-                          {image.analysisResult}
-                        </Text>
+                        />
                       )}
                     </Space>
                   </div>

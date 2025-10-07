@@ -7,7 +7,7 @@ import expressionToContent from 'components/ContentRender/RenderExpressionConten
 const useImageAnalysis = () => {
   const getExpressionInfo = (expression: string): string => {
     const expressionInfo = expressionToContent[expression as keyof typeof expressionToContent];
-    return expressionInfo ? `${expressionInfo.Name}: ${expressionInfo.Description}` : '';
+    return expressionInfo ? `${expressionInfo.Name} - ${expressionInfo.Description}` : '';
   };
 
   const processImageWithAI = async (imageFile: File): Promise<string> => {
@@ -21,16 +21,14 @@ const useImageAnalysis = () => {
 
       if (characterResult.status === 'fulfilled' && characterResult.value.prediction?.length > 0) {
         const topCharacter = characterResult.value.prediction[0];
-        analysisResult += `Character: ${topCharacter.prediction}\n\n`;
+        analysisResult += `Character: ${topCharacter.prediction}\n`;
       }
 
       if (expressionResult.status === 'fulfilled' && expressionResult.value.prediction?.length > 0) {
         const topExpression = expressionResult.value.prediction[0];
-        analysisResult += `Expression: ${topExpression.prediction}\n\n`;
-        
         const expressionInfo = getExpressionInfo(topExpression.prediction);
         if (expressionInfo) {
-          analysisResult += `${expressionInfo}\n\n`;
+          analysisResult += `Expression: ${expressionInfo}\n`;
         }
       }
 
