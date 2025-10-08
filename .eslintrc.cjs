@@ -25,6 +25,7 @@ module.exports = {
     'react/function-component-definition': 'off',
     'react/react-in-jsx-scope': 'off',
     'react/jsx-filename-extension': [1, { extensions: ['.tsx', '.ts'] }],
+    'no-console': 'off',
     'import/extensions': [
       'error',
       'ignorePackages',
