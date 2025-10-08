@@ -1,42 +1,58 @@
 import { useNavigate } from 'react-router-dom';
-import heroImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
+import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
 import Button from 'components/Common/Button';
+import { Typography, Flex, Image } from 'antd';
+import { useStyleToken } from 'themeStyles';
+import useIsMobile from 'utils/isMobile';
+
+const { Text, Title } = Typography;
 
 function MainPage() {
   const navigate = useNavigate();
-
   const handleNavigate = (path: string) => {
     navigate(path);
   };
+  const styleToken = useStyleToken();
+  const isMobile = useIsMobile();
+
+  const pageHeadingStyle = isMobile ? styleToken.pageHeadingTextStyleMobile : styleToken.pageHeadingTextStyle;
+  const subtitleStyle = isMobile ? styleToken.subtitleTextStyleMobile : styleToken.subtitleTextStyle;
 
   return (
-    <div className="mb-xlarge">
-      <div className="font-4xlarge white mb-large">Home</div>
-      <div className="flex-between align-center gap-xlarge">
-        <div className="mx-auto">
-          <div className="font-4xlarge white">
+    <Flex vertical align="center" style={{ width: '100%' }}>
+      <Title style={styleToken.pageHeadingTextStyle}>Home</Title>
+      <Flex align="center" gap="3rem" vertical={isMobile}>
+        <Flex vertical align="left">
+          <Title style={pageHeadingStyle}>
             Discover the World of Cultures at KathakalAI
-          </div>
-          <div className="font-2xlarge gray my-small">
+          </Title>
+          <Text style={subtitleStyle}>
             Experience the beauty and diversity of cultures from all around the
             globe.
-          </div>
-          <div className="flex-center gap-large my-small">
+          </Text>
+          <Flex gap="large" vertical={isMobile}>
             <Button onClick={() => handleNavigate('/cultures')}>
-              Get Started
+              Learn More About Other Cultures
             </Button>
             <Button onClick={() => handleNavigate('/about-us')}>
-              Learn More →
+              Learn More About KathakalAI
             </Button>
-          </div>
-        </div>
-        <img
-          className="media-responsive-large"
-          src={heroImage}
+          </Flex>
+        </Flex>
+        <Image
+          src={kathakaliImage}
           alt="Cultural"
+          style={{ 
+            maxWidth: '100%', 
+            height: 'auto', 
+            borderRadius: '8px', // Optional for rounded corners
+            border: '2px solid #ccc', // Added border property
+            marginBottom: isMobile ? '2rem' : '0', // Added margin bottom for mobile
+           }}
+          preview={false}
         />
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }
 

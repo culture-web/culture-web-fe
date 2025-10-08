@@ -1,23 +1,39 @@
 import { test, expect } from '@playwright/test';
 import { baseUrl } from '../playwright.config';
 
-
 test('Cultures Page has KathakalAI Button in title', async ({ page }) => {
-    await page.goto("/cultures")
-    await expect(page.getByRole('button', { name: 'KathakalAI' })).toBeVisible()
+  await page.goto('/cultures');
+  await expect(page.getByRole('button', { name: 'KathakalAI' })).toBeVisible();
 });
 
+test('Clicking on Kathakali Read More brings us to Kathakali Information page', async ({
+  page,
+}) => {
+  await page.goto('/cultures');
+  await expect(
+    page.getByRole('button', { name: 'Read More About Kathakali' })).toBeVisible()
+  await page
+    .getByRole('button', { name: 'Read More About Kathakali' })
+    .click();
+  await expect(page.getByText('Kathakali', { exact: true })).toBeVisible();
 
-test('Clicking on Kathakali Read More brings us to Kathakali Information page', async ({ page }) => {
-    await page.goto("/cultures")
-    await expect(page.getByRole('button', { name: 'Kathakali Kathakali READ MORE' }).getByRole('button')).toBeVisible()
-    await page.getByRole('button', { name: 'Kathakali Kathakali READ MORE' }).getByRole('button').click()
-    await expect(page.getByText('Kathakali', { exact: true })).toBeVisible()
-
-    // Check url is /cultures/kathakali
-    expect(page.url()).toBe(`${baseUrl}/cultures/kathakali`)
+  // Check url is /cultures/kathakali
+  expect(page.url()).toBe(`${baseUrl}/cultures/kathakali`);
 });
 
-// TODO: Test able to upload Character Recognition File
+test('Clicking on Kootiyattam Read More brings us to Kootiyattam Information page', async ({
+  page,
+}) => {
+  await page.goto('/cultures');
+  await expect(
+    page
+    .getByRole('button', { name: 'Read More About Kootiyattam' })
+  ).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Read More About Kootiyattam' })
+    .click();
+  await expect(page.getByText('Kootiyattam', { exact: true })).toBeVisible();
 
-// TODO: Test able to upload Expression Recognition File
+  // Check url is /cultures/kootiyattam
+  expect(page.url()).toBe(`${baseUrl}/cultures/kootiyattam`);
+});

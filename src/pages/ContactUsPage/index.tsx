@@ -1,47 +1,95 @@
-import React, { FormEvent, useState } from 'react';
-import Button from 'components/Common/Button';
-import './index.css';
+import React, { useState } from 'react';
 import { EMAIL_API_KEY } from 'configs/env.config';
+import { Form, message, Typography, Flex } from 'antd';
+import Button from 'components/Common/Button';
+import { useStyleToken } from 'themeStyles';
+import FormInput from './FormItem';
+
+const { Title, Text } = Typography;
 
 const ContactUsPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // TODO: Handle form submission
-    const formData = new FormData(event.currentTarget);
+  const [loading, setLoading] = useState(false);
+  const styleToken = useStyleToken();
 
-    const response = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      body: formData,
-    });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSubmit = async (values: any) => {
+    setLoading(true);
 
-    if (response.ok) {
-      setSubmitted(true);
-    } else {
-      // TODO: Handle the error
+    try {
+      // Example POST request to Web3Forms API
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...values,
+          access_key: EMAIL_API_KEY, // Your API key here
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+        message.success('Your message has been sent.');
+      } else {
+        message.error('Something went wrong. Please try again later.');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      message.error('An error occurred. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
-
   return (
-    <div className="contactUsPage">
-      <h1>Contact Us</h1>
-      <p>Any questions? Drop us a message!</p>
-      <form onSubmit={handleSubmit} action="https://api.web3forms.com/submit" method="POST" className="contactForm">
-      <input type="hidden" name="access_key" value={EMAIL_API_KEY} />
-      <div className="formRow">
-        <input type="text" name="name" placeholder="Name" required autoComplete="off" />
-      </div>
-      <div className="formRow">
-        <input type="tel" name="number" placeholder="Phone Number" autoComplete="off" />
-      </div>
-      <div className="formRow">
-        <input type="email" name="email" placeholder="Email" required autoComplete="off" />
-      </div>
-      <textarea name="message" placeholder="Write your inquiry..." required autoComplete="off" />
-        <Button type="submit">Send Message</Button>
-        {submitted && <p>Thank you! Your message has been sent.</p>}
-      </form>
-    </div>
+    <Flex vertical align="center">
+      <Title style={styleToken.pageHeadingTextStyle}>Contact Us</Title>
+      <Text style={styleToken.subtitleTextStyle}>
+        Any questions? Feel free to drop us a message below!
+      </Text>
+      <Form
+        onFinish={handleSubmit}
+        layout="vertical"
+        style={{ maxWidth: '600px', width: '100%' }}
+      >
+        <FormInput
+          name="name"
+          placeholder="Name"
+          message="Please enter your name"
+        />
+        <FormInput
+          name="number"
+          required={false}
+          type="tel"
+          placeholder="Phone Number"
+          message="Please enter your phone number"
+        />
+        <FormInput
+          name="email"
+          type="email"
+          placeholder="Email"
+          message="Please enter a valid email"
+        />
+        <FormInput
+          rows={4}
+          name="message"
+          placeholder="Write your inquiry..."
+          message="Please enter your message"
+        />
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={loading}>
+            Send Message
+          </Button>
+        </Form.Item>
+
+        {submitted && (
+          <Text style={styleToken.thankyouTextStyle}>
+            Thank you! Your message has been sent!
+          </Text>
+        )}
+      </Form>
+    </Flex>
   );
 };
 

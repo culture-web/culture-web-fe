@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Carousel, Card, Spin } from 'antd';
+import { Carousel, Card, Spin, Typography, Flex, Image } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import charactersData from 'assets/data/characters.json';
 import Button from 'components/Common/Button';
 import { PredictionMultiple, Character } from 'types/interface';
 import toPascalCase from 'utils/toPascalCase';
+import { useColourToken, useStyleToken } from 'themeStyles';
 import * as characterImages from './images';
-import './index.css';
+import RenderForOne from './RenderForOne';
+
+const { Title, Text } = Typography;
 
 const RenderCharacterContent: React.FC<{
   predictionMultiple: PredictionMultiple;
@@ -14,6 +17,8 @@ const RenderCharacterContent: React.FC<{
 }> = ({ predictionMultiple, file }) => {
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(true);
+  const colourToken = useColourToken();
+  const styleToken = useStyleToken();
 
   useEffect(() => {
     if (file) {
@@ -27,6 +32,15 @@ const RenderCharacterContent: React.FC<{
 
   if (loading) {
     return <Spin indicator={<LoadingOutlined spin />} />;
+  }
+
+  if (predictionMultiple.prediction.length === 1) {
+    return (
+      <RenderForOne
+        prediction={predictionMultiple.prediction[0]}
+        imageUrl={imageUrl}
+      />
+    );
   }
 
   return (
@@ -46,46 +60,47 @@ const RenderCharacterContent: React.FC<{
         return (
           <Card
             key={characterInfo.name}
-            className="mt-base"
             bordered={false}
             styles={{
-              body: { backgroundColor: '#1c1e24' },
+              body: { backgroundColor: colourToken.darkGray },
             }}
           >
-            <div>
-              <div className="font-xlarge white mb-base">
+            <Flex align="center" vertical key={characterInfo.name}>
+              <Title
+                style={styleToken.renderContent.renderSectionHeadingTextStyle}
+              >
                 {characterInfo.name}
-              </div>
-            </div>
-            <div>
+              </Title>
               <div
                 style={{
-                  // width: `${prediction.location.width}px`,
-                  // height: `${prediction.location.height}px`,
+                  width: `${prediction.location.width + 50}px`,
+                  height: `${prediction.location.height + 50}px`,
                   backgroundImage: `url(${imageUrl})`,
                   backgroundPosition: `-${prediction.location.x}px -${prediction.location.y}px`,
                 }}
-                className="cropImage"
               />
-              <div className="font-base gray mb-base">
-                {characterInfo.shortDescription}
-              </div>
-              <img
-                src={characterImage}
-                alt={characterInfo.name}
-                className="characterImage"
-              />
-              <div className="flex-center font-base gray gap-base">
-                <div className="font-bold white">Examples:</div>
-                <div>{characterInfo.examples}</div>
-              </div>
-              <Button
-                className="text-center mt-base mb-base"
-                onClick={() => window.open(characterInfo.url, '_blank')}
+              <Text
+                style={styleToken.renderContent.renderSectionContentTextStyle}
               >
+                {characterInfo.shortDescription}
+              </Text>
+              <Flex align="center" vertical>
+                <Image src={characterImage} alt={characterInfo.name} />
+                <Text
+                  style={styleToken.renderContent.renderSectionContentTextStyle}
+                >
+                  Example:
+                </Text>
+                <Text
+                  style={styleToken.renderContent.renderSectionContentTextStyle}
+                >
+                  {characterInfo.examples}
+                </Text>
+              </Flex>
+              <Button onClick={() => window.open(characterInfo.url, '_blank')}>
                 Find Out More
               </Button>
-            </div>
+            </Flex>
           </Card>
         );
       })}

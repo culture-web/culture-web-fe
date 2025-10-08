@@ -75,7 +75,7 @@ jobs:
 
       # Step 7: Upload Playwright report (optional)
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
@@ -83,7 +83,7 @@ jobs:
 
       # Step 8: Upload Playwright test results (optional)
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure() # Only upload if tests fail
         with:
           name: test-results
