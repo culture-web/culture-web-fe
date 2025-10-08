@@ -22,39 +22,6 @@ interface Match {
 }
 
 const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
-  const renderLine = (line: string, lineIndex: number): React.ReactNode => {
-    // Check if line is a heading
-    const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
-    if (headingMatch) {
-      const level = headingMatch[1].length;
-      const headingText = headingMatch[2];
-      
-      // Apply inline formatting to heading text
-      const formattedHeadingContent = formatInlineText(headingText, `heading-${lineIndex}`);
-      
-      return (
-        <Title 
-          key={`heading-${lineIndex}`} 
-          level={Math.min(level, 5) as 1 | 2 | 3 | 4 | 5}
-          style={{ 
-            marginTop: level === 1 ? '24px' : '16px',
-            marginBottom: '8px',
-            color: '#2b2d38'
-          }}
-        >
-          {formattedHeadingContent}
-        </Title>
-      );
-    }
-
-    // Regular line with inline formatting
-    return (
-      <div key={`line-${lineIndex}`}>
-        {formatInlineText(line, `line-${lineIndex}`)}
-      </div>
-    );
-  };
-
   const formatInlineText = (text: string, keyPrefix: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
     let currentIndex = 0;
@@ -93,8 +60,8 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
     // Find all matches
     patterns.forEach(({ regex, render }) => {
       const regexCopy = new RegExp(regex.source, regex.flags);
-      let match;
-      while ((match = regexCopy.exec(text)) !== null) {
+      let match = regexCopy.exec(text);
+      while (match !== null) {
         allMatches.push({
           start: match.index,
           end: match.index + match[0].length,
@@ -102,6 +69,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
           render,
           innerText: match[1],
         });
+        match = regexCopy.exec(text);
       }
     });
 
@@ -124,11 +92,13 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
       if (match.start > currentIndex) {
         const beforeText = text.slice(currentIndex, match.start);
         if (beforeText) {
-          parts.push(<span key={`${keyPrefix}-text-${partKey++}`}>{beforeText}</span>);
+          partKey += 1;
+          parts.push(<span key={`${keyPrefix}-text-${partKey}`}>{beforeText}</span>);
         }
       }
       // Add the formatted match
-      parts.push(match.render(match.innerText, `${keyPrefix}-format-${partKey++}`));
+      partKey += 1;
+      parts.push(match.render(match.innerText, `${keyPrefix}-format-${partKey}`));
       currentIndex = match.end;
     });
 
@@ -136,11 +106,45 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
     if (currentIndex < text.length) {
       const remainingText = text.slice(currentIndex);
       if (remainingText) {
-        parts.push(<span key={`${keyPrefix}-text-${partKey++}`}>{remainingText}</span>);
+        partKey += 1;
+        parts.push(<span key={`${keyPrefix}-text-${partKey}`}>{remainingText}</span>);
       }
     }
 
     return parts.length > 0 ? parts : [<span key={`${keyPrefix}-default`}>{text}</span>];
+  };
+
+  const renderLine = (line: string, lineIndex: number): React.ReactNode => {
+    // Check if line is a heading
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const headingText = headingMatch[2];
+      
+      // Apply inline formatting to heading text
+      const formattedHeadingContent = formatInlineText(headingText, `heading-${lineIndex}`);
+      
+      return (
+        <Title 
+          key={`heading-${lineIndex}`} 
+          level={Math.min(level, 5) as 1 | 2 | 3 | 4 | 5}
+          style={{ 
+            marginTop: level === 1 ? '24px' : '16px',
+            marginBottom: '8px',
+            color: '#2b2d38'
+          }}
+        >
+          {formattedHeadingContent}
+        </Title>
+      );
+    }
+
+    // Regular line with inline formatting
+    return (
+      <div key={`line-${lineIndex}`}>
+        {formatInlineText(line, `line-${lineIndex}`)}
+      </div>
+    );
   };
 
   // Split content by line breaks and handle empty lines
@@ -150,7 +154,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
     <div style={style}>
       {lines.map((line, index) => {
         if (line.trim() === '') {
-          return <div key={`empty-${index}`} style={{ height: '16px' }} />;
+          return <div key={`empty-line-${index}`} style={{ height: '16px' }} />;
         }
         return renderLine(line, index);
       })}
