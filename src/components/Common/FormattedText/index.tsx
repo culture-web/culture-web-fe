@@ -114,7 +114,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
     return parts.length > 0 ? parts : [<span key={`${keyPrefix}-default`}>{text}</span>];
   };
 
-  const renderLine = (line: string, lineIndex: number): React.ReactNode => {
+  const renderLine = (line: string, contentKey: string): React.ReactNode => {
     // Check if line is a heading
     const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
     if (headingMatch) {
@@ -122,11 +122,11 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
       const headingText = headingMatch[2];
       
       // Apply inline formatting to heading text
-      const formattedHeadingContent = formatInlineText(headingText, `heading-${lineIndex}`);
+      const formattedHeadingContent = formatInlineText(headingText, `heading-${contentKey}`);
       
       return (
         <Title 
-          key={`heading-${lineIndex}`} 
+          key={`heading-${contentKey}`} 
           level={Math.min(level, 5) as 1 | 2 | 3 | 4 | 5}
           style={{ 
             marginTop: level === 1 ? '24px' : '16px',
@@ -141,22 +141,25 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
 
     // Regular line with inline formatting
     return (
-      <div key={`line-${lineIndex}`}>
-        {formatInlineText(line, `line-${lineIndex}`)}
+      <div key={`line-${contentKey}`}>
+        {formatInlineText(line, `line-${contentKey}`)}
       </div>
     );
   };
 
   // Split content by line breaks and handle empty lines
   const lines = content.split(/\n/);
+  let emptyLineCounter = 0;
   
   return (
     <div style={style}>
-      {lines.map((line, index) => {
+      {lines.map((line) => {
         if (line.trim() === '') {
-          return <div key={`empty-line-${index}`} style={{ height: '16px' }} />;
+          emptyLineCounter += 1;
+          return <div key={`empty-line-${emptyLineCounter}`} style={{ height: '16px' }} />;
         }
-        return renderLine(line, index);
+        const contentKey = line.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_') || 'line';
+        return renderLine(line, contentKey);
       })}
     </div>
   );

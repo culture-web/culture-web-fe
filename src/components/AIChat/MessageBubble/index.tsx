@@ -1,8 +1,8 @@
 import React from 'react';
 import { Avatar } from 'antd';
 import { RobotOutlined, UserOutlined } from '@ant-design/icons';
-import { MessageBubbleProps } from '../types';
 import ChatbotResponseDisplay from 'components/AIChat/ChatbotResponseDisplay';
+import { MessageBubbleProps } from '../types';
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isUser = message.type === 'user';

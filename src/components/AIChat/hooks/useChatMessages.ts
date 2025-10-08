@@ -42,13 +42,11 @@ const useChatMessages = () => {
   
   const { processImageWithAI } = useImageAnalysis();
 
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       uploadedImages.forEach(image => {
         URL.revokeObjectURL(image.url);
       });
-    };
-  }, [uploadedImages]);
+    }, [uploadedImages]);
 
   const handleImageUpload = async (file: File) => {
     const imageId = Date.now().toString();
