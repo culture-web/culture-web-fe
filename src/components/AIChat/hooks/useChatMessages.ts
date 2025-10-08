@@ -127,7 +127,7 @@ const useChatMessages = () => {
         combinedAnalysis = currentImages
           .filter(img => img.analysisResult && img.analysisResult !== 'Analysis failed')
           .map((img, index) => `Image ${index + 1}: ${img.analysisResult}`)
-          .join('\\n\\n');
+          .join('\n\n');
       }
 
       // Send to chat API with context - use the first image file for compatibility

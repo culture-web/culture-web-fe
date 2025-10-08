@@ -65,7 +65,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           type="primary"
           icon={<SendOutlined />}
           onClick={onSend}
-          disabled={!value.trim() && uploadedImages.length === 0 || isLoading}
+          disabled={(!value.trim() && uploadedImages.length === 0) || isLoading}
           style={{ 
             backgroundColor: '#c81f58',
             borderColor: '#c81f58',
