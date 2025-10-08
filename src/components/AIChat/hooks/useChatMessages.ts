@@ -113,10 +113,17 @@ const useChatMessages = () => {
 
     setMessages(prev => [...prev, userMessage]);
     
-    // Clear input
+    // Clear input and images immediately after sending
     const currentInput = inputValue;
     const currentImages = [...uploadedImages];
     setInputValue('');
+    
+    // Clear uploaded images immediately when message is sent
+    currentImages.forEach(image => {
+      URL.revokeObjectURL(image.url);
+    });
+    setUploadedImages([]);
+    
     setIsLoading(true);
 
     try {
