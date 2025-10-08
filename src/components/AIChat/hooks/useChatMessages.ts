@@ -103,7 +103,6 @@ const useChatMessages = () => {
 
     const userMessageId = Date.now().toString();
     
-    // Create message with images if any
     const userMessage: Message = {
       id: userMessageId,
       type: 'user',
@@ -113,12 +112,10 @@ const useChatMessages = () => {
 
     setMessages(prev => [...prev, userMessage]);
     
-    // Clear input and images immediately after sending
     const currentInput = inputValue;
     const currentImages = [...uploadedImages];
     setInputValue('');
-    
-    // Clear uploaded images immediately when message is sent
+
     currentImages.forEach(image => {
       URL.revokeObjectURL(image.url);
     });
@@ -129,7 +126,6 @@ const useChatMessages = () => {
     try {
       let combinedAnalysis = '';
       
-      // If we have uploaded images, use their analysis results
       if (currentImages.length > 0) {
         combinedAnalysis = currentImages
           .filter(img => img.analysisResult && img.analysisResult !== 'Analysis failed')
@@ -137,11 +133,9 @@ const useChatMessages = () => {
           .join('\n\n');
       }
 
-      // Send to chat API with context - use the first image file for compatibility
       const firstImageFile = currentImages.length > 0 ? currentImages[0].file : undefined;
       const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis);
 
-      // Add AI response
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
