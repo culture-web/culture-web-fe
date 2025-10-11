@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
 import Button from 'components/Common/Button';
+import EventsCalendar from 'components/Common/EventsCalendar';
 import { Typography, Flex, Image } from 'antd';
 import { useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
+import { calendarEventData } from 'assets/data/events';
 
 const { Text, Title } = Typography;
 
@@ -51,6 +53,19 @@ function MainPage() {
            }}
           preview={false}
         />
+      </Flex>
+      
+      {/* Events Calendar Section */}
+      <Flex 
+        vertical 
+        align="center" 
+        style={{ 
+          width: '100%', 
+          marginTop: '4rem',
+          padding: isMobile ? '0 1rem' : '0 2rem',
+        }}
+      >
+        <EventsCalendar eventData={calendarEventData} />
       </Flex>
     </Flex>
   );
