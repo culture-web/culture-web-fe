@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
 import Button from 'components/Common/Button';
+import EventsCalendar from 'components/Common/EventsCalendar';
 import { Typography, Flex, Image } from 'antd';
 import { useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
@@ -51,6 +52,27 @@ function MainPage() {
            }}
           preview={false}
         />
+      </Flex>
+
+      {/* Cultural Events Calendar Section */}
+      <Flex 
+        vertical 
+        align="center" 
+        style={{ 
+          width: '100%', 
+          marginTop: '4rem',
+          marginBottom: '2rem'
+        }}
+      >
+        <Title level={2} style={pageHeadingStyle}>
+          Upcoming Cultural Events
+        </Title>
+        <Text style={subtitleStyle}>
+          Discover and participate in various cultural performances and workshops
+        </Text>
+        <div style={{ width: '100%', maxWidth: '1000px', marginTop: '2rem' }}>
+          <EventsCalendar />
+        </div>
       </Flex>
     </Flex>
   );
