@@ -80,19 +80,17 @@ function MainPage() {
     };
   }, []);
 
-  // Fetch events from API
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         setEventsLoading(true);
         setEventsError(null);
         
-        // Validate BACKEND_URI before using it
         if (!BACKEND_URI || BACKEND_URI.trim() === '') {
           throw new Error('Events service is not properly configured. Please contact support.');
         }
         
-        const url = new URL('/api/events', '');
+        const url = new URL('/api/events', BACKEND_URI);
         url.searchParams.append('upcoming', 'true');
         url.searchParams.append('limit', '50');
         url.searchParams.append('offset', '0');
