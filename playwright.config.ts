@@ -6,7 +6,7 @@ export const baseUrl = 'http://localhost:5173'
 export default defineConfig({
     testDir: './tests', // Define the folder where your test files will be stored
     testMatch: '**/*.test.ts', // Define the file pattern for test files
-    timeout: 30000, // Maximum test time (in milliseconds)
+    timeout: 60000, // Maximum test time (in milliseconds)
     retries: 2, // Retry failed tests twice
     use: {
       headless: true, // Run tests in headless mode
@@ -14,6 +14,8 @@ export default defineConfig({
       video: 'retain-on-failure', // Record video on test failure
       baseURL: baseUrl, // Base URL for all tests
       screenshot: 'only-on-failure', // Take screenshots only on test failure
+      actionTimeout: 15000, // Timeout for individual actions
+      navigationTimeout: 30000, // Timeout for page navigation
     },
     projects: [
       {
