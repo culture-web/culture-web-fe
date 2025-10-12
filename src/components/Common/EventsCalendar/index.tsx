@@ -1,18 +1,7 @@
 import { useState } from 'react';
 import { useColourToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
-
-interface Event {
-  id: number;
-  title: string;
-  description: string | null;
-  start_time: string; // ISO 8601 format with timezone
-  end_time: string | null; // ISO 8601 format with timezone
-  location: string | null;
-  url: string; // Unique URL for the event
-  category: string | null;
-  scraped_at: string; // ISO 8601 format with timezone
-}
+import { Event } from 'types/interface';
 
 interface EventsCalendarProps {
   events: Event[];
@@ -525,12 +514,37 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
           gap: '16px'
         }}>
           <div style={{
-            color: colourToken.red || '#ff474c',
-            fontSize: '16px',
-            fontWeight: 500,
-            textAlign: 'center'
+            display: 'flex',
+            flexDirection: 'column' as const,
+            alignItems: 'center',
+            gap: '12px'
           }}>
-            Failed to load events: {error}
+            <div style={{
+              fontSize: '48px',
+              opacity: 0.8,
+            }}>
+              📅
+            </div>
+            <div style={{
+              color: colourToken.primary,
+              fontSize: '18px',
+              fontWeight: 600,
+              textAlign: 'center',
+              marginBottom: '4px'
+            }}>
+              Oops! Something went wrong
+            </div>
+            <div style={{
+              color: colourToken.primary,
+              fontSize: '14px',
+              fontWeight: 400,
+              textAlign: 'center',
+              maxWidth: '400px',
+              lineHeight: 1.5,
+              opacity: 0.9
+            }}>
+              {error}
+            </div>
           </div>
           <button
             type="button"
@@ -539,14 +553,26 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
               color: colourToken.white,
               border: 'none',
               borderRadius: '8px',
-              padding: '8px 16px',
+              padding: '10px 20px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: 500
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colourToken.pink;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colourToken.pinkLight;
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
             onClick={() => window.location.reload()}
           >
-            Retry
+            Try Again
           </button>
         </div>
       )}

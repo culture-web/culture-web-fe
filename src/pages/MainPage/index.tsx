@@ -7,30 +7,9 @@ import { Typography, Flex, Image } from 'antd';
 import { useStyleToken, useColourToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
 import BACKEND_URI from 'configs/env.config';
+import { Event, GetEventsApiResponse } from 'types/interface';
 
 const { Text, Title } = Typography;
-
-interface Event {
-  id: number;
-  title: string;
-  description: string | null;
-  start_time: string; // ISO 8601 format with timezone
-  end_time: string | null; // ISO 8601 format with timezone
-  location: string | null;
-  url: string; // Unique URL for the event
-  category: string | null;
-  scraped_at: string; // ISO 8601 format with timezone
-}
-
-interface ApiResponse {
-  success: boolean;
-  data: Event[];
-  pagination: {
-    limit: number;
-    offset: number;
-    count: number;
-  };
-}
 
 function MainPage() {
   const navigate = useNavigate();
@@ -101,76 +80,6 @@ function MainPage() {
     };
   }, []);
 
-  // Sample events for fallback when API is not available
-  const getSampleEvents = (): Event[] => [
-    {
-      id: 1,
-      title: 'Kathakali Performance - Ramayana',
-      start_time: new Date(2025, 9, 15, 19, 0).toISOString(), // October 15, 2025, 7:00 PM
-      end_time: new Date(2025, 9, 15, 21, 0).toISOString(), // October 15, 2025, 9:00 PM
-      location: 'Cultural Center Main Hall',
-      description: 'Experience the epic tale of Ramayana through traditional Kathakali dance-drama.',
-      category: 'Kathakali',
-      url: 'kathakali-ramayana-2025',
-      scraped_at: new Date().toISOString()
-    },
-    {
-      id: 2,
-      title: 'Kootiyattam Classical Theater Workshop',
-      start_time: new Date(2025, 9, 18, 15, 0).toISOString(), // October 18, 2025, 3:00 PM
-      end_time: new Date(2025, 9, 20, 17, 0).toISOString(), // October 20, 2025, 5:00 PM (3-day workshop)
-      location: 'Heritage Theater',
-      description: 'Learn about the ancient Sanskrit theater form recognized by UNESCO.',
-      category: 'Kootiyattam',
-      url: 'kootiyattam-workshop-2025',
-      scraped_at: new Date().toISOString()
-    },
-    {
-      id: 3,
-      title: 'Bharatanatyam Evening Recital',
-      start_time: new Date(2025, 9, 22, 18, 30).toISOString(), // October 22, 2025, 6:30 PM
-      end_time: new Date(2025, 9, 22, 20, 30).toISOString(), // October 22, 2025, 8:30 PM
-      location: 'Dance Studio A',
-      description: 'Classical Tamil dance performance featuring traditional compositions.',
-      category: 'Bharatanatyam',
-      url: 'bharatanatyam-recital-2025',
-      scraped_at: new Date().toISOString()
-    },
-    {
-      id: 4,
-      title: 'Kathakali Character Recognition Demo',
-      start_time: new Date(2025, 9, 28, 18, 0).toISOString(), // October 28, 2025, 6:00 PM
-      end_time: new Date(2025, 9, 28, 19, 30).toISOString(), // October 28, 2025, 7:30 PM
-      location: 'Innovation Lab',
-      description: 'Interactive demonstration of AI-powered Kathakali character recognition.',
-      category: 'Kathakali',
-      url: 'kathakali-ai-demo-2025',
-      scraped_at: new Date().toISOString()
-    },
-    {
-      id: 5,
-      title: 'Odissi Dance Festival',
-      start_time: new Date(2025, 10, 2, 16, 0).toISOString(), // November 2, 2025, 4:00 PM
-      end_time: new Date(2025, 10, 4, 20, 0).toISOString(), // November 4, 2025, 8:00 PM (3-day festival)
-      location: 'Cultural Center Studio B',
-      description: 'Three-day festival celebrating Odissi, the classical dance of Odisha.',
-      category: 'Odissi',
-      url: 'odissi-festival-2025',
-      scraped_at: new Date().toISOString()
-    },
-    {
-      id: 6,
-      title: 'Traditional Carnatic Music Concert',
-      start_time: new Date(2025, 10, 5, 19, 30).toISOString(), // November 5, 2025, 7:30 PM
-      end_time: new Date(2025, 10, 5, 22, 0).toISOString(), // November 5, 2025, 10:00 PM
-      location: 'Heritage Auditorium',
-      description: 'An evening of classical South Indian music featuring renowned artists.',
-      category: 'Music',
-      url: 'carnatic-concert-2025',
-      scraped_at: new Date().toISOString()
-    }
-  ];
-
   // Fetch events from API
   useEffect(() => {
     const fetchEvents = async () => {
@@ -178,7 +87,12 @@ function MainPage() {
         setEventsLoading(true);
         setEventsError(null);
         
-        const url = new URL('/api/events', BACKEND_URI);
+        // Validate BACKEND_URI before using it
+        if (!BACKEND_URI || BACKEND_URI.trim() === '') {
+          throw new Error('Events service is not properly configured. Please contact support.');
+        }
+        
+        const url = new URL('/api/events', '');
         url.searchParams.append('upcoming', 'true');
         url.searchParams.append('limit', '50');
         url.searchParams.append('offset', '0');
@@ -186,39 +100,42 @@ function MainPage() {
         const response = await fetch(url.toString());
         
         if (!response.ok) {
-          // If endpoint doesn't exist, fall back to sample data
           if (response.status === 404) {
-            console.warn('API endpoint /api/events not found, using sample data');
-            setEvents(getSampleEvents());
-            setEventsLoading(false);
-            return;
+            throw new Error('We couldn\'t find the events calendar. Please try again later or contact support if the problem persists.');
           }
-          throw new Error(`HTTP error! status: ${response.status}`);
+          if (response.status >= 500) {
+            throw new Error('Our events service is temporarily unavailable. Please try again in a few minutes.');
+          }
+          if (response.status === 403) {
+            throw new Error('Access to events is currently restricted. Please contact support for assistance.');
+          }
+          throw new Error('We\'re having trouble loading events right now. Please refresh the page or try again later.');
         }
         
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
-          // If response is not JSON (likely HTML error page), fall back to sample data
-          console.warn('API endpoint returned non-JSON response, using sample data');
-          setEvents(getSampleEvents());
-          setEventsLoading(false);
-          return;
+          throw new Error('We received an unexpected response from our events service. Please try refreshing the page.');
         }
         
-        const data: ApiResponse = await response.json();
-
-        console.log("events: ", data);
+        const data: GetEventsApiResponse = await response.json();
         
         if (data.success) {
           setEvents(data.data);
         } else {
-          throw new Error('API returned success: false');
+          throw new Error('There was a problem loading the events calendar. Please try again later.');
         }
       } catch (err) {
         console.error('Error fetching events:', err);
-        // Fall back to sample data on any error
-        console.warn('Falling back to sample data due to API error');
-        setEvents(getSampleEvents());
+        let userMessage = 'We\'re having trouble loading events right now. Please try again later.';
+        
+        if (err instanceof Error) {
+          userMessage = err.message;
+        } else if (typeof err === 'string') {
+          userMessage = 'We\'re having trouble connecting to our events service. Please check your internet connection and try again.';
+        }
+        
+        setEventsError(userMessage);
+        setEvents([]);
       } finally {
         setEventsLoading(false);
       }
