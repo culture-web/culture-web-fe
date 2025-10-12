@@ -102,17 +102,16 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
   const calendarDayStyle = {
     backgroundColor: colourToken.lightGray,
     borderRadius: '8px',
-    padding: isMobile ? '8px 4px' : '12px 8px',
-    textAlign: 'center' as const,
+    padding: isMobile ? '4px 2px' : '6px 4px',
+    textAlign: 'left' as const,
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     position: 'relative' as const,
-    minHeight: isMobile ? '50px' : '60px',
+    minHeight: isMobile ? '80px' : '100px',
     display: 'flex',
     flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
     border: '1px solid transparent',
+    overflow: 'hidden',
   };
 
   const calendarDayHoverStyle = {
@@ -136,18 +135,31 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
     color: colourToken.primary,
     fontSize: isMobile ? '14px' : '16px',
     fontWeight: 500,
+    marginBottom: '4px',
+    alignSelf: 'flex-start',
   };
 
-  const eventDotStyle = {
-    width: '6px',
-    height: '6px',
+  const eventBlockStyle = {
     backgroundColor: colourToken.pinkLight,
-    borderRadius: '50%',
-    marginTop: '4px',
+    color: colourToken.white,
+    fontSize: isMobile ? '10px' : '11px',
+    fontWeight: 500,
+    padding: '2px 4px',
+    marginBottom: '2px',
+    borderRadius: '3px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
   };
 
-  const eventDotSelectedStyle = {
-    backgroundColor: colourToken.white,
+  const moreEventsStyle = {
+    fontSize: isMobile ? '9px' : '10px',
+    color: colourToken.gray,
+    fontWeight: 500,
+    padding: '1px 4px',
+    cursor: 'pointer',
   };
 
   const emptyDayStyle = {
@@ -282,6 +294,91 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
 
   const getEventsForDate = (date: Date) => allEvents.filter(event => isEventOnDate(event, date));
 
+  const getEventsByCategory = (eventsList: Event[]) => {
+    const categories = ['Kathakali', 'Kootiyattam', 'Bharatanatyam', 'Odissi', 'Music', 'Other'];
+    const colors = [colourToken.pinkLight, colourToken.pink, '#9C27B0', '#673AB7', '#3F51B5', '#607D8B'];
+    
+    return eventsList.map(event => ({
+      ...event,
+      color: colors[categories.indexOf(event.category || 'Other')] || colors[5]
+    }));
+  };
+
+  const renderEventBlocks = (dayEvents: Event[], date: Date) => {
+    const maxVisible = isMobile ? 2 : 3;
+    const eventsWithColors = getEventsByCategory(dayEvents);
+    const visibleEvents = eventsWithColors.slice(0, maxVisible);
+    const remainingCount = dayEvents.length - maxVisible;
+
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        {visibleEvents.map((event) => {
+          const startTime = getEventStartDate(event);
+          const endTime = getEventEndDate(event);
+          const isMultiDay = startTime.toDateString() !== endTime.toDateString();
+          
+          return (
+            <div
+              key={event.id}
+              style={{
+                ...eventBlockStyle,
+                backgroundColor: event.color,
+              }}
+              onMouseEnter={(e) => {
+                Object.assign(e.currentTarget.style, {
+                  backgroundColor: event.color,
+                  transform: 'scale(1.02)',
+                  zIndex: 10,
+                });
+              }}
+              onMouseLeave={(e) => {
+                Object.assign(e.currentTarget.style, {
+                  backgroundColor: event.color,
+                  transform: 'scale(1)',
+                  zIndex: 1,
+                });
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedDate(date);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation();
+                  setSelectedDate(date);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              title={`${event.title} - ${isMultiDay ? 'Multi-day event' : startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`}
+            >
+              {isMultiDay ? `📅 ${event.title}` : event.title}
+            </div>
+          );
+        })}
+        {remainingCount > 0 && (
+          <div 
+            style={moreEventsStyle}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedDate(date);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation();
+                setSelectedDate(date);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            +{remainingCount} more
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const navigateMonth = (direction: number) => {
     setCurrentDate(prev => {
       const newDate = new Date(prev);
@@ -344,7 +441,7 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
           tabIndex={0}
         >
           <span style={dayNumberStyle}>{day}</span>
-          {hasEvents && <div style={isSelected ? {...eventDotStyle, ...eventDotSelectedStyle} : eventDotStyle} />}
+          {hasEvents && renderEventBlocks(dayEvents, date)}
         </div>
       );
     }
@@ -372,7 +469,7 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
         <h4 style={{ color: colourToken.primary, margin: '0 0 16px 0', fontSize: '18px' }}>
           Events on {selectedDate.toLocaleDateString()}
         </h4>
-        {dayEvents.map(event => {
+        {dayEvents.map((event: Event) => {
           const startTime = getEventStartDate(event);
           const endTime = getEventEndDate(event);
           const isMultiDay = startTime.toDateString() !== endTime.toDateString();
