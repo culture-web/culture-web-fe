@@ -6,8 +6,31 @@ import EventsCalendar from 'components/Common/EventsCalendar';
 import { Typography, Flex, Image } from 'antd';
 import { useStyleToken, useColourToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
+import BACKEND_URI from 'configs/env.config';
 
 const { Text, Title } = Typography;
+
+interface Event {
+  id: number;
+  title: string;
+  description: string | null;
+  start_time: string; // ISO 8601 format with timezone
+  end_time: string | null; // ISO 8601 format with timezone
+  location: string | null;
+  url: string; // Unique URL for the event
+  category: string | null;
+  scraped_at: string; // ISO 8601 format with timezone
+}
+
+interface ApiResponse {
+  success: boolean;
+  data: Event[];
+  pagination: {
+    limit: number;
+    offset: number;
+    count: number;
+  };
+}
 
 function MainPage() {
   const navigate = useNavigate();
@@ -20,6 +43,9 @@ function MainPage() {
 
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [isHeroVisible, setIsHeroVisible] = useState(true);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +99,132 @@ function MainPage() {
         observer.unobserve(currentHeroRef);
       }
     };
+  }, []);
+
+  // Sample events for fallback when API is not available
+  const getSampleEvents = (): Event[] => [
+    {
+      id: 1,
+      title: 'Kathakali Performance - Ramayana',
+      start_time: new Date(2025, 9, 15, 19, 0).toISOString(), // October 15, 2025, 7:00 PM
+      end_time: new Date(2025, 9, 15, 21, 0).toISOString(), // October 15, 2025, 9:00 PM
+      location: 'Cultural Center Main Hall',
+      description: 'Experience the epic tale of Ramayana through traditional Kathakali dance-drama.',
+      category: 'Kathakali',
+      url: 'kathakali-ramayana-2025',
+      scraped_at: new Date().toISOString()
+    },
+    {
+      id: 2,
+      title: 'Kootiyattam Classical Theater Workshop',
+      start_time: new Date(2025, 9, 18, 15, 0).toISOString(), // October 18, 2025, 3:00 PM
+      end_time: new Date(2025, 9, 20, 17, 0).toISOString(), // October 20, 2025, 5:00 PM (3-day workshop)
+      location: 'Heritage Theater',
+      description: 'Learn about the ancient Sanskrit theater form recognized by UNESCO.',
+      category: 'Kootiyattam',
+      url: 'kootiyattam-workshop-2025',
+      scraped_at: new Date().toISOString()
+    },
+    {
+      id: 3,
+      title: 'Bharatanatyam Evening Recital',
+      start_time: new Date(2025, 9, 22, 18, 30).toISOString(), // October 22, 2025, 6:30 PM
+      end_time: new Date(2025, 9, 22, 20, 30).toISOString(), // October 22, 2025, 8:30 PM
+      location: 'Dance Studio A',
+      description: 'Classical Tamil dance performance featuring traditional compositions.',
+      category: 'Bharatanatyam',
+      url: 'bharatanatyam-recital-2025',
+      scraped_at: new Date().toISOString()
+    },
+    {
+      id: 4,
+      title: 'Kathakali Character Recognition Demo',
+      start_time: new Date(2025, 9, 28, 18, 0).toISOString(), // October 28, 2025, 6:00 PM
+      end_time: new Date(2025, 9, 28, 19, 30).toISOString(), // October 28, 2025, 7:30 PM
+      location: 'Innovation Lab',
+      description: 'Interactive demonstration of AI-powered Kathakali character recognition.',
+      category: 'Kathakali',
+      url: 'kathakali-ai-demo-2025',
+      scraped_at: new Date().toISOString()
+    },
+    {
+      id: 5,
+      title: 'Odissi Dance Festival',
+      start_time: new Date(2025, 10, 2, 16, 0).toISOString(), // November 2, 2025, 4:00 PM
+      end_time: new Date(2025, 10, 4, 20, 0).toISOString(), // November 4, 2025, 8:00 PM (3-day festival)
+      location: 'Cultural Center Studio B',
+      description: 'Three-day festival celebrating Odissi, the classical dance of Odisha.',
+      category: 'Odissi',
+      url: 'odissi-festival-2025',
+      scraped_at: new Date().toISOString()
+    },
+    {
+      id: 6,
+      title: 'Traditional Carnatic Music Concert',
+      start_time: new Date(2025, 10, 5, 19, 30).toISOString(), // November 5, 2025, 7:30 PM
+      end_time: new Date(2025, 10, 5, 22, 0).toISOString(), // November 5, 2025, 10:00 PM
+      location: 'Heritage Auditorium',
+      description: 'An evening of classical South Indian music featuring renowned artists.',
+      category: 'Music',
+      url: 'carnatic-concert-2025',
+      scraped_at: new Date().toISOString()
+    }
+  ];
+
+  // Fetch events from API
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setEventsLoading(true);
+        setEventsError(null);
+        
+        const url = new URL('/api/events', BACKEND_URI);
+        url.searchParams.append('upcoming', 'true');
+        url.searchParams.append('limit', '50');
+        url.searchParams.append('offset', '0');
+
+        const response = await fetch(url.toString());
+        
+        if (!response.ok) {
+          // If endpoint doesn't exist, fall back to sample data
+          if (response.status === 404) {
+            console.warn('API endpoint /api/events not found, using sample data');
+            setEvents(getSampleEvents());
+            setEventsLoading(false);
+            return;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          // If response is not JSON (likely HTML error page), fall back to sample data
+          console.warn('API endpoint returned non-JSON response, using sample data');
+          setEvents(getSampleEvents());
+          setEventsLoading(false);
+          return;
+        }
+        
+        const data: ApiResponse = await response.json();
+
+        console.log("events: ", data);
+        
+        if (data.success) {
+          setEvents(data.data);
+        } else {
+          throw new Error('API returned success: false');
+        }
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        // Fall back to sample data on any error
+        console.warn('Falling back to sample data due to API error');
+        setEvents(getSampleEvents());
+      } finally {
+        setEventsLoading(false);
+      }
+    };
+
+    fetchEvents();
   }, []);
 
   const heroSectionStyle = {
@@ -349,7 +501,11 @@ function MainPage() {
             }}
             className="calendar-container"
           >
-            <EventsCalendar events={[]}/>
+            <EventsCalendar 
+              events={events}
+              loading={eventsLoading}
+              error={eventsError}
+            />
           </div>
         </Flex>
       </div>

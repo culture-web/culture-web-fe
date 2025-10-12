@@ -3,20 +3,24 @@ import { useColourToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
 
 interface Event {
-  id: string | number;
+  id: number;
   title: string;
-  date: Date;
-  time?: string;
-  venue?: string;
-  description?: string;
-  type?: string;
+  description: string | null;
+  start_time: string; // ISO 8601 format with timezone
+  end_time: string | null; // ISO 8601 format with timezone
+  location: string | null;
+  url: string; // Unique URL for the event
+  category: string | null;
+  scraped_at: string; // ISO 8601 format with timezone
 }
 
 interface EventsCalendarProps {
   events: Event[];
+  loading: boolean;
+  error: string | null;
 }
 
-function EventsCalendar({ events = [] }: EventsCalendarProps) {
+function EventsCalendar({ events, loading = false, error = null }: EventsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const colourToken = useColourToken();
@@ -207,6 +211,7 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   const upcomingEventsGridStyle = {
     display: 'grid',
     gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
+    gridAutoRows: '1fr',
     gap: isMobile ? '16px' : '20px',
     marginTop: '1.5rem',
   };
@@ -220,7 +225,7 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
     padding: '20px',
     transition: 'all 0.3s ease',
     border: `1px solid rgba(255, 255, 255, 0.4)`,
-    height: 'fit-content',
+    minHeight: '180px',
   };
 
   const eventDateStyle = {
@@ -252,96 +257,30 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
     fontSize: '14px',
   };
 
-  // Sample cultural events data - includes various Indian cultural performances
-  const sampleEvents: Event[] = [
-    {
-      id: 1,
-      title: 'Kathakali Performance - Ramayana',
-      date: new Date(2025, 9, 15), // October 15, 2025
-      time: '7:00 PM',
-      venue: 'Cultural Center Main Hall',
-      description: 'Experience the epic tale of Ramayana through traditional Kathakali dance-drama.',
-      type: 'Kathakali'
-    },
-    {
-      id: 2,
-      title: 'Kootiyattam Classical Theater Workshop',
-      date: new Date(2025, 9, 18), // October 18, 2025
-      time: '3:00 PM',
-      venue: 'Heritage Theater',
-      description: 'Learn about the ancient Sanskrit theater form recognized by UNESCO.',
-      type: 'Kootiyattam'
-    },
-    {
-      id: 3,
-      title: 'Bharatanatyam Evening Recital',
-      date: new Date(2025, 9, 22), // October 22, 2025
-      time: '6:30 PM',
-      venue: 'Dance Studio A',
-      description: 'Classical Tamil dance performance featuring traditional compositions.',
-      type: 'Bharatanatyam'
-    },
-    {
-      id: 4,
-      title: 'Kathakali Character Recognition Demo',
-      date: new Date(2025, 9, 28), // October 28, 2025
-      time: '6:00 PM',
-      venue: 'Innovation Lab',
-      description: 'Interactive demonstration of AI-powered Kathakali character recognition.',
-      type: 'Kathakali'
-    },
-    {
-      id: 5,
-      title: 'Odissi Dance Masterclass',
-      date: new Date(2025, 10, 2), // November 2, 2025
-      time: '4:00 PM',
-      venue: 'Cultural Center Studio B',
-      description: 'Master class in Odissi, the classical dance of Odisha.',
-      type: 'Odissi'
-    },
-    {
-      id: 6,
-      title: 'Traditional Carnatic Music Concert',
-      date: new Date(2025, 10, 5), // November 5, 2025
-      time: '7:30 PM',
-      venue: 'Heritage Auditorium',
-      description: 'An evening of classical South Indian music featuring renowned artists.',
-      type: 'Music'
-    },
-    {
-      id: 7,
-      title: 'Koodiyattam Performance - Anguliyankam',
-      date: new Date(2025, 10, 12), // November 12, 2025
-      time: '8:00 PM',
-      venue: 'Traditional Theater',
-      description: 'Traditional Sanskrit drama performance in the ancient Koodiyattam style.',
-      type: 'Kootiyattam'
-    },
-    {
-      id: 8,
-      title: 'Indian Classical Arts Festival',
-      date: new Date(2025, 10, 20), // November 20, 2025
-      time: '2:00 PM',
-      venue: 'Main Auditorium',
-      description: 'A day-long festival celebrating various Indian classical performing arts.',
-      type: 'Festival'
-    }
-  ];
-
-  const allEvents = [...events, ...sampleEvents];
+  // Use events from props
+  const allEvents = events;
 
   const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
 
   const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
-  const getEventsForDate = (date: Date) => allEvents.filter(event => {
-    const eventDate = new Date(event.date);
-    return (
-      eventDate.getDate() === date.getDate() &&
-      eventDate.getMonth() === date.getMonth() &&
-      eventDate.getFullYear() === date.getFullYear()
-    );
-  });
+  // Helper functions for handling multi-day events
+  const getEventStartDate = (event: Event) => new Date(event.start_time);
+  const getEventEndDate = (event: Event) => event.end_time ? new Date(event.end_time) : new Date(event.start_time);
+  
+  const isEventOnDate = (event: Event, date: Date) => {
+    const startDate = getEventStartDate(event);
+    const endDate = getEventEndDate(event);
+    
+    // Check if the given date falls within the event's date range
+    const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const eventStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const eventEnd = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    
+    return checkDate >= eventStart && checkDate <= eventEnd;
+  };
+
+  const getEventsForDate = (date: Date) => allEvents.filter(event => isEventOnDate(event, date));
 
   const navigateMonth = (direction: number) => {
     setCurrentDate(prev => {
@@ -433,22 +372,92 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
         <h4 style={{ color: colourToken.primary, margin: '0 0 16px 0', fontSize: '18px' }}>
           Events on {selectedDate.toLocaleDateString()}
         </h4>
-        {dayEvents.map(event => (
-          <div key={event.id} style={{...eventCardStyle, marginBottom: dayEvents.indexOf(event) === dayEvents.length - 1 ? 0 : '12px'}}>
-            <h5 style={eventTitleStyle}>{event.title}</h5>
-            <p style={eventTimeStyle}>{event.time}</p>
-            <p style={eventVenueStyle}>{event.venue}</p>
-            <p style={eventDescriptionStyle}>{event.description}</p>
-          </div>
-        ))}
+        {dayEvents.map(event => {
+          const startTime = getEventStartDate(event);
+          const endTime = getEventEndDate(event);
+          const isMultiDay = startTime.toDateString() !== endTime.toDateString();
+          
+          return (
+            <div key={event.id} style={{...eventCardStyle, marginBottom: dayEvents.indexOf(event) === dayEvents.length - 1 ? 0 : '12px'}}>
+              <h5 style={eventTitleStyle}>{event.title}</h5>
+              <p style={eventTimeStyle}>
+                {isMultiDay 
+                  ? `${startTime.toLocaleDateString()} - ${endTime.toLocaleDateString()}` 
+                  : `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+                }
+              </p>
+              <p style={eventVenueStyle}>{event.location}</p>
+              <p style={eventDescriptionStyle}>{event.description}</p>
+            </div>
+          );
+        })}
       </div>
     );
   };
 
   return (
     <div style={eventsCalendarStyle}>
-      {/* Main Calendar */}
-      <div style={calendarMainContentStyle}>
+      {/* Loading State */}
+      {loading && (
+        <div style={{
+          ...calendarMainContentStyle,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px'
+        }}>
+          <div style={{
+            color: colourToken.primary,
+            fontSize: '16px',
+            fontWeight: 500
+          }}>
+            Loading events...
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div style={{
+          ...calendarMainContentStyle,
+          display: 'flex',
+          flexDirection: 'column' as const,
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          gap: '16px'
+        }}>
+          <div style={{
+            color: colourToken.red || '#ff474c',
+            fontSize: '16px',
+            fontWeight: 500,
+            textAlign: 'center'
+          }}>
+            Failed to load events: {error}
+          </div>
+          <button
+            type="button"
+            style={{
+              background: colourToken.pinkLight,
+              color: colourToken.white,
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 500
+            }}
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Main Calendar - only show when not loading and no error */}
+      {!loading && !error && (
+        <>
+          <div style={calendarMainContentStyle}>
         <div style={calendarHeaderStyle}>
           <button 
             type="button"
@@ -502,52 +511,65 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
         </h4>
         <div style={upcomingEventsGridStyle}>
           {allEvents
-            .filter(event => new Date(event.date) > new Date())
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .filter(event => getEventStartDate(event) > new Date())
+            .sort((a, b) => getEventStartDate(a).getTime() - getEventStartDate(b).getTime())
             .slice(0, isMobile ? 4 : 6)
-            .map(event => (
-              <div 
-                key={event.id} 
-                style={upcomingEventCardStyle}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                <div style={eventDateStyle}>
-                  {new Date(event.date).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric' 
-                  })}
+            .map(event => {
+              const startTime = getEventStartDate(event);
+              const endTime = getEventEndDate(event);
+              const isMultiDay = startTime.toDateString() !== endTime.toDateString();
+              
+              return (
+                <div 
+                  key={event.id} 
+                  style={upcomingEventCardStyle}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={eventDateStyle}>
+                    {isMultiDay 
+                      ? `${startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                      : startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    }
+                  </div>
+                  <div style={eventInfoStyle}>
+                    <h5 style={eventInfoTitleStyle}>{event.title}</h5>
+                    <p style={eventInfoTextStyle}>
+                      {isMultiDay 
+                        ? `${startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} • ${event.location}`
+                        : `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} • ${event.location}`
+                      }
+                    </p>
+                    {event.category && (
+                      <span style={{
+                        background: `linear-gradient(45deg, ${colourToken.pinkLight}, ${colourToken.pink})`,
+                        color: colourToken.white,
+                        padding: '3px 10px',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        marginTop: '8px',
+                        display: 'inline-block',
+                        textTransform: 'uppercase' as const,
+                        letterSpacing: '0.5px',
+                      }}>
+                        {event.category}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div style={eventInfoStyle}>
-                  <h5 style={eventInfoTitleStyle}>{event.title}</h5>
-                  <p style={eventInfoTextStyle}>{event.time} • {event.venue}</p>
-                  {event.type && (
-                    <span style={{
-                      background: `linear-gradient(45deg, ${colourToken.pinkLight}, ${colourToken.pink})`,
-                      color: colourToken.white,
-                      padding: '3px 10px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: 500,
-                      marginTop: '8px',
-                      display: 'inline-block',
-                      textTransform: 'uppercase' as const,
-                      letterSpacing: '0.5px',
-                    }}>
-                      {event.type}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }
