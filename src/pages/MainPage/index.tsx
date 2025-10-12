@@ -19,7 +19,9 @@ function MainPage() {
   const isMobile = useIsMobile();
 
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [isHeroVisible, setIsHeroVisible] = useState(true);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
 
   const pageHeadingStyle = isMobile ? styleToken.pageHeadingTextStyleMobile : styleToken.pageHeadingTextStyle;
   const subtitleStyle = isMobile ? styleToken.subtitleTextStyleMobile : styleToken.subtitleTextStyle;
@@ -27,28 +29,48 @@ function MainPage() {
   // Intersection Observer for scroll animations
   useEffect(() => {
     const currentCalendarRef = calendarRef.current;
+    const currentHeroRef = heroRef.current;
     
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsCalendarVisible(true);
+          if (entry.target === currentCalendarRef) {
+            if (entry.isIntersecting) {
+              setIsCalendarVisible(true);
+            } else {
+              setIsCalendarVisible(false);
+            }
+          }
+          
+          if (entry.target === currentHeroRef) {
+            if (entry.isIntersecting) {
+              setIsHeroVisible(true);
+            } else {
+              setIsHeroVisible(false);
+            }
           }
         });
       },
       {
-        threshold: 0.1,
-        rootMargin: '100px 0px -100px 0px'
+        threshold: 0.15,
+        rootMargin: '0px 0px -20px 0px'
       }
     );
 
     if (currentCalendarRef) {
       observer.observe(currentCalendarRef);
     }
+    
+    if (currentHeroRef) {
+      observer.observe(currentHeroRef);
+    }
 
     return () => {
       if (currentCalendarRef) {
         observer.unobserve(currentCalendarRef);
+      }
+      if (currentHeroRef) {
+        observer.unobserve(currentHeroRef);
       }
     };
   }, []);
@@ -77,11 +99,10 @@ function MainPage() {
 
   const calendarSectionStyle = {
     width: '100%',
-    background: `linear-gradient(180deg, ${colourToken.primary} 0%, ${colourToken.primary} 5%, ${colourToken.lightGray} 100%)`,
     padding: isMobile ? '4rem 1rem' : '6rem 2rem',
-    transform: isCalendarVisible ? 'translateY(0)' : 'translateY(50px)',
+    transform: isCalendarVisible ? 'translateY(0) scale(1)' : 'translateY(100px) scale(0.95)',
     opacity: isCalendarVisible ? 1 : 0,
-    transition: 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
   };
 
   return (
@@ -188,8 +209,8 @@ function MainPage() {
       </style>
 
       {/* Hero Section */}
-      <div style={heroSectionStyle}>
-        <div style={{ width: '100%', padding: isMobile ? '0 1rem' : '0 3rem' }}>
+      <div ref={heroRef} style={heroSectionStyle}>
+        <div style={{ width: '100%', padding: isMobile ? '0 1rem 0 2rem' : '0 3rem 0 4rem' }}>
           <Flex vertical align="center" style={{ textAlign: 'center', marginBottom: isMobile ? '1.5rem' : '2rem' }}>
             <Title 
               style={{
@@ -202,14 +223,14 @@ function MainPage() {
                 backgroundClip: 'text',
                 fontWeight: 'bold',
               }}
-              className="hero-content"
+              className={isHeroVisible ? "hero-content" : ""}
             >
               Welcome to KathakalAI
             </Title>
           </Flex>
           
           <Flex align="center" gap={isMobile ? "3rem" : "4rem"} vertical={isMobile} style={{ width: '100%' }}>
-            <Flex vertical align={isMobile ? "center" : "left"} style={{ flex: 1 }} className="hero-text-left">
+            <Flex vertical align={isMobile ? "center" : "left"} style={{ flex: 1 }} className={isHeroVisible ? "hero-text-left" : ""}>
               <Title style={{
                 ...pageHeadingStyle,
                 fontSize: isMobile ? '2rem' : '3rem',
@@ -245,7 +266,7 @@ function MainPage() {
               display: 'flex', 
               justifyContent: 'center',
               marginRight: isMobile ? '1rem' : '2rem'
-            }} className="hero-image-right">
+            }} className={isHeroVisible ? "hero-image-right" : ""}>
               <Image
                 src={kathakaliImage}
                 alt="Cultural Heritage"
@@ -328,7 +349,7 @@ function MainPage() {
             }}
             className="calendar-container"
           >
-            <EventsCalendar />
+            <EventsCalendar events={[]}/>
           </div>
         </Flex>
       </div>

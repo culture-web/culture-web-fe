@@ -13,7 +13,7 @@ interface Event {
 }
 
 interface EventsCalendarProps {
-  events?: Event[];
+  events: Event[];
 }
 
 function EventsCalendar({ events = [] }: EventsCalendarProps) {
@@ -36,12 +36,13 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   };
 
   const calendarMainContentStyle = {
-    backgroundColor: colourToken.white,
+    background: `linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(245, 245, 245, 0.8) 100%)`,
+    backdropFilter: 'blur(15px)',
     borderRadius: '16px',
     padding: isMobile ? '20px' : '32px',
     marginBottom: '2rem',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-    border: `1px solid ${colourToken.lightGray}`,
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+    border: `1px solid rgba(255, 255, 255, 0.3)`,
   };
 
   const calendarHeaderStyle = {
@@ -194,32 +195,32 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   };
 
   const upcomingEventsStyle = {
-    backgroundColor: colourToken.white,
+    background: `linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(245, 245, 245, 0.8) 100%)`,
+    backdropFilter: 'blur(15px)',
     borderRadius: '16px',
     padding: isMobile ? '20px' : '32px',
     marginTop: '2rem',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-    border: `1px solid ${colourToken.lightGray}`,
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+    border: `1px solid rgba(255, 255, 255, 0.3)`,
   };
 
   const upcomingEventsGridStyle = {
     display: 'grid',
-    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: isMobile ? '12px' : '16px',
-    marginTop: '1rem',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: isMobile ? '16px' : '20px',
+    marginTop: '1.5rem',
   };
 
   const upcomingEventCardStyle = {
     display: 'flex',
-    alignItems: 'flex-start',
+    flexDirection: 'column' as const,
     gap: '12px',
-    backgroundColor: colourToken.lightGray,
+    background: `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 248, 248, 0.8) 100%)`,
     borderRadius: '12px',
     padding: '20px',
     transition: 'all 0.3s ease',
-    flexDirection: 'column' as const,
-    height: '100%',
-    border: `1px solid ${colourToken.gray}20`,
+    border: `1px solid rgba(255, 255, 255, 0.4)`,
+    height: 'fit-content',
   };
 
   const eventDateStyle = {
