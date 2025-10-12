@@ -41,6 +41,6 @@ export interface GetEventsApiResponse {
   pagination: {
     limit: number;
     offset: number;
-    count: number;
+    total: number;
   };
 }

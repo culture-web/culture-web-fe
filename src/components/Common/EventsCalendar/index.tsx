@@ -5,11 +5,29 @@ import { Event } from 'types/interface';
 
 interface EventsCalendarProps {
   events: Event[];
+  upcomingEvents: Event[];
   loading: boolean;
   error: string | null;
+  currentUpcomingPage: number;
+  totalUpcomingEvents: number;
+  upcomingEventsLoading: boolean;
+  eventsPerPage: number;
+  onPreviousUpcomingPage: () => void;
+  onNextUpcomingPage: () => void;
 }
 
-function EventsCalendar({ events, loading = false, error = null }: EventsCalendarProps) {
+function EventsCalendar({ 
+  events, 
+  upcomingEvents, 
+  loading = false, 
+  error = null,
+  currentUpcomingPage,
+  totalUpcomingEvents,
+  upcomingEventsLoading,
+  eventsPerPage,
+  onPreviousUpcomingPage,
+  onNextUpcomingPage
+}: EventsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const colourToken = useColourToken();
@@ -217,6 +235,46 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
     marginTop: '1.5rem',
   };
 
+  const paginationControlsStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: '24px',
+    padding: '0 8px',
+  };
+
+  const paginationButtonStyle = {
+    background: `linear-gradient(45deg, ${colourToken.pinkLight}, ${colourToken.pink})`,
+    color: colourToken.white,
+    border: 'none',
+    borderRadius: '8px',
+    padding: isMobile ? '8px 12px' : '10px 16px',
+    fontSize: isMobile ? '12px' : '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: isMobile ? '4px' : '6px',
+    minWidth: isMobile ? '70px' : 'auto',
+    justifyContent: 'center',
+  };
+
+  const paginationButtonDisabledStyle = {
+    ...paginationButtonStyle,
+    background: colourToken.gray,
+    cursor: 'not-allowed',
+    opacity: 0.5,
+  };
+
+  const pageIndicatorStyle = {
+    color: colourToken.primary,
+    fontSize: isMobile ? '12px' : '14px',
+    fontWeight: 500,
+    textAlign: 'center' as const,
+    flex: isMobile ? 1 : 'none',
+  };
+
   const upcomingEventCardStyle = {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -265,9 +323,14 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
 
   const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
-  // Helper functions for handling multi-day events
   const getEventStartDate = (event: Event) => new Date(event.start_time);
   const getEventEndDate = (event: Event) => event.end_time ? new Date(event.end_time) : new Date(event.start_time);
+  
+  const sortedUpcomingEvents = upcomingEvents && upcomingEvents.length > 0 
+    ? [...upcomingEvents].sort((a, b) => getEventStartDate(a).getTime() - getEventStartDate(b).getTime())
+    : [];
+
+  const totalUpcomingPages = Math.ceil(totalUpcomingEvents / eventsPerPage);
   
   const isEventOnDate = (event: Event, date: Date) => {
     const startDate = getEventStartDate(event);
@@ -630,66 +693,199 @@ function EventsCalendar({ events, loading = false, error = null }: EventsCalenda
       {/* Upcoming Events Grid */}
       <div style={upcomingEventsStyle}>
         <h4 style={{ color: colourToken.primary, margin: '0 0 16px 0', fontSize: '18px' }}>
-          Upcoming Cultural Events
+          Upcoming Cultural Events {upcomingEventsLoading && '(Loading...)'}
         </h4>
+        
         <div style={upcomingEventsGridStyle}>
-          {allEvents
-            .filter(event => getEventStartDate(event) > new Date())
-            .sort((a, b) => getEventStartDate(a).getTime() - getEventStartDate(b).getTime())
-            .slice(0, isMobile ? 4 : 6)
-            .map(event => {
-              const startTime = getEventStartDate(event);
-              const endTime = getEventEndDate(event);
-              const isMultiDay = startTime.toDateString() !== endTime.toDateString();
-              
-              return (
-                <div 
-                  key={event.id} 
-                  style={upcomingEventCardStyle}
+          {sortedUpcomingEvents.length > 0 ? (
+            sortedUpcomingEvents.map(event => {
+                const startTime = getEventStartDate(event);
+                const endTime = getEventEndDate(event);
+                const isMultiDay = startTime.toDateString() !== endTime.toDateString();
+                
+                return (
+                  <div 
+                    key={event.id} 
+                    style={upcomingEventCardStyle}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'none';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <div style={eventDateStyle}>
+                      {isMultiDay 
+                        ? `${startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                        : startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      }
+                    </div>
+                    <div style={eventInfoStyle}>
+                      <h5 style={eventInfoTitleStyle}>{event.title}</h5>
+                      <p style={eventInfoTextStyle}>
+                        {isMultiDay 
+                          ? `${startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} • ${event.location}`
+                          : `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} • ${event.location}`
+                        }
+                      </p>
+                      {event.category && (
+                        <span style={{
+                          background: `linear-gradient(45deg, ${colourToken.pinkLight}, ${colourToken.pink})`,
+                          color: colourToken.white,
+                          padding: '3px 10px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: 500,
+                          marginTop: '8px',
+                          display: 'inline-block',
+                          textTransform: 'uppercase' as const,
+                          letterSpacing: '0.5px',
+                        }}>
+                          {event.category}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+          ) : (
+            // Empty state when no upcoming events
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column' as const,
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: isMobile ? '2rem 1rem' : '3rem 2rem',
+              textAlign: 'center' as const,
+              color: colourToken.gray,
+              background: `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 248, 248, 0.8) 100%)`,
+              borderRadius: '12px',
+              border: `1px solid rgba(255, 255, 255, 0.4)`,
+              gridColumn: '1 / -1', // Span full width
+            }}>
+              <div style={{
+                fontSize: '3rem',
+                marginBottom: '1rem',
+                opacity: 0.6,
+              }}>
+                📅
+              </div>
+              <h5 style={{
+                color: colourToken.primary,
+                margin: '0 0 0.5rem 0',
+                fontSize: isMobile ? '1.1rem' : '1.3rem',
+                fontWeight: 600,
+              }}>
+                No Upcoming Events
+              </h5>
+              <p style={{
+                color: colourToken.gray,
+                margin: 0,
+                fontSize: isMobile ? '0.9rem' : '1rem',
+                lineHeight: 1.5,
+                maxWidth: '400px',
+              }}>
+                Check back soon for exciting cultural events and performances!
+              </p>
+            </div>
+          )}
+        </div>
+        
+        {/* Pagination Controls */}
+        {totalUpcomingPages > 1 && (
+          <div style={{
+            ...paginationControlsStyle,
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            borderRadius: '12px',
+            padding: isMobile ? '12px' : '16px',
+            marginTop: '24px',
+            border: `1px solid ${colourToken.pinkLight}20`,
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: isMobile ? '12px' : '0',
+          }}>
+            {isMobile ? (
+              <>
+                <div style={pageIndicatorStyle}>
+                  Page {currentUpcomingPage + 1} of {totalUpcomingPages}
+                </div>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '12px',
+                }}>
+                  <button
+                    type="button"
+                    style={currentUpcomingPage === 0 ? paginationButtonDisabledStyle : paginationButtonStyle}
+                    onClick={onPreviousUpcomingPage}
+                    disabled={currentUpcomingPage === 0}
+                  >
+                    ← Prev
+                  </button>
+                  
+                  <button
+                    type="button"
+                    style={currentUpcomingPage >= totalUpcomingPages - 1 ? paginationButtonDisabledStyle : paginationButtonStyle}
+                    onClick={onNextUpcomingPage}
+                    disabled={currentUpcomingPage >= totalUpcomingPages - 1}
+                  >
+                    Next →
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  style={currentUpcomingPage === 0 ? paginationButtonDisabledStyle : paginationButtonStyle}
+                  onClick={onPreviousUpcomingPage}
+                  disabled={currentUpcomingPage === 0}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
+                    if (currentUpcomingPage > 0) {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.boxShadow = 'none';
+                    if (currentUpcomingPage > 0) {
+                      e.currentTarget.style.transform = 'none';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
                   }}
                 >
-                  <div style={eventDateStyle}>
-                    {isMultiDay 
-                      ? `${startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                      : startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                    }
-                  </div>
-                  <div style={eventInfoStyle}>
-                    <h5 style={eventInfoTitleStyle}>{event.title}</h5>
-                    <p style={eventInfoTextStyle}>
-                      {isMultiDay 
-                        ? `${startTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} • ${event.location}`
-                        : `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} • ${event.location}`
-                      }
-                    </p>
-                    {event.category && (
-                      <span style={{
-                        background: `linear-gradient(45deg, ${colourToken.pinkLight}, ${colourToken.pink})`,
-                        color: colourToken.white,
-                        padding: '3px 10px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        marginTop: '8px',
-                        display: 'inline-block',
-                        textTransform: 'uppercase' as const,
-                        letterSpacing: '0.5px',
-                      }}>
-                        {event.category}
-                      </span>
-                    )}
-                  </div>
+                  ← Previous
+                </button>
+                
+                <div style={pageIndicatorStyle}>
+                  Page {currentUpcomingPage + 1} of {totalUpcomingPages}
                 </div>
-              );
-            })}
-        </div>
+                
+                <button
+                  type="button"
+                  style={currentUpcomingPage >= totalUpcomingPages - 1 ? paginationButtonDisabledStyle : paginationButtonStyle}
+                  onClick={onNextUpcomingPage}
+                  disabled={currentUpcomingPage >= totalUpcomingPages - 1}
+                  onMouseEnter={(e) => {
+                    if (currentUpcomingPage < totalUpcomingPages - 1) {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentUpcomingPage < totalUpcomingPages - 1) {
+                      e.currentTarget.style.transform = 'none';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
+                >
+                  Next →
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
         </>
       )}

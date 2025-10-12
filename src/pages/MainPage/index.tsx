@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali5.jpg';
 import Button from 'components/Common/Button';
 import EventsCalendar from 'components/Common/EventsCalendar';
@@ -23,8 +23,16 @@ function MainPage() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [isHeroVisible, setIsHeroVisible] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  
+  // Pagination state for upcoming events
+  const [currentUpcomingPage, setCurrentUpcomingPage] = useState(0);
+  const [totalUpcomingEvents, setTotalUpcomingEvents] = useState(0);
+  const [upcomingEventsLoading, setUpcomingEventsLoading] = useState(false);
+  const eventsPerPage = isMobile ? 4 : 6;
+  
   const calendarRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +88,64 @@ function MainPage() {
     };
   }, []);
 
+  // Separate function to fetch upcoming events with pagination
+  const fetchUpcomingEvents = useCallback(async (page: number) => {
+    try {
+      setUpcomingEventsLoading(true);
+      
+      if (!BACKEND_URI || BACKEND_URI.trim() === '') {
+        return;
+      }
+
+      const upcomingEventsUrl = new URL('/api/events', BACKEND_URI);
+      upcomingEventsUrl.searchParams.append('upcoming', 'true');
+      upcomingEventsUrl.searchParams.append('limit', eventsPerPage.toString());
+      upcomingEventsUrl.searchParams.append('offset', (page * eventsPerPage).toString());
+
+      const upcomingEventsResponse = await fetch(upcomingEventsUrl.toString());
+
+      if (upcomingEventsResponse.ok) {
+        const upcomingEventsContentType = upcomingEventsResponse.headers.get('content-type');
+        if (upcomingEventsContentType && upcomingEventsContentType.includes('application/json')) {
+          const upcomingEventsData: GetEventsApiResponse = await upcomingEventsResponse.json();
+          
+          if (upcomingEventsData.success) {
+            setUpcomingEvents(upcomingEventsData.data);
+            setTotalUpcomingEvents(upcomingEventsData.pagination.total);
+            setCurrentUpcomingPage(page);
+          } else {
+            setUpcomingEvents([]);
+            setTotalUpcomingEvents(0);
+          }
+        }
+      } else {
+        console.warn('Failed to fetch upcoming events');
+        setUpcomingEvents([]);
+        setTotalUpcomingEvents(0);
+      }
+    } catch (err) {
+      console.error('Error fetching upcoming events:', err);
+      setUpcomingEvents([]);
+      setTotalUpcomingEvents(0);
+    } finally {
+      setUpcomingEventsLoading(false);
+    }
+  }, [eventsPerPage, setTotalUpcomingEvents, setCurrentUpcomingPage, setUpcomingEvents, setUpcomingEventsLoading]);
+
+  // Pagination handlers
+  const handlePreviousUpcomingPage = () => {
+    if (currentUpcomingPage > 0) {
+      fetchUpcomingEvents(currentUpcomingPage - 1);
+    }
+  };
+
+  const handleNextUpcomingPage = () => {
+    const totalPages = Math.ceil(totalUpcomingEvents / eventsPerPage);
+    if (currentUpcomingPage < totalPages - 1) {
+      fetchUpcomingEvents(currentUpcomingPage + 1);
+    }
+  };
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -89,39 +155,41 @@ function MainPage() {
         if (!BACKEND_URI || BACKEND_URI.trim() === '') {
           throw new Error('Events service is not properly configured. Please contact support.');
         }
-        
-        const url = new URL('/api/events', BACKEND_URI);
-        url.searchParams.append('upcoming', 'true');
-        url.searchParams.append('limit', '50');
-        url.searchParams.append('offset', '0');
 
-        const response = await fetch(url.toString());
+        // Fetch all events for the calendar (without upcoming filter)
+        const allEventsUrl = new URL('/api/events', BACKEND_URI);
+        allEventsUrl.searchParams.append('limit', '100');
+        allEventsUrl.searchParams.append('offset', '0');
+
+        const allEventsResponse = await fetch(allEventsUrl.toString());
         
-        if (!response.ok) {
-          if (response.status === 404) {
+        if (!allEventsResponse.ok) {
+          if (allEventsResponse.status === 404) {
             throw new Error('We couldn\'t find the events calendar. Please try again later or contact support if the problem persists.');
           }
-          if (response.status >= 500) {
+          if (allEventsResponse.status >= 500) {
             throw new Error('Our events service is temporarily unavailable. Please try again in a few minutes.');
           }
-          if (response.status === 403) {
+          if (allEventsResponse.status === 403) {
             throw new Error('Access to events is currently restricted. Please contact support for assistance.');
           }
           throw new Error('We\'re having trouble loading events right now. Please refresh the page or try again later.');
         }
         
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
+        const allEventsContentType = allEventsResponse.headers.get('content-type');
+        if (!allEventsContentType || !allEventsContentType.includes('application/json')) {
           throw new Error('We received an unexpected response from our events service. Please try refreshing the page.');
         }
         
-        const data: GetEventsApiResponse = await response.json();
+        const allEventsData: GetEventsApiResponse = await allEventsResponse.json();
         
-        if (data.success) {
-          setEvents(data.data);
+        if (allEventsData.success) {
+          setEvents(allEventsData.data);
         } else {
           throw new Error('There was a problem loading the events calendar. Please try again later.');
         }
+
+        await fetchUpcomingEvents(0);
       } catch (err) {
         console.error('Error fetching events:', err);
         let userMessage = 'We\'re having trouble loading events right now. Please try again later.';
@@ -134,13 +202,14 @@ function MainPage() {
         
         setEventsError(userMessage);
         setEvents([]);
+        setUpcomingEvents([]);
       } finally {
         setEventsLoading(false);
       }
     };
 
     fetchEvents();
-  }, []);
+  }, [fetchUpcomingEvents]);
 
   const heroSectionStyle = {
     minHeight: '100vh',
@@ -418,8 +487,15 @@ function MainPage() {
           >
             <EventsCalendar 
               events={events}
+              upcomingEvents={upcomingEvents}
               loading={eventsLoading}
               error={eventsError}
+              currentUpcomingPage={currentUpcomingPage}
+              totalUpcomingEvents={totalUpcomingEvents}
+              upcomingEventsLoading={upcomingEventsLoading}
+              eventsPerPage={eventsPerPage}
+              onPreviousUpcomingPage={handlePreviousUpcomingPage}
+              onNextUpcomingPage={handleNextUpcomingPage}
             />
           </div>
         </Flex>
