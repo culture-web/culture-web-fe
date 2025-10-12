@@ -55,20 +55,20 @@ test('Calendar navigation works', async ({ page }) => {
   // Scroll to calendar
   await page.locator('h2:has-text("Upcoming Cultural Events")').scrollIntoViewIfNeeded();
   
-  // Get initial month/year
-  const initialMonthYear = await page.locator('h3').filter({ hasText: /\w+ \d{4}/ }).textContent();
+  // Get initial month/year from the calendar header
+  const initialMonthYear = await page.locator('h3').first().textContent();
   
   // Click next month
   await page.locator('button:has-text("›")').click();
   await page.waitForTimeout(500);
   
   // Get new month/year and verify it changed
-  const newMonthYear = await page.locator('h3').filter({ hasText: /\w+ \d{4}/ }).textContent();
+  const newMonthYear = await page.locator('h3').first().textContent();
   expect(newMonthYear).not.toBe(initialMonthYear);
   
   await page.locator('button:has-text("‹")').click();
   await page.waitForTimeout(500);
   
-  const backMonthYear = await page.locator('h3').filter({ hasText: /\w+ \d{4}/ }).textContent();
+  const backMonthYear = await page.locator('h3').first().textContent();
   expect(backMonthYear).toBe(initialMonthYear);
 });
