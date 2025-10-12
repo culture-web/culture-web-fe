@@ -31,12 +31,17 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
 
   // Styles
   const eventsCalendarStyle = {
-    backgroundColor: colourToken.primary,
-    borderRadius: '12px',
-    padding: isMobile ? '16px' : '24px',
-    maxWidth: '800px',
-    margin: '0 auto',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+    width: '100%',
+    backgroundColor: 'transparent',
+  };
+
+  const calendarMainContentStyle = {
+    backgroundColor: colourToken.white,
+    borderRadius: '16px',
+    padding: isMobile ? '20px' : '32px',
+    marginBottom: '2rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    border: `1px solid ${colourToken.lightGray}`,
   };
 
   const calendarHeaderStyle = {
@@ -49,7 +54,7 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   const navButtonStyle = {
     background: 'none',
     border: 'none',
-    color: colourToken.white,
+    color: colourToken.primary,
     fontSize: '24px',
     cursor: 'pointer',
     padding: '8px 12px',
@@ -58,7 +63,7 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   };
 
   const monthYearStyle = {
-    color: colourToken.white,
+    color: colourToken.primary,
     fontSize: isMobile ? '20px' : '24px',
     fontWeight: 600,
     margin: 0,
@@ -90,7 +95,7 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   };
 
   const calendarDayStyle = {
-    backgroundColor: '#2b2d38',
+    backgroundColor: colourToken.lightGray,
     borderRadius: '8px',
     padding: isMobile ? '8px 4px' : '12px 8px',
     textAlign: 'center' as const,
@@ -102,24 +107,28 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
     flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
+    border: '1px solid transparent',
   };
 
   const calendarDayHoverStyle = {
-    backgroundColor: '#3a3c49',
+    backgroundColor: colourToken.white,
     transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
   };
 
   const calendarDaySelectedStyle = {
     backgroundColor: colourToken.pinkLight,
     color: colourToken.white,
+    border: `1px solid ${colourToken.pink}`,
   };
 
   const calendarDayHasEventsStyle = {
     border: `2px solid ${colourToken.pinkLight}`,
+    backgroundColor: colourToken.white,
   };
 
   const dayNumberStyle = {
-    color: colourToken.white,
+    color: colourToken.primary,
     fontSize: isMobile ? '14px' : '16px',
     fontWeight: 500,
   };
@@ -141,22 +150,24 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   };
 
   const eventDetailsStyle = {
-    backgroundColor: '#2b2d38',
-    borderRadius: '8px',
+    backgroundColor: colourToken.lightGray,
+    borderRadius: '12px',
     padding: '20px',
     marginBottom: '24px',
+    border: `1px solid ${colourToken.gray}20`,
   };
 
   const eventCardStyle = {
-    backgroundColor: colourToken.primary,
+    backgroundColor: colourToken.white,
     borderRadius: '8px',
     padding: '16px',
     marginBottom: '12px',
     borderLeft: `4px solid ${colourToken.pinkLight}`,
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
   };
 
   const eventTitleStyle = {
-    color: colourToken.white,
+    color: colourToken.primary,
     margin: '0 0 8px 0',
     fontSize: '16px',
     fontWeight: 600,
@@ -176,56 +187,62 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
   };
 
   const eventDescriptionStyle = {
-    color: colourToken.gray,
+    color: colourToken.primary,
     margin: 0,
     fontSize: '14px',
     lineHeight: 1.5,
   };
 
   const upcomingEventsStyle = {
-    backgroundColor: '#2b2d38',
-    borderRadius: '8px',
-    padding: '20px',
+    backgroundColor: colourToken.white,
+    borderRadius: '16px',
+    padding: isMobile ? '20px' : '32px',
+    marginTop: '2rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    border: `1px solid ${colourToken.lightGray}`,
   };
 
-  const eventsListStyle = {
-    display: 'flex',
-    flexDirection: isMobile ? 'column' : 'column' as const,
-    gap: '12px',
+  const upcomingEventsGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: isMobile ? '12px' : '16px',
+    marginTop: '1rem',
   };
 
   const upcomingEventCardStyle = {
     display: 'flex',
-    alignItems: 'center',
-    gap: isMobile ? '8px' : '16px',
-    backgroundColor: colourToken.primary,
-    borderRadius: '8px',
-    padding: '16px',
-    transition: 'transform 0.3s ease',
-    flexDirection: (isMobile ? 'column' : 'row') as 'column' | 'row',
-    textAlign: (isMobile ? 'center' : 'left') as 'center' | 'left',
+    alignItems: 'flex-start',
+    gap: '12px',
+    backgroundColor: colourToken.lightGray,
+    borderRadius: '12px',
+    padding: '20px',
+    transition: 'all 0.3s ease',
+    flexDirection: 'column' as const,
+    height: '100%',
+    border: `1px solid ${colourToken.gray}20`,
   };
 
   const eventDateStyle = {
     backgroundColor: colourToken.pinkLight,
     color: colourToken.white,
     padding: '8px 12px',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: 600,
     textAlign: 'center' as const,
-    minWidth: isMobile ? 'auto' : '60px',
+    alignSelf: 'flex-start',
   };
 
   const eventInfoStyle = {
     flex: 1,
+    width: '100%',
   };
 
   const eventInfoTitleStyle = {
-    color: colourToken.white,
+    color: colourToken.primary,
     margin: '0 0 4px 0',
     fontSize: '16px',
-    fontWeight: 500,
+    fontWeight: 600,
   };
 
   const eventInfoTextStyle = {
@@ -377,8 +394,9 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
           onMouseLeave={(e) => {
             if (!isSelected) {
               Object.assign(e.currentTarget.style, {
-                backgroundColor: '#2b2d38',
+                backgroundColor: hasEvents ? colourToken.white : colourToken.lightGray,
                 transform: 'none',
+                boxShadow: 'none',
               });
             }
           }}
@@ -402,7 +420,7 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
     if (dayEvents.length === 0) {
       return (
         <div style={eventDetailsStyle}>
-          <h4 style={{ color: colourToken.white, margin: '0 0 16px 0', fontSize: '18px' }}>
+          <h4 style={{ color: colourToken.primary, margin: '0 0 16px 0', fontSize: '18px' }}>
             No events on {selectedDate.toLocaleDateString()}
           </h4>
         </div>
@@ -411,7 +429,7 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
 
     return (
       <div style={eventDetailsStyle}>
-        <h4 style={{ color: colourToken.white, margin: '0 0 16px 0', fontSize: '18px' }}>
+        <h4 style={{ color: colourToken.primary, margin: '0 0 16px 0', fontSize: '18px' }}>
           Events on {selectedDate.toLocaleDateString()}
         </h4>
         {dayEvents.map(event => (
@@ -428,69 +446,75 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
 
   return (
     <div style={eventsCalendarStyle}>
-      <div style={calendarHeaderStyle}>
-        <button 
-          type="button"
-          style={navButtonStyle}
-          onClick={() => navigateMonth(-1)}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = colourToken.pinkLight;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          ‹
-        </button>
-        <h3 style={monthYearStyle}>
-          {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-        </h3>
-        <button 
-          type="button"
-          style={navButtonStyle}
-          onClick={() => navigateMonth(1)}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = colourToken.pinkLight;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          ›
-        </button>
+      {/* Main Calendar */}
+      <div style={calendarMainContentStyle}>
+        <div style={calendarHeaderStyle}>
+          <button 
+            type="button"
+            style={navButtonStyle}
+            onClick={() => navigateMonth(-1)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colourToken.pinkLight;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            ‹
+          </button>
+          <h3 style={monthYearStyle}>
+            {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h3>
+          <button 
+            type="button"
+            style={navButtonStyle}
+            onClick={() => navigateMonth(1)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colourToken.pinkLight;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            ›
+          </button>
+        </div>
+
+        <div style={calendarGridStyle}>
+          <div style={daysOfWeekHeaderStyle}>
+            {daysOfWeek.map(day => (
+              <div key={day} style={dayOfWeekStyle}>{day}</div>
+            ))}
+          </div>
+          <div style={daysGridStyle}>
+            {renderCalendarDays()}
+          </div>
+        </div>
+
+        {renderEventDetails()}
       </div>
 
-      <div style={calendarGridStyle}>
-        <div style={daysOfWeekHeaderStyle}>
-          {daysOfWeek.map(day => (
-            <div key={day} style={dayOfWeekStyle}>{day}</div>
-          ))}
-        </div>
-        <div style={daysGridStyle}>
-          {renderCalendarDays()}
-        </div>
-      </div>
-
-      {renderEventDetails()}
-
+      {/* Upcoming Events Grid */}
       <div style={upcomingEventsStyle}>
-        <h4 style={{ color: colourToken.white, margin: '0 0 16px 0', fontSize: '18px' }}>
+        <h4 style={{ color: colourToken.primary, margin: '0 0 16px 0', fontSize: '18px' }}>
           Upcoming Cultural Events
         </h4>
-        <div style={eventsListStyle}>
+        <div style={upcomingEventsGridStyle}>
           {allEvents
             .filter(event => new Date(event.date) > new Date())
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-            .slice(0, 4)
+            .slice(0, isMobile ? 4 : 6)
             .map(event => (
               <div 
                 key={event.id} 
                 style={upcomingEventCardStyle}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateX(4px)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
                 <div style={eventDateStyle}>
@@ -502,6 +526,22 @@ function EventsCalendar({ events = [] }: EventsCalendarProps) {
                 <div style={eventInfoStyle}>
                   <h5 style={eventInfoTitleStyle}>{event.title}</h5>
                   <p style={eventInfoTextStyle}>{event.time} • {event.venue}</p>
+                  {event.type && (
+                    <span style={{
+                      background: `linear-gradient(45deg, ${colourToken.pinkLight}, ${colourToken.pink})`,
+                      color: colourToken.white,
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      marginTop: '8px',
+                      display: 'inline-block',
+                      textTransform: 'uppercase' as const,
+                      letterSpacing: '0.5px',
+                    }}>
+                      {event.type}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
