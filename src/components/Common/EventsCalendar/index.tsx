@@ -316,7 +316,6 @@ function EventsCalendar({
     fontSize: '14px',
   };
 
-  // Use events from props
   const allEvents = events;
 
   const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();

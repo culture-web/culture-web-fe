@@ -27,7 +27,6 @@ function MainPage() {
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
   
-  // Pagination state for upcoming events
   const [currentUpcomingPage, setCurrentUpcomingPage] = useState(0);
   const [totalUpcomingEvents, setTotalUpcomingEvents] = useState(0);
   const [upcomingEventsLoading, setUpcomingEventsLoading] = useState(false);
@@ -88,7 +87,6 @@ function MainPage() {
     };
   }, []);
 
-  // Separate function to fetch upcoming events with pagination
   const fetchUpcomingEvents = useCallback(async (page: number) => {
     try {
       setUpcomingEventsLoading(true);
@@ -132,7 +130,6 @@ function MainPage() {
     }
   }, [eventsPerPage, setTotalUpcomingEvents, setCurrentUpcomingPage, setUpcomingEvents, setUpcomingEventsLoading]);
 
-  // Pagination handlers
   const handlePreviousUpcomingPage = () => {
     if (currentUpcomingPage > 0) {
       fetchUpcomingEvents(currentUpcomingPage - 1);
