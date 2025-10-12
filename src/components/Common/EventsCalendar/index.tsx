@@ -550,17 +550,28 @@ function EventsCalendar({
         <div style={{
           ...calendarMainContentStyle,
           display: 'flex',
+          flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          minHeight: '200px'
+          minHeight: '200px',
+          gap: '16px'
         }}>
           <div style={{
-            color: colourToken.primary,
-            fontSize: '16px',
-            fontWeight: 500
-          }}>
-            Loading events...
-          </div>
+            width: '40px',
+            height: '40px',
+            border: `3px solid ${colourToken.lightGray}`,
+            borderTop: `3px solid ${colourToken.pinkLight}`,
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+          }} />
+          <style>
+            {`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}
+          </style>
         </div>
       )}
 
@@ -692,9 +703,35 @@ function EventsCalendar({
       {/* Upcoming Events Grid */}
       <div style={upcomingEventsStyle}>
         <h4 style={{ color: colourToken.primary, margin: '0 0 16px 0', fontSize: '18px' }}>
-          Upcoming Cultural Events {upcomingEventsLoading && '(Loading...)'}
+          Upcoming Cultural Events
         </h4>
         
+        {upcomingEventsLoading ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '200px',
+            gap: '16px'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: `3px solid ${colourToken.lightGray}`,
+              borderTop: `3px solid ${colourToken.pinkLight}`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }} />
+            <div style={{
+              color: colourToken.gray,
+              fontSize: '14px',
+              fontWeight: 500,
+            }}>
+              Loading events...
+            </div>
+          </div>
+        ) : (
         <div style={upcomingEventsGridStyle}>
           {sortedUpcomingEvents.length > 0 ? (
             sortedUpcomingEvents.map(event => {
@@ -791,6 +828,7 @@ function EventsCalendar({
             </div>
           )}
         </div>
+        )}
         
         {/* Pagination Controls */}
         {totalUpcomingPages > 1 && (
