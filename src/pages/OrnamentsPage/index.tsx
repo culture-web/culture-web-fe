@@ -79,6 +79,13 @@ function OrnamentsPage() {
           }}
         >
           <strong>{ornament.name}</strong>
+          {ornament.image && (
+            <img
+              src={ornament.image}
+              alt={ornament.name}
+              style={{ marginTop: 8, maxWidth: 220, borderRadius: 4 }}
+            />
+          )}
           <div style={{ fontSize: '0.9em', marginTop: '4px' }}>{ornament.description}</div>
         </div>
       )}
