@@ -7,6 +7,7 @@ import MainPage from 'pages/MainPage';
 import KathakaliPage from 'pages/CulturesKathakaliPage';
 import KootiyattamPage from 'pages/CulturesKootiyattamPage';
 import OrnamentsPage from 'pages/OrnamentsPage';
+import OrnamentsCharacterListPage from 'pages/OrnamentsCharacterListPage';
 import Navbar from 'components/Common/Navbar';
 import DropdownNavbar from 'components/Common/DropdownNavbar';
 import useIsMobile from 'utils/isMobile';
@@ -32,7 +33,8 @@ function App() {
                 path="/cultures/kootiyattam"
                 element={<KootiyattamPage />}
               />
-              <Route path="/cultures/kathakali/ornaments" element={<OrnamentsPage />}/>
+              <Route path="/cultures/kathakali/ornaments" element={<OrnamentsCharacterListPage />}/>
+              <Route path="/cultures/kathakali/ornaments/pacha" element={<OrnamentsPage />}/>
             </Routes>
           </Flex>
         </Flex>

@@ -34,6 +34,8 @@ function OrnamentsPage() {
             width: '100%',
             height: 'auto',
             pointerEvents: 'none',
+            transform: 'translate(25px, -50px)',
+
           }}
         />
 
@@ -58,7 +60,7 @@ function OrnamentsPage() {
               pointerEvents="auto"
               onMouseEnter={() => setHovered(name)}
               onMouseLeave={() => setHovered(null)}
-              style={{ cursor: 'pointer', transition: 'stroke 0.2s ease' }}
+              style={{ cursor: 'pointer', transition: 'stroke 0.2s ease', transform: 'translate(25px, -50px)'}}
             />
           ))}
         </svg>
