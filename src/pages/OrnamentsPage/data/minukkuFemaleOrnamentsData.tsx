@@ -15,17 +15,11 @@ import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
 import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
 import tantappatippu from 'assets/images/kathakali-ornaments/tantappatippu.png';
 import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
+import type { Ornament } from './types';
 
-interface Ornament {
-  id: string;
-  name: string;
-  pathD: string;   // SVG path "d" string
-  tooltipPosition: { top: string; left: string };  // positions for tooltip
-  description: string | React.ReactNode;          // tooltip content (can be multiline)
-  image: string;
-}
 
-const ornamentsData: Ornament[] = [
+
+const pachaOrnamentsData: Ornament[] = [
   {
     id: 'kireedam',
     name: 'Kireedam',
@@ -387,4 +381,4 @@ const ornamentsData: Ornament[] = [
   },
 ];
 
-export default ornamentsData;
+export default pachaOrnamentsData;

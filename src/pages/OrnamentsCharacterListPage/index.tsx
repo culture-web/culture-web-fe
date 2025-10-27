@@ -5,7 +5,7 @@ import minukkufemaleImage from 'assets/images/kathakali-stock-images/minukkufema
 
 const characters = [
   { id: 'pacha', name: 'Pacha', image: pachaImage },
-  { id: 'kathi', name: 'Kathi', image: minukkufemaleImage },
+  { id: 'minukkufemale', name: 'Minukku Female', image: minukkufemaleImage },
   // Add more
 ];
 

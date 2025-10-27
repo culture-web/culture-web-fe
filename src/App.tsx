@@ -34,7 +34,7 @@ function App() {
                 element={<KootiyattamPage />}
               />
               <Route path="/cultures/kathakali/ornaments" element={<OrnamentsCharacterListPage />}/>
-              <Route path="/cultures/kathakali/ornaments/pacha" element={<OrnamentsPage />}/>
+              <Route path="/cultures/kathakali/ornaments/:characterId" element={<OrnamentsPage />} />
             </Routes>
           </Flex>
         </Flex>
