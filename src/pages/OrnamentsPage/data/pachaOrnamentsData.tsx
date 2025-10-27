@@ -111,7 +111,7 @@ const pachaOrnamentsData: Ornament[] = [
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Choker</li>
-        <li>Blackcotton and red woolover cotton tape</li>
+        <li>Black cotton and red woolover cotton tape</li>
         <li>Worn over kazhuttartam (necklace) to keep in place</li>
       </ul>
     ),
@@ -126,7 +126,7 @@ const pachaOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Necklace</li>
         <li>Plastic and metal gold toned beads</li>
-        <li>Tied around neck at the back</li>
+        <li>Two red woolpompoms</li>
       </ul>
     ),
     image: kazhuttaram,

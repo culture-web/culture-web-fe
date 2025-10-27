@@ -1,117 +1,84 @@
-import kireedam from 'assets/images/kathakali-ornaments/kireedam.png';
-import thoda from 'assets/images/kathakali-ornaments/thoda.png';
-import chevippuvu from 'assets/images/kathakali-ornaments/chevippuvu.png';
-import chutti from 'assets/images/kathakali-ornaments/chutti.png';
 import kazhuthunada from 'assets/images/kathakali-ornaments/kazhuthunada.png';
-import kazhuttaram from 'assets/images/kathakali-ornaments/kazhuttaram.png';
-import paruttikkaimani from 'assets/images/kathakali-ornaments/paruttikkaimani.png';
-import tolputtu from 'assets/images/kathakali-ornaments/tolputtu.png';
-import kuralaram from 'assets/images/kathakali-ornaments/kuralaram.png';
-import uttariya from 'assets/images/kathakali-ornaments/uttariya.png';
 import kastakatakam from 'assets/images/kathakali-ornaments/kastakatakam.png';
 import kalases from 'assets/images/kathakali-ornaments/kalases.png';
-import pattuval from 'assets/images/kathakali-ornaments/pattuval.png';
-import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
-import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
-import tantappatippu from 'assets/images/kathakali-ornaments/tantappatippu.png';
-import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
+import veil from 'assets/images/kathakali-ornaments/veil.png';
+import katila from 'assets/images/kathakali-ornaments/katila.png';
+import kurunira from 'assets/images/kathakali-ornaments/kurunira.png';
+import kazhuttaramfemale from 'assets/images/kathakali-ornaments/kazhuttaramfemale.png';
+import mulakkuralaram from 'assets/images/kathakali-ornaments/mulakkuralaram.png';
+import tolputtufemale from 'assets/images/kathakali-ornaments/tolputtufemale.png';
+import paruttikkaimanifemale from 'assets/images/kathakali-ornaments/paruttikkaimanifemale.png';
+import patiarannanamfemale from 'assets/images/kathakali-ornaments/patiarannanamfemale.png';
+
 import type { Ornament } from './types';
 
 
 
-const pachaOrnamentsData: Ornament[] = [
+const minukkuFemaleOrnamentsData: Ornament[] = [
   {
-    id: 'kireedam',
-    name: 'Kireedam',
-    pathD: 'M 379.2 469.0 L 350.2 451.0 L 331.2 430.0 L 315.2 388.0 L 315.2 347.0 L 331.2 303.0 L 358.2 271.0 L 398.2 250.0 L 446.2 246.0 L 495.2 261.0 L 529.2 288.0 L 544.2 316.0 L 555.0 343.4 L 555.0 377.4 L 548.0 412.4 L 530.0 442.4 L 509.0 460.4 L 492.0 469.4 L 482.8 439.2 L 436.8 433.2 L 387.8 444.2 L 378.8 469.2 Z',
+    id: 'veil',
+    name: 'Veil',
+    pathD: 'M 397.2 17.0 L 259.2 98.0 L 220.2 140.0 L 136.2 344.0 L 122.2 552.0 L 127.2 664.0 L 94.2 730.0 L 83.2 772.0 L 118.2 808.0 L 137.2 812.0 L 150.2 753.0 L 151.2 673.0 L 167.2 650.0 L 178.2 627.0 L 150.2 473.0 L 167.2 379.0 L 206.2 320.0 L 208.2 266.0 L 231.2 233.0 L 249.2 188.0 L 259.2 128.0 L 297.2 86.0 L 335.2 73.0 L 373.2 78.0 L 394.2 101.0 L 401.2 126.0 L 404.2 169.0 L 424.2 208.0 L 409.2 226.0 L 403.2 254.0 L 391.2 264.0 L 391.2 281.0 L 439.2 309.0 L 450.2 323.0 L 458.2 299.0 L 472.2 295.0 L 502.2 318.0 L 527.2 379.0 L 539.2 379.0 L 436.2 66.0 L 431.2 30.0 L 420.2 20.0 L 398.2 15.0 Z',
     tooltipPosition: { top: '10%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Headdress of Pacha</li>
-        <li>2 pieces carved wood: disc & crown</li>
+        <li>Silk cloth covering the back of the head</li>
+        <li>Pink/gold poly tissue brocade</li>
       </ul>
     ),
-    image: kireedam,
+    image: veil,
   },
   {
-    id: 'thoda1',
-    name: 'Thoda',
-    pathD: 'M 374.2 425.0 L 361.2 438.0 L 363.2 451.0 L 375.2 460.0 L 387.2 458.0 L 391.2 431.0 L 374.2 424.0 Z',
+    id: 'kurunira',
+    name: 'Kurunira',
+    pathD: 'M 248.2 166.0 L 261.2 129.0 L 294.2 91.0 L 333.2 74.0 L 364.2 77.0 L 387.2 90.0 L 396.4 109.0 L 396.4 129.0 L 378.4 113.0 L 356.4 103.0 L 330.4 108.0 L 283.4 146.0 L 246.4 166.0 Z',
     tooltipPosition: { top: '20%', left: '93%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Ear Ornaments</li>
-        <li>Worn with Kireedam headdress</li>
-        <li>Larger than Chevippuvu</li>
+        <li>Women's headband</li>
+        <li>Chain of dangling ornaments</li>
+        <li>Red wool with black cotton backing</li>
       </ul>
     ),
-    image: thoda,
+    image: kurunira,
   },
   {
-    id: 'thoda2',
-    name: 'Thoda',
-    pathD: 'M 480.2 422.6 L 496.2 418.6 L 509.2 426.6 L 509.2 441.6 L 499.2 451.6 L 483.2 448.6 L 479.2 423.6 Z',
+    id: 'katila1',
+    name: 'Katila',
+    pathD: 'M 263.2 157.0 L 232.2 173.6 L 238.2 193.6 L 250.2 195.6 L 251.2 219.6 L 259.2 238.6 L 272.2 245.6 L 292.2 229.6 L 297.2 211.6 L 288.2 198.6 L 294.2 185.6 L 300.2 176.6 L 265.2 153.6 Z',
     tooltipPosition: { top: '20%', left: '93%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Ear Ornaments</li>
-        <li>Worn with Kireedam headdress</li>
-        <li>Larger than Chevippuvu</li>
+        <li>Women's earrings</li>
+        <li>Tied around head with red cotton cord</li>
+        <li>Carved wood decorated with gilt foil, plastic silver</li>
       </ul>
     ),
-    image: thoda,
+    image: katila,
   },
   {
-    id: 'chevippuvu1',
-    name: 'Chevippuvu',
-    pathD: 'M 377.2 472.8 L 369.2 480.8 L 369.2 491.8 L 376.2 499.8 L 389.2 496.8 L 396.2 485.8 L 392.2 476.8 L 380.2 471.8 Z',
+    id: 'katila2',
+    name: 'Katila',
+    pathD: 'M 396.2 158.0 L 407.2 230.0 L 426.2 214.0 L 414.2 177.0 L 396.2 158.0 Z',
     tooltipPosition: { top: '30%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Ear Ornaments</li>
-        <li>Attached to headband</li>
-        <li>Smaller than Thoda</li>
+        <li>Women's earrings</li>
+        <li>Tied around head with red cotton cord</li>
+        <li>Carved wood decorated with gilt foil, plastic silver</li>
       </ul>
     ),
-    image: chevippuvu,
-  },
-  {
-    id: 'chevippuvu2',
-    name: 'Chevippuvu',
-    pathD: 'M 491.2 464.0 L 481.2 470.8 L 479.2 480.8 L 484.2 488.8 L 494.2 492.8 L 504.2 487.8 L 508.2 477.8 L 504.2 466.8 L 491.2 461.8 Z',
-    tooltipPosition: { top: '30%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Ear Ornaments</li>
-        <li>Attached to headband</li>
-        <li>Smaller than Thoda</li>
-      </ul>
-    ),
-    image: chevippuvu,
-  },
-  {
-    id: 'chutti',
-    name: 'Chutti',
-    pathD: 'M 398.2 492.0 L 382.2 498.0 L 370.2 504.0 L 366.2 512.0 L 369.2 519.0 L 382.2 525.0 L 398.2 528.0 L 421.2 530.0 L 471.2 528.0 L 506.2 516.0 L 513.2 508.0 L 509.2 500.0 L 478.2 487.0 L 475.2 511.0 L 468.2 519.0 L 440.2 522.0 L 402.2 517.0 L 397.2 491.0 Z',
-    tooltipPosition: { top: '30%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>White facial ridges</li>
-        <li>Made from a mixture of rice paste and lime</li>
-        <li>Highlights the facial make-up and curcial for distinguishing characters and their personalities</li>
-      </ul>
-    ),
-    image: chutti,
+    image: katila,
   },
   {
     id: 'Kazhuthu nada',
     name: 'Kazhuthu nada',
-    pathD: 'M 404.2 538.2 L 403.2 545.2 L 424.2 554.2 L 443.2 555.2 L 471.2 548.2 L 472.2 540.2 L 455.2 545.2 L 437.2 548.2 L 419.2 545.2 L 404.2 537.2 Z',
+    pathD: 'M 264.2 266.2 L 257.2 277.2 L 315.2 298.2 L 368.2 303.2 L 388.2 296.2 L 392.2 276.2 L 367.2 285.2 L 325.2 282.2 L 265.2 265.2 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Choker</li>
-        <li>Blackcotton and red woolover cotton tape</li>
+        <li>Black cotton and red woolover cotton tape</li>
         <li>Worn over kazhuttartam (necklace) to keep in place</li>
       </ul>
     ),
@@ -120,117 +87,130 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Kazhuttaram',
     name: 'Kazhuttaram',
-    pathD: 'M 401.2 546.6 L 391.2 592.6 L 386.2 649.6 L 390.2 669.6 L 407.2 686.6 L 428.2 681.6 L 449.2 660.6 L 462.2 622.6 L 472.2 548.6 L 446.2 555.6 L 423.2 553.6 L 402.2 545.6 Z',
+    pathD: 'M 266.2 279.8 L 294.2 339.0 L 309.2 392.0 L 320.2 459.0 L 372.2 542.0 L 418.2 568.0 L 452.2 574.0 L 466.2 552.0 L 474.2 438.0 L 463.2 402.0 L 426.2 360.0 L 384.2 298.0 L 360.2 303.0 L 322.2 297.0 L 265.2 278.0 Z',
     tooltipPosition: { top: '22%', left: '95%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Necklace</li>
-        <li>Plastic and metal gold toned beads</li>
-        <li>Tied around neck at the back</li>
+        <li>Women's Necklace</li>
+        <li>Many strings of gold colored plastic beads</li>
+        <li>Two red wool pompoms</li>
       </ul>
     ),
-    image: kazhuttaram,
+    image: kazhuttaramfemale,
   },
   {
-    id: 'Paruttikkaimani1',
-    name: 'Paruttikkaimani',
-    pathD: 'M 258.2 559.6 L 253.2 577.6 L 273.2 576.6 L 289.2 586.6 L 299.2 580.6 L 278.2 556.6 L 257.2 561.0 Z',
-    tooltipPosition: { top: '32%', left: '88%' },
+    id: 'mulakkuralaram',
+    name: 'Mulakkuralaram',
+    pathD: 'M 324.2 521.8 L 331.2 550.8 L 343.2 595.8 L 406.2 644.8 L 468.2 649.8 L 520.2 629.8 L 539.2 595.8 L 545.2 565.8 L 527.2 514.8 L 528.2 491.8 L 518.2 475.8 L 493.2 478.8 L 486.2 491.8 L 472.2 526.8 L 458.2 553.8 L 441.2 563.8 L 407.2 552.8 L 371.2 517.8 L 329.2 518.8 Z',
+    tooltipPosition: { top: '30%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
-        <li>Wooden beads and baubles with gilt foil</li>
-        <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
+        <li>Women's breastplate</li>
+        <li>Red wool felt decorated with gilt foil, wool multicolored tassels, green and red plastic jewels with gilt underneath</li>
+        <li>Ties to body with red cotton cord and cotton twill</li>
       </ul>
     ),
-    image: paruttikkaimani,
-  },
-  {
-    id: 'Paruttikkaimani2',
-    name: 'Paruttikkaimani',
-    pathD: 'M 567.2 609.8 L 567.2 622.8 L 612.2 614.8 L 612.2 625.8 L 625.2 604.8 L 619.2 596.8 L 579.2 599.8 L 567.2 607.8 Z',
-    tooltipPosition: { top: '32%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
-        <li>Wooden beads and baubles with gilt foil</li>
-        <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
-      </ul>
-    ),
-    image: paruttikkaimani,
+    image: mulakkuralaram,
   },
   {
     id: 'Tolputtu1',
     name: 'Tolputtu',
-    pathD: 'M 282.2 558.8 L 295.2 573.8 L 337.2 541.8 L 346.2 540.8 L 336.2 531.8 L 326.2 539.8 L 306.2 544.8 L 284.2 560.8 Z',
+    pathD: 'M 168.2 378.8 L 173.2 417.8 L 179.2 426.8 L 180.2 464.8 L 258.2 458.8 L 256.2 400.8 L 239.2 356.8 L 203.2 347.8 L 177.2 360.8 L 166.2 377.8 Z',
     tooltipPosition: { top: '27%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Epaulettes</li>
-        <li>6 pieces carved wood</li>
-        <li>Cotton cords tied around body & bicep</li>
+        <li>Women's epaulettes</li>
+        <li>Carved wood, red wool, gilt foil, green & red plastic jewels, cotton cord</li>
       </ul>
     ),
-    image: tolputtu,
+    image: tolputtufemale,
   },
   {
     id: 'Tolputtu2',
     name: 'Tolputtu',
-    pathD: 'M 546.2 556.0 L 571.2 601.0 L 601.2 598.0 L 577.2 567.0 L 559.2 553.0 L 546.2 555.0 Z',
+    pathD: 'M 449.2 320.0 L 480.2 402.0 L 526.2 385.0 L 505.2 320.0 L 473.2 296.0 L 461.2 296.4 L 450.2 307.4 L 450.2 320.0 Z',
     tooltipPosition: { top: '27%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Epaulettes</li>
-        <li>6 pieces carved wood</li>
-        <li>Cotton cords tied around body & bicep</li>
+        <li>Women's epaulettes</li>
+        <li>Carved wood, red wool, gilt foil, green & red plastic jewels, cotton cord</li>
       </ul>
     ),
-    image: tolputtu,
-  },
+    image: tolputtufemale,
+  },  
   {
-    id: 'Kuralaram',
-    name: 'Kuralaram',
-    pathD: 'M 359.2 667.2 L 357.2 692.2 L 398.2 708.2 L 398.2 697.2 L 406.2 688.2 L 423.2 688.2 L 426.2 704.2 L 422.2 712.2 L 448.2 708.2 L 482.2 694.2 L 485.2 680.2 L 472.2 671.2 L 445.2 683.2 L 421.2 683.8 L 385.2 679.8 L 362.2 666.8 Z',
-    tooltipPosition: { top: '25%', left: '88%' },
+    id: 'Paruttikkaimani1',
+    name: 'Paruttikkaimani',
+    pathD: 'M 171.2 463.8 L 162.2 482.8 L 199.2 483.8 L 267.2 470.8 L 275.2 464.8 L 255.2 458.8 L 217.2 465.8 L 187.2 469.8 L 171.2 465.8 Z',
+    tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's breastplate</li>
-        <li>10 pieces carved wood</li>
-        <li>Neck bound with stitched cotton tape</li>
+        <li>Women's Upper Arm Band</li>
+        <li>6 ogee domes</li>
+        <li>These are slightly mismatched, as if carved by student/apprentice, or combined from two or more existing sets</li>
       </ul>
     ),
-    image: kuralaram,
+    image: paruttikkaimanifemale,
   },
   {
-    id: 'Uttariya1',
-    name: 'Uttariya',
-    pathD: 'M 383.2 542.6 L 338.2 540.6 L 293.2 574.6 L 275.2 634.6 L 270.2 759.6 L 276.2 781.6 L 260.2 811.6 L 248.2 839.6 L 256.2 859.6 L 230.2 906.6 L 225.2 945.6 L 251.2 962.6 L 291.2 961.6 L 300.2 950.6 L 330.2 959.6 L 373.2 946.6 L 384.2 943.6 L 351.2 887.6 L 359.2 818.6 L 348.2 803.6 L 358.2 765.8 L 357.2 679.8 L 366.2 628.8 L 369.2 574.8 L 384.2 542.8 Z',
-    tooltipPosition: { top: '42%', left: '93%' },
+    id: 'Paruttikkaimani2',
+    name: 'Paruttikkaimani',
+    pathD: 'M 487.2 399.8 L 506.2 391.8 L 542.2 385.8 L 545.2 390.8 L 522.2 399.8 L 490.2 407.8 L 484.2 398.8 Z',
+    tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Neck streamers/scarves</li>
-        <li>White cotton, 36”x78”, tied at center and third marks; striped area at edge tied off with folded/pleated self ruffles and stuffed full at stripes plus smell ball above</li>
+        <li>Women's Upper Arm Band</li>
+        <li>6 ogee domes</li>
+        <li>These are slightly mismatched, as if carved by student/apprentice, or combined from two or more existing sets</li>
       </ul>
     ),
-    image: uttariya,
+    image: paruttikkaimanifemale,
+  },  
+  {
+    id: 'Patiarannanam',
+    name: 'Patiarannanam',
+    pathD: 'M 540.2 603.8 L 506.2 630.8 L 502.2 651.8 L 486.2 667.8 L 459.2 675.8 L 463.2 686.8 L 515.2 689.8 L 539.2 657.8 L 558.2 639.8 L 541.2 602.8 Z',
+    tooltipPosition: { top: '37%', left: '88%' },
+    description: (
+      <ul style={{ margin: 0, paddingLeft: 16 }}>
+        <li>Women's belt</li>
+        <li>Carved wood, 7 belt pieces, two strings of beads</li>
+        <li>Red wool gilt foil, plastic gems, red cotton cord</li>
+        <li>Not symmetrical, but balanced</li>
+      </ul>
+    ),
+    image: patiarannanamfemale,
   },
   {
-    id: 'Uttariya2',
-    name: 'Uttariya',
-    pathD: 'M 487.2 541.8 L 494.2 799.8 L 493.2 862.8 L 461.2 944.8 L 486.2 968.8 L 534.2 959.8 L 570.2 973.8 L 615.2 999.8 L 671.2 974.8 L 670.2 956.8 L 646.2 929.8 L 613.2 876.8 L 600.2 772.8 L 611.2 765.8 L 593.2 737.8 L 576.2 625.8 L 540.2 559.8 L 517.2 545.8 L 488.2 540.8 Z',
-    tooltipPosition: { top: '42%', left: '93%' },
+    id: 'Kalases1',
+    name: 'Kalases',
+    pathD: 'M 543.2 586.8 L 552.2 605.8 L 615.2 613.8 L 615.2 594.8 L 596.2 576.8 L 565.2 577.8 L 545.2 587.8 Z',
+    tooltipPosition: { top: '20%', left: '0%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Neck streamers/scarves</li>
-        <li>White cotton, 36”x78”, tied at center and third marks; striped area at edge tied off with folded/pleated self ruffles and stuffed full at stripes plus smell ball above</li>
+        <li>Bracelet cuffs</li>
+        <li>Gilt foil, strings of silver toned beads</li>
       </ul>
     ),
-    image: uttariya,
+    image: kalases,
   },
+  {
+    id: 'Kalases2',
+    name: 'Kalases',
+    pathD: 'M 355.2 647.8 L 342.2 689.8 L 336.2 729.8 L 382.2 743.8 L 402.2 704.8 L 410.2 666.8 L 354.2 645.8 Z',
+    tooltipPosition: { top: '20%', left: '0%' },
+    description: (
+      <ul style={{ margin: 0, paddingLeft: 16 }}>
+        <li>Bracelet cuffs</li>
+        <li>Gilt foil, strings of silver toned beads</li>
+      </ul>
+    ),
+    image: kalases,
+  },  
   {
     id: 'Kastakatakam1',
     name: 'Kastakatakam',
-    pathD: 'M 81.2 588.0 L 89.2 599.0 L 108.2 608.0 L 96.2 616.0 L 88.2 644.0 L 69.2 645.0 L 74.2 621.0 L 68.2 611.0 L 49.2 603.0 L 68.2 593.0 L 79.2 588.0 Z',
+    pathD: 'M 411.2 650.8 L 406.2 688.8 L 387.2 744.8 L 406.2 757.8 L 443.2 763.8 L 449.2 749.8 L 445.2 734.8 L 464.2 693.8 L 457.2 682.8 L 466.2 671.8 L 461.2 651.8 L 445.2 651.8 L 433.2 640.8 L 411.2 649.8 Z',
     tooltipPosition: { top: '20%', left: '0%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -244,7 +224,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Kastakatakam2',
     name: 'Kastakatakam',
-    pathD: 'M 557.2 664.8 L 573.2 675.8 L 586.2 690.8 L 576.2 716.8 L 595.2 727.8 L 600.2 721.8 L 615.2 717.8 L 622.2 704.8 L 610.2 691.8 L 589.2 673.8 L 589.2 664.8 L 580.2 652.8 L 557.2 659.8 Z',
+    pathD: 'M 545.2 607.8 L 554.2 633.8 L 575.2 644.8 L 589.2 642.8 L 610.2 666.8 L 618.2 684.8 L 638.2 679.8 L 643.2 662.8 L 645.2 641.8 L 624.2 626.8 L 609.2 607.8 L 583.2 609.8 L 566.2 598.8 L 547.2 607.8 Z',
     tooltipPosition: { top: '20%', left: '0%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -254,131 +234,7 @@ const pachaOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: kastakatakam,
-  },
-  {
-    id: 'Kalases1',
-    name: 'Kalases',
-    pathD: 'M 89.0 590.8 L 97.0 611.8 L 98.0 630.8 L 85.0 644.8 L 120.0 651.8 L 133.0 633.8 L 133.0 613.8 L 124.0 595.8 L 88.0 590.8 Z',
-    tooltipPosition: { top: '20%', left: '0%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Bracelet cuffs</li>
-        <li>Gilt foil, strings of silver toned beads</li>
-      </ul>
-    ),
-    image: kalases,
-  },
-  {
-    id: 'Kalases2',
-    name: 'Kalases',
-    pathD: 'M 593.2 671.0 L 605.2 682.0 L 608.2 697.0 L 604.2 716.0 L 597.2 723.0 L 604.2 728.0 L 618.2 725.0 L 631.2 709.0 L 633.2 689.0 L 622.2 673.0 L 609.2 667.0 L 593.2 670.0 Z',
-    tooltipPosition: { top: '20%', left: '0%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Bracelet cuffs</li>
-        <li>Gilt foil, strings of silver toned beads</li>
-      </ul>
-    ),
-    image: kalases,
-  },
-  {
-    id: 'Pattu Val1',
-    name: 'Pattu Val',
-    pathD: 'M 392.2 532.0 L 371.2 566.0 L 365.2 628.0 L 370.2 655.0 L 365.2 685.0 L 367.2 818.0 L 353.2 874.0 L 351.2 889.0 L 371.2 905.0 L 393.2 904.0 L 414.2 889.0 L 415.2 873.0 L 402.2 858.0 L 391.2 847.0 L 392.2 837.0 L 381.2 826.0 L 385.2 793.0 L 384.2 667.0 L 379.2 655.0 L 385.2 643.0 L 393.2 566.0 L 403.2 543.0 L 395.2 532.0 Z',
-    tooltipPosition: { top: '32%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Side streamers</li>
-        <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
-      </ul>
-    ),
-    image: pattuval,
-  },
-  {
-    id: 'Pattu Val2',
-    name: 'Pattu Val',
-    pathD: 'M 473.2 531.2 L 463.2 605.2 L 460.2 657.2 L 449.2 705.2 L 442.2 832.2 L 426.2 873.2 L 410.2 890.2 L 412.2 910.2 L 440.2 920.2 L 473.2 904.2 L 459.2 865.2 L 460.2 850.2 L 454.2 840.2 L 471.2 750.2 L 472.2 663.8 L 487.2 537.8 L 473.2 526.8 Z',
-    tooltipPosition: { top: '32%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Side streamers</li>
-        <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
-      </ul>
-    ),
-    image: pattuval,
-  },
-  {
-    id: 'Patiarannanam',
-    name: 'Patiarannanam',
-    pathD: 'M 335.2 744.0 L 352.2 863.0 L 370.2 911.0 L 417.2 946.0 L 455.2 938.0 L 486.2 888.0 L 509.2 849.0 L 536.2 748.0 L 431.2 751.0 L 417.2 745.0 L 401.2 751.0 L 334.2 744.0 Z',
-    tooltipPosition: { top: '37%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's belt</li>
-        <li>Decorated with gilt foil, plastic jewels and red wool felt</li>
-        <li>Tied with white cotton cord</li>
-      </ul>
-    ),
-    image: patiarannanam,
-  },
-  {
-    id: 'Ottanakku',
-    name: 'Ottanakku',
-    pathD: 'M 373.2 792.4 L 373.2 941.4 L 385.2 1000.4 L 408.2 1028.4 L 410.2 1045.4 L 423.2 1054.4 L 436.2 1048.4 L 437.2 1030.4 L 455.2 1006.4 L 467.2 925.4 L 465.2 793.4 L 373.2 790.4 Z',
-    tooltipPosition: { top: '18%', left: '92%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Apron</li>
-        <li>Red wool tassel with wooden bell shaped topper decorated in gilt foil</li>
-        <li>Chrome decoration with silver tone beads</li>
-        <li>Red cotton cord to tie around waist</li>
-      </ul>
-    ),
-    image: ottanakku,
-  },
-  {
-    id: 'Tantappatippu1',
-    name: 'Tantappatippu',
-    pathD: 'M 261.2 1215.8 L 258.2 1232.8 L 248.2 1248.8 L 260.2 1261.8 L 301.2 1243.8 L 300.2 1228.8 L 282.2 1233.8 L 274.2 1228.8 L 268.2 1231.8 L 270.2 1220.8 L 263.2 1215.8 Z',
-    tooltipPosition: { top: '40%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Bell Stays</li>
-        <li>Red wool, black cotton faille trim, silver toned plastic bead string, black cotton end caps, heavy cotton/jute tapes</li>
-      </ul>
-    ),
-    image: tantappatippu,
-  },
-  {
-    id: 'Tantappatippu2',
-    name: 'Tantappatippu',
-    pathD: 'M 550.2 1229.8 L 552.2 1251.8 L 581.2 1260.8 L 603.2 1254.8 L 604.2 1239.8 L 594.2 1222.8 L 583.2 1232.8 L 573.2 1232.8 L 556.2 1224.8 L 549.2 1227.8 Z',
-    tooltipPosition: { top: '50%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Bell Stays</li>
-        <li>Red wool, black cotton faille trim, silver toned plastic bead string, black cotton end caps, heavy cotton/jute tapes</li>
-      </ul>
-    ),
-    image: tantappatippu,
-  },
-  {
-    id: 'Chuttituni',
-    name: 'Chuttituni',
-    pathD: 'M 396.2 480.2 L 402.2 464.2 L 423.2 453.2 L 438.2 451.2 L 459.2 452.4 L 473.2 459.4 L 480.2 473.4 L 491.2 464.4 L 478.2 446.4 L 451.2 435.4 L 422.2 434.4 L 402.2 445.4 L 389.2 459.4 L 384.2 472.4 L 396.2 480.4 Z',
-    tooltipPosition: { top: '12%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Headbands</li>
-        <li>Red wool felt</li>
-        <li>Black cotton backing</li>
-        <li>Rice paste décor</li>
-      </ul>
-    ),
-    image: chuttituni,
-  },
+  }
 ];
 
-export default pachaOrnamentsData;
+export default minukkuFemaleOrnamentsData;

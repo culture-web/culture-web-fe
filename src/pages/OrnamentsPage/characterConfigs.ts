@@ -44,7 +44,7 @@ const characterConfigs: Record<string, CharacterConfig> = {
     imageStyle: {
       display: 'block',
       width: '100%',
-      maxWidth: 600,
+      maxWidth: 800,
       height: 'auto',
       transform: 'translate(0px, 150px)',
       margin: '0 auto',
@@ -56,7 +56,8 @@ const characterConfigs: Record<string, CharacterConfig> = {
       left: 0,
       width: '100%',
       height: '100%',
-      pointerEvents: 'none'
+      pointerEvents: 'none',
+      transform: 'translate(0px, 150px)',
     }
   }
 };
