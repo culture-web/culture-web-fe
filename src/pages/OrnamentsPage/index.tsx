@@ -1,85 +1,26 @@
-import { Typography, Flex } from 'antd';
+import { Typography, Flex, Button } from 'antd';
+import { LeftOutlined } from '@ant-design/icons';
 import { useStyleToken } from 'themeStyles';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import type { Ornament } from './types';
-
-import pachaImage from 'assets/images/kathakali-stock-images/pacha.png';
-import minukkuFemaleImage from 'assets/images/kathakali-stock-images/minukkufemale.png';
-import pachaOrnamentsData from './data/pachaOrnamentsData';
-import minukkuFemaleOrnamentsData from './data/minukkuFemaleOrnamentsData';
+import characterConfigs from './characterConfigs';
 
 const { Title } = Typography;
-
-// Add imageStyle and svgStyle for each character to control their display independently
-const characterMap: Record<
-  string,
-  {
-    title: string;
-    image: string;
-    data: Ornament[];
-    imageStyle?: React.CSSProperties;
-    svgStyle?: React.CSSProperties;
-  }
-> = {
-  pacha: {
-    title: 'Pacha',
-    image: pachaImage,
-    data: pachaOrnamentsData,
-    imageStyle: {
-      display: 'block',
-      width: '100%',
-      maxWidth: 900,
-      height: 'auto',
-      transform: 'translate(25px, -50px)',
-      pointerEvents: 'none',
-      margin: '0 auto'
-    },
-    svgStyle: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none',
-      transform: 'translate(25px, -50px)'
-    }
-  },
-  minukkufemale: {
-    title: 'Minukku Female',
-    image: minukkuFemaleImage,
-    data: minukkuFemaleOrnamentsData,
-    imageStyle: {
-      display: 'block',
-      width: '100%',
-      maxWidth: 380, // Tweak this value independently
-      height: 'auto',
-      margin: '0 auto',
-      pointerEvents: 'none'
-    },
-    svgStyle: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none'
-      // If you need further translation for alignment, add transform here too
-    }
-  }
-};
 
 function OrnamentsPage() {
   const { characterId } = useParams<{ characterId: string }>();
   const styleToken = useStyleToken();
+  const navigate = useNavigate();
 
-  const characterConfig = characterMap[characterId!] || characterMap['pacha'];
+
+  const characterConfig = characterConfigs[characterId!] || characterConfigs['pacha'];
   const ornamentsData = characterConfig.data;
   const characterImage = characterConfig.image;
   const characterTitle = characterConfig.title;
-  const imageStyle = characterConfig.imageStyle;
-  const svgStyle = characterConfig.svgStyle;
+  const { imageStyle, svgStyle } = characterConfig;
+
 
   const [hovered, setHovered] = useState<string | null>(null);
   const ornament = ornamentsData.find((o: Ornament) => o.name === hovered);
@@ -145,6 +86,16 @@ function OrnamentsPage() {
           </div>
         )}
       </div>
+      <Button
+        icon={<LeftOutlined />}
+        onClick={() => navigate('/cultures/kathakali/ornaments')}
+        style={{
+          position: 'fixed',
+          bottom: 20,
+          left: 20,
+          zIndex: 1000
+        }}
+      />
     </Flex>
   );
 }
