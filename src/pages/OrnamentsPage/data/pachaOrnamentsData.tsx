@@ -27,7 +27,7 @@ const pachaOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '10%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Headdress of Pacha</li>
+        <li>Headdress (Crown) of Pacha</li>
         <li>2 pieces carved wood: disc & crown</li>
       </ul>
     ),

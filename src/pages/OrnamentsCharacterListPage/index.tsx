@@ -2,10 +2,12 @@ import { Card, Button, Row, Col } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import pachaImage from 'assets/images/kathakali-stock-images/pacha.png';
 import minukkufemaleImage from 'assets/images/kathakali-stock-images/minukkufemale.png'
+import chuvannathadiImage from 'assets/images/kathakali-stock-images/chuvannathadi.png'
 
 const characters = [
   { id: 'pacha', name: 'Pacha', image: pachaImage },
   { id: 'minukkufemale', name: 'Minukku Female', image: minukkufemaleImage },
+  { id: 'chuvannathadi', name: 'Chuvanna Thadi (Red Beard)', image: chuvannathadiImage},
   // Add more
 ];
 
