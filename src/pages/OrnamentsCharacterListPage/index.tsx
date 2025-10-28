@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import pachaImage from 'assets/images/kathakali-stock-images/pacha.png';
 import minukkufemaleImage from 'assets/images/kathakali-stock-images/minukkufemale.png'
 import chuvannathadiImage from 'assets/images/kathakali-stock-images/chuvannathadi.png'
+import kathiImage from 'assets/images/kathakali-stock-images/kathi.png'
+import karimaleImage from 'assets/images/kathakali-stock-images/karimale.png'
+
 
 const characters = [
   { id: 'pacha', name: 'Pacha', image: pachaImage },
   { id: 'minukkufemale', name: 'Minukku Female', image: minukkufemaleImage },
   { id: 'chuvannathadi', name: 'Chuvanna Thadi (Red Beard)', image: chuvannathadiImage},
+  { id: 'kathi', name: 'Kathi', image: kathiImage },
+  { id: 'karimale', name: 'Kari Male', image: karimaleImage },
   // Add more
 ];
 
