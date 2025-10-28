@@ -113,7 +113,7 @@ const characterConfigs: Record<string, CharacterConfig> = {
     }
   },
   karimale: {
-    title: 'Kari',
+    title: 'Kari Male',
     image: karimaleImage,
     data: kariMaleOrnamentsData,
     imageStyle: {

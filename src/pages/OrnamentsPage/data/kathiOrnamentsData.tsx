@@ -13,13 +13,12 @@ import kalases from 'assets/images/kathakali-ornaments/kalases.png';
 import pattuval from 'assets/images/kathakali-ornaments/pattuval.png';
 import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
 import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
-import tantappatippu from 'assets/images/kathakali-ornaments/tantappatippu.png';
 import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
 import type { Ornament } from './types';
 
 
 
-const pachaOrnamentsData: Ornament[] = [
+const kathiOrnamentsData: Ornament[] = [
   {
     id: 'kireedam',
     name: 'Kireedam',
@@ -386,4 +385,4 @@ const pachaOrnamentsData: Ornament[] = [
   },
 ];
 
-export default pachaOrnamentsData;
+export default kathiOrnamentsData;
