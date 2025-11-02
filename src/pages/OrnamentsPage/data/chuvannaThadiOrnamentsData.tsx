@@ -10,23 +10,24 @@ import pattuval from 'assets/images/kathakali-ornaments/pattuval.png';
 import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
 import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
 import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
+import kuttichamaram from 'assets/images/kathakali-ornaments/kuttichamaram.png';
 import type { Ornament } from './types';
 
 
 
 const chuvannaThadiOrnamentsData: Ornament[] = [
   {
-    id: 'kireedam',
-    name: 'Kireedam',
+    id: 'kuttichamaram',
+    name: 'Kuttichamaram',
     pathD: 'M 333.2 100.0 L 282.2 130.0 L 252.2 162.0 L 211.2 235.0 L 193.2 313.0 L 201.2 387.0 L 219.2 440.0 L 251.2 487.0 L 293.2 530.0 L 319.2 542.0 L 356.2 515.0 L 375.2 481.0 L 420.2 471.0 L 506.2 472.0 L 530.2 508.0 L 573.2 542.0 L 615.2 519.0 L 655.2 474.0 L 687.2 419.0 L 699.2 338.0 L 698.2 289.0 L 673.2 218.0 L 606.2 129.0 L 507.2 82.0 L 413.2 77.0 L 335.2 98.0 Z',
     tooltipPosition: { top: '10%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Headdress (Crown) of Chuvanna Thadi</li>
-        <li>2 pieces carved wood: disc & crown</li>
+        <li>Bigger than kireedam worn by other male characters</li>
       </ul>
     ),
-    image: kireedam,
+    image: kuttichamaram,
   },
   {
     id: 'thoda1',
