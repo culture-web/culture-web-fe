@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Divider } from 'antd';
+import { useLocation } from 'react-router-dom';
 import useIsMobile from 'utils/isMobile';
 import { AIChatProps } from './types';
 import useChatMessages from './hooks/useChatMessages';
@@ -8,6 +9,15 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 
 const AIChat: React.FC<AIChatProps> = ({ onClose }) => {
+  const location = useLocation();
+  const [mudrasMode, setMudrasMode] = useState(false);
+  
+  // Auto-detect mode based on current page
+  useEffect(() => {
+    const isMudrasPage = location.pathname === '/learn';
+    setMudrasMode(isMudrasPage);
+  }, [location.pathname]);
+
   const {
     messages,
     inputValue,
@@ -17,7 +27,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose }) => {
     handleImageUpload,
     removeImage,
     handleSendMessage,
-  } = useChatMessages();
+  } = useChatMessages(mudrasMode);
   
   const isMobile = useIsMobile();
 
@@ -35,7 +45,10 @@ const AIChat: React.FC<AIChatProps> = ({ onClose }) => {
       }}
       bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%' }}
     >
-      <ChatHeader onClose={onClose} />
+      <ChatHeader 
+        onClose={onClose}
+        mudrasMode={mudrasMode}
+      />
       
       <MessageList messages={messages} isLoading={isLoading} />
 

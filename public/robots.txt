@@ -1,0 +1,11 @@
+# KathakalAI - Robots.txt
+# Block search engines from indexing admin pages
+
+User-agent: *
+Disallow: /admin-login
+Disallow: /k-manage-portal
+Disallow: /api/auth/
+Disallow: /api/k-manage/
+
+# Allow everything else
+Allow: /
