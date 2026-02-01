@@ -1,5 +1,6 @@
 import { ChatbotResponse } from 'components/AIChat/types';
 import BACKEND_URI from 'configs/env.config';
+import { getCurrentUserToken } from 'configs/supabase.config';
 import { PredictionMultiple, Prediction } from 'types/interface';
 
 const getImageDimensions = (
@@ -137,9 +138,22 @@ export const sendChatQuery = async (
       formData.append('imageAnalysis', imageAnalysis);
     }
 
+    // Add Supabase JWT token if user is authenticated
+    const headers: Record<string, string> = {};
+    try {
+      const token = await getCurrentUserToken();
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.warn('Failed to get auth token for chat:', error);
+      // Continue without token for anonymous chat
+    }
+
     const response = await fetch(`${BACKEND_URI}/kathakali/chat`, {
       method: 'POST',
       body: formData,
+      headers,
     });
 
     if (!response.ok) {
