@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Image, Typography, Flex } from 'antd';
-import { Prediction } from 'types/interface'; // Assuming interface types are defined somewher
+import { Prediction } from 'types/interface';
 import { useColourToken, useStyleToken } from 'themeStyles'; // Assuming these hooks are defined somewhere
 import expressionToContent from './expressions';
 

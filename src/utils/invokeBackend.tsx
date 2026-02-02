@@ -1,3 +1,4 @@
+import { ChatbotResponse } from 'components/AIChat/types';
 import BACKEND_URI from 'configs/env.config';
 import { PredictionMultiple, Prediction } from 'types/interface';
 
@@ -117,3 +118,77 @@ export const uploadCharacterDataToBE = async (
   actual: string,
   type: string,
 ): Promise<void> => uploadCharacterData(imageFile, predicted, actual, type);
+
+export const sendChatQuery = async (
+  query: string,
+  imageFile?: File,
+  imageAnalysis?: string,
+): Promise<ChatbotResponse> => {
+  try {
+    // Always use FormData to be consistent with backend multer middleware
+    const formData = new FormData();
+    formData.append('query', query);
+    
+    if (imageFile) {
+      formData.append('image', imageFile);
+    }
+    
+    if (imageAnalysis) {
+      formData.append('imageAnalysis', imageAnalysis);
+    }
+
+    const response = await fetch(`${BACKEND_URI}/kathakali/chat`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get chat response: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    // Parse the response format
+    if (data.shortAnswer !== undefined) {
+      // New structured response format
+      return {
+        shortAnswer: data.shortAnswer || 'I apologize, but I couldn\'t generate a response at the moment.',
+        reasoning: data.reasoning || null,
+        sections: data.sections || [],
+        tables: data.tables || [],
+        metadata: data.metadata || {
+          hasStructuredContent: false,
+          responseLength: 0,
+          processingTimestamp: new Date().toISOString(),
+        }
+      };
+    } 
+      // Legacy response format - convert to new format
+      const responseText = data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
+      return {
+        shortAnswer: responseText,
+        reasoning: null,
+        sections: [],
+        tables: [],
+        metadata: {
+          hasStructuredContent: false,
+          responseLength: responseText.length,
+          processingTimestamp: new Date().toISOString(),
+        }
+      };
+    
+  } catch {
+    // Chat API Error - return error response in new format
+    return {
+      shortAnswer: 'Failed to communicate with the AI assistant',
+      reasoning: null,
+      sections: [],
+      tables: [],
+      metadata: {
+        hasStructuredContent: false,
+        responseLength: 0,
+        processingTimestamp: new Date().toISOString(),
+      }
+    };
+  }
+};

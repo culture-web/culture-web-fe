@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali6.jpg';
 import ImageUpload from 'components/FileUploads/ImageUpload';
-import { Image, Flex, Typography, Button } from 'antd';
+import AIChat from 'components/AIChat';
+import FloatingChatButton from 'components/FloatingChatButton';
+import { Image, Flex, Typography, Button, Modal } from 'antd';
+import { MessageOutlined } from '@ant-design/icons';
 import {
   // uploadImgToCharRecBEMultiple,
   uploadImgToCharRecBESingle,
@@ -22,6 +25,7 @@ function KathakaliPage() {
     useState(false);
   const [isExpressionModalSingleOpen, setIsExpressionModalSingleOpen] =
     useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   // const [isCharacterModalMultipleOpen, setIsCharacterModalMultipleOpen] =
   //   useState(false);
   // const [isExpressionModalMultipleOpen, setIsExpressionModalMultipleOpen] =
@@ -33,6 +37,12 @@ function KathakaliPage() {
 
   const headingStyle = isMobile ? styleToken.culture.cultureSectionHeadingTextStyleMobile : styleToken.culture.cultureSectionHeadingTextStyle;
   const contentStyle = isMobile ? styleToken.culture.cultureSectionContentTextStyleMobile : styleToken.culture.cultureSectionContentTextStyle;
+
+  const modalRender = (modal: React.ReactNode) => (
+    <div style={{ backgroundColor: 'transparent' }}>
+      {modal}
+    </div>
+  );
 
   const handleNavigation = (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -81,6 +91,15 @@ function KathakaliPage() {
           style={styleToken.culture.cultureSectionButtonTextStyle}
         >
           Expression Recognition Algorithm
+        </Button>
+        <Button
+          type="text"
+          onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+            handleNavigation(e, 'ai-chat')
+          }
+          style={styleToken.culture.cultureSectionButtonTextStyle}
+        >
+          AI Assistant
         </Button>
       </nav>
       <Flex vertical align="center" style={{ maxWidth: isMobile ? '90%' : '75%' }}>
@@ -174,7 +193,72 @@ function KathakaliPage() {
             </Flex>
           </Flex>
         </section>
+
+        <section id="ai-chat">
+          <Flex vertical>
+            <Title style={headingStyle}>
+              AI Assistant - Ask Me Anything
+            </Title>
+            <Text style={contentStyle}>
+              Have questions about Kathakali? Our AI assistant combines character and expression recognition with deep knowledge about Kathakali traditions, stories, and cultural significance.
+            </Text>
+            <Text style={contentStyle}>
+              You can upload images of Kathakali performances and ask questions like:
+            </Text>
+            <ul style={{ ...contentStyle, marginLeft: '2rem', marginTop: '0.5rem' }}>
+              <li>What character is this and what story are they from?</li>
+              <li>What does this expression mean in Kathakali?</li>
+              <li>Tell me about the significance of this character&apos;s makeup</li>
+              <li>What emotions is this performer conveying?</li>
+            </ul>
+            <Flex gap="large" style={{ margin: '1rem 0rem' }}>
+              <Button 
+                type="primary"
+                icon={<MessageOutlined />}
+                onClick={() => setIsChatModalOpen(true)}
+                style={{ 
+                  backgroundColor: '#c81f58',
+                  borderColor: '#c81f58',
+                  height: '40px',
+                  fontSize: '16px'
+                }}
+              >
+                Start Chat with AI Assistant
+              </Button>
+            </Flex>
+            <Text style={contentStyle}>
+              The AI assistant uses our advanced recognition algorithms to analyze your images and provides detailed explanations using our knowledge base about Kathakali culture and traditions.
+            </Text>
+          </Flex>
+        </section>
       </Flex>
+
+      {/* AI Chat Modal */}
+      <Modal
+        open={isChatModalOpen}
+        onCancel={() => setIsChatModalOpen(false)}
+        footer={null}
+        width={isMobile ? '95%' : '90%'}
+        style={{ maxWidth: '900px' }}
+        styles={{ 
+          body: { padding: 0, backgroundColor: 'transparent' },
+          content: { backgroundColor: 'transparent', boxShadow: 'none', padding: 0 },
+          mask: { backgroundColor: 'rgba(0, 0, 0, 0.2)' }
+        }}
+        centered
+        destroyOnClose
+        maskClosable
+        closable={false}
+        modalRender={modalRender}
+      >
+        <AIChat onClose={() => setIsChatModalOpen(false)} />
+      </Modal>
+
+      {/* Floating Chat Button */}
+      <FloatingChatButton 
+        onClick={() => setIsChatModalOpen(true)}
+        isMobile={isMobile}
+      />
       {isExpressionModalSingleOpen && (
         <ImageUpload
           isOpen={isExpressionModalSingleOpen}
