@@ -1,4 +1,4 @@
-import kireedam from 'assets/images/kathakali-ornaments/kireedam.png';
+import krishnamudi from 'assets/images/kathakali-ornaments/krishnamudi.png';
 import thoda from 'assets/images/kathakali-ornaments/thoda.png';
 import chevippuvu from 'assets/images/kathakali-ornaments/chevippuvu.png';
 import chutti from 'assets/images/kathakali-ornaments/chutti.png';
@@ -15,55 +15,26 @@ import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
 import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
 import tantappatippu from 'assets/images/kathakali-ornaments/tantappatippu.png';
 import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
+import kecchamani from 'assets/images/kathakali-ornaments/kecchamani.png';
 import type { Ornament } from './types';
 
-const pachaOrnamentsData: Ornament[] = [
+const krishnaOrnamentsData: Ornament[] = [
   {
-    id: 'kireedam',
-    name: 'Kireedam',
-    pathD: 'M 379.2 469.0 L 350.2 451.0 L 331.2 430.0 L 315.2 388.0 L 315.2 347.0 L 331.2 303.0 L 358.2 271.0 L 398.2 250.0 L 446.2 246.0 L 495.2 261.0 L 529.2 288.0 L 544.2 316.0 L 555.0 343.4 L 555.0 377.4 L 548.0 412.4 L 530.0 442.4 L 509.0 460.4 L 492.0 469.4 L 482.8 439.2 L 436.8 433.2 L 387.8 444.2 L 378.8 469.2 Z',
+    id: 'krishna mudi',
+    name: 'Krishna Mudi',
+    pathD: 'M 428.2 113.0 L 546.2 114.0 L 551.2 122.0 L 540.2 123.0 L 523.2 134.0 L 530.2 147.0 L 522.2 155.0 L 525.2 166.0 L 542.2 189.0 L 547.2 207.0 L 548.2 234.0 L 536.2 241.0 L 437.2 234.0 L 431.2 199.0 L 440.2 180.0 L 456.2 160.0 L 455.2 140.0 L 458.2 132.0 L 452.2 123.0 L 427.2 118.0 L 427.2 111.0 Z',
     tooltipPosition: { top: '10%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Headdress (Crown) of Pacha</li>
-        <li>2 pieces carved wood: disc & crown</li>
+        <li>Headdress (Crown) of Krishna</li>
       </ul>
     ),
-    image: kireedam,
+    image: krishnamudi,
   },
-  {
-    id: 'thoda1',
-    name: 'Thoda',
-    pathD: 'M 374.2 425.0 L 361.2 438.0 L 363.2 451.0 L 375.2 460.0 L 387.2 458.0 L 391.2 431.0 L 374.2 424.0 Z',
-    tooltipPosition: { top: '20%', left: '93%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Ear Ornaments</li>
-        <li>Worn with Kireedam headdress</li>
-        <li>Larger than Chevippuvu</li>
-      </ul>
-    ),
-    image: thoda,
-  },
-  {
-    id: 'thoda2',
-    name: 'Thoda',
-    pathD: 'M 480.2 422.6 L 496.2 418.6 L 509.2 426.6 L 509.2 441.6 L 499.2 451.6 L 483.2 448.6 L 479.2 423.6 Z',
-    tooltipPosition: { top: '20%', left: '93%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Ear Ornaments</li>
-        <li>Worn with Kireedam headdress</li>
-        <li>Larger than Chevippuvu</li>
-      </ul>
-    ),
-    image: thoda,
-  },
-  {
+ {
     id: 'chevippuvu1',
     name: 'Chevippuvu',
-    pathD: 'M 377.2 472.8 L 369.2 480.8 L 369.2 491.8 L 376.2 499.8 L 389.2 496.8 L 396.2 485.8 L 392.2 476.8 L 380.2 471.8 Z',
-    tooltipPosition: { top: '30%', left: '88%' },
+    pathD: 'M 427.8 259.4 L 418.8 268.4 L 416.8 279.4 L 427.8 286.4 L 442.8 285.4 L 449.8 275.4 L 447.8 263.4 L 437.8 257.4 L 428.8 258.4 Z',    tooltipPosition: { top: '30%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Ear Ornaments</li>
@@ -76,8 +47,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'chevippuvu2',
     name: 'Chevippuvu',
-    pathD: 'M 491.2 464.0 L 481.2 470.8 L 479.2 480.8 L 484.2 488.8 L 494.2 492.8 L 504.2 487.8 L 508.2 477.8 L 504.2 466.8 L 491.2 461.8 Z',
-    tooltipPosition: { top: '30%', left: '88%' },
+    pathD: 'M 535.8 265.4 L 548.8 258.4 L 561.8 266.4 L 563.8 281.4 L 554.8 292.4 L 536.8 292.4 L 530.8 279.4 L 535.8 263.4 Z',    tooltipPosition: { top: '30%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Ear Ornaments</li>
@@ -87,10 +57,11 @@ const pachaOrnamentsData: Ornament[] = [
     ),
     image: chevippuvu,
   },
+
   {
     id: 'chutti',
     name: 'Chutti',
-    pathD: 'M 398.2 492.0 L 382.2 498.0 L 370.2 504.0 L 366.2 512.0 L 369.2 519.0 L 382.2 525.0 L 398.2 528.0 L 421.2 530.0 L 471.2 528.0 L 506.2 516.0 L 513.2 508.0 L 509.2 500.0 L 478.2 487.0 L 475.2 511.0 L 468.2 519.0 L 440.2 522.0 L 402.2 517.0 L 397.2 491.0 Z',
+    pathD: 'M 446.4 278.4 L 441.4 285.4 L 425.4 292.4 L 418.4 309.4 L 426.4 318.4 L 492.4 344.4 L 513.4 342.4 L 551.4 331.4 L 565.4 320.4 L 564.4 306.4 L 537.4 291.4 L 533.4 284.4 L 530.4 310.4 L 516.4 326.4 L 505.4 336.4 L 494.4 335.4 L 454.4 315.4 L 458.4 291.4 L 448.4 277.4 Z',    
     tooltipPosition: { top: '30%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -102,37 +73,9 @@ const pachaOrnamentsData: Ornament[] = [
     image: chutti,
   },
   {
-    id: 'Kazhuthu nada',
-    name: 'Kazhuthu nada',
-    pathD: 'M 404.2 538.2 L 403.2 545.2 L 424.2 554.2 L 443.2 555.2 L 471.2 548.2 L 472.2 540.2 L 455.2 545.2 L 437.2 548.2 L 419.2 545.2 L 404.2 537.2 Z',
-    tooltipPosition: { top: '32%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Choker</li>
-        <li>Black cotton and red woolover cotton tape</li>
-        <li>Worn over kazhuttartam (necklace) to keep in place</li>
-      </ul>
-    ),
-    image: kazhuthunada,
-  },
-  {
-    id: 'Kazhuttaram',
-    name: 'Kazhuttaram',
-    pathD: 'M 401.2 546.6 L 391.2 592.6 L 386.2 649.6 L 390.2 669.6 L 407.2 686.6 L 428.2 681.6 L 449.2 660.6 L 462.2 622.6 L 472.2 548.6 L 446.2 555.6 L 423.2 553.6 L 402.2 545.6 Z',
-    tooltipPosition: { top: '22%', left: '95%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Necklace</li>
-        <li>Plastic and metal gold toned beads</li>
-        <li>Two red woolpompoms</li>
-      </ul>
-    ),
-    image: kazhuttaram,
-  },
-  {
     id: 'Paruttikkaimani1',
     name: 'Paruttikkaimani',
-    pathD: 'M 258.2 559.6 L 253.2 577.6 L 273.2 576.6 L 289.2 586.6 L 299.2 580.6 L 278.2 556.6 L 257.2 561.0 Z',
+    pathD: 'M 313.8 455.4 L 333.8 456.4 L 350.8 438.4 L 407.8 434.4 L 415.8 408.4 L 365.8 408.4 L 339.8 413.4 L 322.8 426.4 L 312.8 455.4 Z',    
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -146,7 +89,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Paruttikkaimani2',
     name: 'Paruttikkaimani',
-    pathD: 'M 567.2 609.8 L 567.2 622.8 L 612.2 614.8 L 612.2 625.8 L 625.2 604.8 L 619.2 596.8 L 579.2 599.8 L 567.2 607.8 Z',
+    pathD: 'M 595.8 423.4 L 612.8 437.4 L 634.8 439.4 L 662.8 436.4 L 668.8 410.4 L 640.8 408.4 L 612.8 412.4 L 594.8 421.4 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -160,7 +103,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Tolputtu1',
     name: 'Tolputtu',
-    pathD: 'M 282.2 558.8 L 295.2 573.8 L 337.2 541.8 L 346.2 540.8 L 336.2 531.8 L 326.2 539.8 L 306.2 544.8 L 284.2 560.8 Z',
+    pathD: 'M 367.8 360.4 L 348.8 372.4 L 346.8 414.4 L 387.8 414.4 L 395.8 376.4 L 387.8 362.4 L 368.8 359.4 Z',
     tooltipPosition: { top: '27%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -174,7 +117,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Tolputtu2',
     name: 'Tolputtu',
-    pathD: 'M 546.2 556.0 L 571.2 601.0 L 601.2 598.0 L 577.2 567.0 L 559.2 553.0 L 546.2 555.0 Z',
+    pathD: 'M 578.8 360.4 L 579.8 378.4 L 604.8 419.4 L 640.8 414.4 L 610.8 365.4 L 593.8 359.4 L 579.8 360.4 Z',
     tooltipPosition: { top: '27%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -186,23 +129,9 @@ const pachaOrnamentsData: Ornament[] = [
     image: tolputtu,
   },
   {
-    id: 'Kuralaram',
-    name: 'Kuralaram',
-    pathD: 'M 359.2 667.2 L 357.2 692.2 L 398.2 708.2 L 398.2 697.2 L 406.2 688.2 L 423.2 688.2 L 426.2 704.2 L 422.2 712.2 L 448.2 708.2 L 482.2 694.2 L 485.2 680.2 L 472.2 671.2 L 445.2 683.2 L 421.2 683.8 L 385.2 679.8 L 362.2 666.8 Z',
-    tooltipPosition: { top: '25%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's breastplate</li>
-        <li>10 pieces carved wood</li>
-        <li>Neck bound with stitched cotton tape</li>
-      </ul>
-    ),
-    image: kuralaram,
-  },
-  {
-    id: 'Uttariya1',
+    id: 'Uttariya',
     name: 'Uttariya',
-    pathD: 'M 383.2 542.6 L 338.2 540.6 L 293.2 574.6 L 275.2 634.6 L 270.2 759.6 L 276.2 781.6 L 260.2 811.6 L 248.2 839.6 L 256.2 859.6 L 230.2 906.6 L 225.2 945.6 L 251.2 962.6 L 291.2 961.6 L 300.2 950.6 L 330.2 959.6 L 373.2 946.6 L 384.2 943.6 L 351.2 887.6 L 359.2 818.6 L 348.2 803.6 L 358.2 765.8 L 357.2 679.8 L 366.2 628.8 L 369.2 574.8 L 384.2 542.8 Z',
+    pathD: 'M 417.8 326.4 L 413.8 352.4 L 417.8 396.4 L 424.8 417.4 L 414.8 448.4 L 397.8 555.4 L 385.8 609.4 L 362.8 631.4 L 336.8 704.4 L 346.8 714.4 L 362.8 715.4 L 394.8 729.4 L 418.8 723.4 L 416.8 684.4 L 456.8 689.4 L 470.8 740.4 L 499.8 752.4 L 523.8 753.4 L 532.8 740.4 L 535.8 718.4 L 549.8 723.4 L 573.8 718.4 L 589.8 755.4 L 603.8 767.4 L 620.8 770.4 L 662.8 768.4 L 679.8 758.4 L 685.8 740.4 L 624.8 595.4 L 615.8 572.4 L 601.8 488.4 L 582.8 407.4 L 553.8 363.4 L 551.8 338.4 L 542.8 401.4 L 539.8 487.4 L 531.8 625.4 L 537.8 649.4 L 524.8 661.4 L 506.8 643.4 L 492.8 642.4 L 485.8 609.4 L 463.8 532.4 L 463.8 528.4 L 469.8 480.4 L 465.8 463.4 L 465.8 463.4 L 454.8 406.4 L 416.8 327.4 Z',
     tooltipPosition: { top: '42%', left: '93%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -212,23 +141,11 @@ const pachaOrnamentsData: Ornament[] = [
     ),
     image: uttariya,
   },
-  {
-    id: 'Uttariya2',
-    name: 'Uttariya',
-    pathD: 'M 487.2 541.8 L 494.2 799.8 L 493.2 862.8 L 461.2 944.8 L 486.2 968.8 L 534.2 959.8 L 570.2 973.8 L 615.2 999.8 L 671.2 974.8 L 670.2 956.8 L 646.2 929.8 L 613.2 876.8 L 600.2 772.8 L 611.2 765.8 L 593.2 737.8 L 576.2 625.8 L 540.2 559.8 L 517.2 545.8 L 488.2 540.8 Z',
-    tooltipPosition: { top: '42%', left: '93%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Neck streamers/scarves</li>
-        <li>White cotton, 36”x78”, tied at center and third marks; striped area at edge tied off with folded/pleated self ruffles and stuffed full at stripes plus smell ball above</li>
-      </ul>
-    ),
-    image: uttariya,
-  },
+
   {
     id: 'Kastakatakam1',
     name: 'Kastakatakam',
-    pathD: 'M 81.2 588.0 L 89.2 599.0 L 108.2 608.0 L 96.2 616.0 L 88.2 644.0 L 69.2 645.0 L 74.2 621.0 L 68.2 611.0 L 49.2 603.0 L 68.2 593.0 L 79.2 588.0 Z',
+    pathD: 'M 439.8 412.4 L 448.8 417.4 L 470.8 436.4 L 470.8 450.4 L 486.8 453.4 L 490.8 438.4 L 497.8 427.4 L 486.8 417.4 L 475.8 407.4 L 472.8 394.4 L 465.8 393.4 L 441.8 409.4 Z',
     tooltipPosition: { top: '20%', left: '0%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -242,7 +159,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Kastakatakam2',
     name: 'Kastakatakam',
-    pathD: 'M 557.2 664.8 L 573.2 675.8 L 586.2 690.8 L 576.2 716.8 L 595.2 727.8 L 600.2 721.8 L 615.2 717.8 L 622.2 704.8 L 610.2 691.8 L 589.2 673.8 L 589.2 664.8 L 580.2 652.8 L 557.2 659.8 Z',
+    pathD: 'M 585.8 430.4 L 590.8 444.4 L 581.8 463.4 L 598.8 475.4 L 612.8 461.4 L 616.8 437.4 L 588.8 430.4 Z',
     tooltipPosition: { top: '20%', left: '0%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -256,7 +173,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Kalases1',
     name: 'Kalases',
-    pathD: 'M 89.0 590.8 L 97.0 611.8 L 98.0 630.8 L 85.0 644.8 L 120.0 651.8 L 133.0 633.8 L 133.0 613.8 L 124.0 595.8 L 88.0 590.8 Z',
+    pathD: 'M 443.8 422.4 L 421.8 448.4 L 457.8 485.4 L 476.8 461.4 L 444.8 421.4 Z',
     tooltipPosition: { top: '20%', left: '0%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -269,7 +186,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Kalases2',
     name: 'Kalases',
-    pathD: 'M 593.2 671.0 L 605.2 682.0 L 608.2 697.0 L 604.2 716.0 L 597.2 723.0 L 604.2 728.0 L 618.2 725.0 L 631.2 709.0 L 633.2 689.0 L 622.2 673.0 L 609.2 667.0 L 593.2 670.0 Z',
+    pathD: 'M 614.8 437.4 L 620.8 463.4 L 604.8 477.4 L 583.8 475.4 L 611.8 503.4 L 636.8 503.4 L 656.8 484.4 L 662.8 470.4 L 614.8 434.4 Z',
     tooltipPosition: { top: '20%', left: '0%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -282,7 +199,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Pattu Val1',
     name: 'Pattu Val',
-    pathD: 'M 304.8 722.4 L 227.8 745.4 L 178.8 765.4 L 92.8 814.4 L 74.8 830.4 L 111.8 815.4 L 166.8 785.4 L 307.8 752.4 L 306.8 721.4 Z',
+    pathD: 'M 346.8 556.4 L 281.8 563.4 L 236.8 578.4 L 177.8 608.4 L 124.8 645.4 L 87.8 678.4 L 38.8 785.4 L 36.8 819.4 L 74.8 840.4 L 73.8 813.4 L 93.8 803.4 L 105.8 811.4 L 114.8 809.4 L 108.8 731.4 L 125.8 687.4 L 175.8 628.4 L 246.8 596.4 L 356.8 573.4 L 348.8 554.4 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -296,7 +213,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Pattu Val2',
     name: 'Pattu Val',
-    pathD: 'M 524.8 779.4 L 555.8 789.4 L 562.8 785.4 L 646.8 819.4 L 743.8 867.4 L 795.8 901.4 L 806.8 956.4 L 805.8 1006.4 L 812.8 1034.4 L 830.8 1015.4 L 822.8 983.4 L 823.8 905.4 L 821.8 877.4 L 811.8 859.4 L 688.8 794.4 L 608.8 761.4 L 571.8 747.4 L 546.8 744.4 L 525.8 777.4 Z',
+    pathD: 'M 610.8 552.4 L 655.8 643.4 L 760.8 863.4 L 844.8 853.4 L 818.8 726.4 L 796.8 667.4 L 730.8 612.4 L 643.8 543.4 L 610.8 550.4 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -308,23 +225,9 @@ const pachaOrnamentsData: Ornament[] = [
     image: pattuval,
   },
   {
-    id: 'Patiarannanam',
-    name: 'Patiarannanam',
-    pathD: 'M 335.2 744.0 L 352.2 863.0 L 370.2 911.0 L 417.2 946.0 L 455.2 938.0 L 486.2 888.0 L 509.2 849.0 L 536.2 748.0 L 431.2 751.0 L 417.2 745.0 L 401.2 751.0 L 334.2 744.0 Z',
-    tooltipPosition: { top: '37%', left: '88%' },
-    description: (
-      <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's belt</li>
-        <li>Decorated with gilt foil, plastic jewels and red wool felt</li>
-        <li>Tied with white cotton cord</li>
-      </ul>
-    ),
-    image: patiarannanam,
-  },
-  {
     id: 'Ottanakku',
     name: 'Ottanakku',
-    pathD: 'M 373.2 792.4 L 373.2 941.4 L 385.2 1000.4 L 408.2 1028.4 L 410.2 1045.4 L 423.2 1054.4 L 436.2 1048.4 L 437.2 1030.4 L 455.2 1006.4 L 467.2 925.4 L 465.2 793.4 L 373.2 790.4 Z',
+    pathD: 'M 510.8 770.4 L 507.8 795.4 L 523.8 805.4 L 536.8 792.4 L 534.8 774.4 L 548.8 759.4 L 555.8 724.4 L 549.8 620.4 L 552.8 590.4 L 519.8 597.4 L 488.8 593.4 L 449.8 585.4 L 473.8 715.4 L 497.8 758.4 L 508.8 768.4 Z',
     tooltipPosition: { top: '18%', left: '92%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -339,7 +242,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Tantappatippu1',
     name: 'Tantappatippu',
-    pathD: 'M 261.2 1215.8 L 258.2 1232.8 L 248.2 1248.8 L 260.2 1261.8 L 301.2 1243.8 L 300.2 1228.8 L 282.2 1233.8 L 274.2 1228.8 L 268.2 1231.8 L 270.2 1220.8 L 263.2 1215.8 Z',
+    pathD: 'M 438.8 1128.4 L 443.8 1143.4 L 457.8 1145.4 L 486.8 1133.4 L 486.8 1114.4 L 439.8 1124.4 Z',
     tooltipPosition: { top: '40%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -352,7 +255,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Tantappatippu2',
     name: 'Tantappatippu',
-    pathD: 'M 550.2 1229.8 L 552.2 1251.8 L 581.2 1260.8 L 603.2 1254.8 L 604.2 1239.8 L 594.2 1222.8 L 583.2 1232.8 L 573.2 1232.8 L 556.2 1224.8 L 549.2 1227.8 Z',
+    pathD: 'M 528.8 1117.4 L 532.8 1128.4 L 569.8 1146.4 L 588.8 1141.4 L 585.8 1127.4 L 530.8 1115.4 Z',
     tooltipPosition: { top: '50%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -365,7 +268,7 @@ const pachaOrnamentsData: Ornament[] = [
   {
     id: 'Chuttituni',
     name: 'Chuttituni',
-    pathD: 'M 396.2 480.2 L 402.2 464.2 L 423.2 453.2 L 438.2 451.2 L 459.2 452.4 L 473.2 459.4 L 480.2 473.4 L 491.2 464.4 L 478.2 446.4 L 451.2 435.4 L 422.2 434.4 L 402.2 445.4 L 389.2 459.4 L 384.2 472.4 L 396.2 480.4 Z',
+    pathD: 'M 422.8 257.4 L 457.8 235.4 L 492.8 229.4 L 527.8 235.4 L 543.8 252.4 L 543.8 252.4 L 540.8 263.4 L 535.8 263.4 L 528.8 252.4 L 506.8 251.4 L 498.8 255.4 L 487.8 249.4 L 463.8 250.4 L 454.8 257.4 L 452.8 265.4 L 434.8 259.4 L 421.8 258.4 Z',
     tooltipPosition: { top: '12%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -377,6 +280,34 @@ const pachaOrnamentsData: Ornament[] = [
     ),
     image: chuttituni,
   },
+  {
+    id: 'Kecchamani1',
+    name: 'Kecchamani',
+    pathD: 'M 409.8 959.4 L 410.8 992.4 L 414.8 1036.4 L 451.8 1040.4 L 484.8 1024.4 L 483.8 965.4 L 452.8 965.4 L 406.8 955.4 Z',
+    tooltipPosition: { top: '12%', left: '88%' },
+    description: (
+      <ul style={{ margin: 0, paddingLeft: 16 }}>
+        <li>Knee Bells</li>
+        <li>Leather, cotton backing, batting, whip stitched, brass bells on metal findings</li>
+        <li>11 bells per piece</li>
+      </ul>
+    ),
+    image: kecchamani,
+  },
+  {
+    id: 'Kecchamani2',
+    name: 'Kecchamani',
+    pathD: 'M 560.8 955.4 L 553.8 989.4 L 564.8 1024.4 L 591.8 1029.4 L 610.8 1017.4 L 617.8 962.4 L 564.8 956.4 Z',
+    tooltipPosition: { top: '12%', left: '88%' },
+    description: (
+      <ul style={{ margin: 0, paddingLeft: 16 }}>
+        <li>Knee Bells</li>
+        <li>Leather, cotton backing, batting, whip stitched, brass bells on metal findings</li>
+        <li>11 bells per piece</li>
+      </ul>
+    ),
+    image: kecchamani,
+  },
 ];
 
-export default pachaOrnamentsData;
+export default krishnaOrnamentsData;

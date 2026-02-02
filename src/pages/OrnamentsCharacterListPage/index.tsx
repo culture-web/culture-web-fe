@@ -5,6 +5,8 @@ import minukkufemaleImage from 'assets/images/kathakali-stock-images/minukkufema
 import chuvannathadiImage from 'assets/images/kathakali-stock-images/chuvannathadi.png'
 import kathiImage from 'assets/images/kathakali-stock-images/kathi.png'
 import karimaleImage from 'assets/images/kathakali-stock-images/karimale.png'
+import krishnaImage from 'assets/images/kathakali-stock-images/krishna.png'
+import rowdrabheemanImage from 'assets/images/kathakali-stock-images/rowdrabheeman.png'
 
 
 const characters = [
@@ -13,8 +15,21 @@ const characters = [
   { id: 'chuvannathadi', name: 'Chuvanna Thadi (Red Beard)', image: chuvannathadiImage},
   { id: 'kathi', name: 'Kathi', image: kathiImage },
   { id: 'karimale', name: 'Kari Male', image: karimaleImage },
+  { id: 'krishna', name: 'Krishna', image: krishnaImage },
+  { id: 'rowdrabheeman', name: 'Rowdrabheeman', image: rowdrabheemanImage },    
   // Add more
 ];
+
+const imageTransforms: Record<string, { transform: string }> = {
+  pacha: { transform: 'translate(25px, -40px) scale(1.1)' },
+  minukkufemale: { transform: 'scale(0.95)'},
+  chuvannathadi: { transform: 'translate(10px, -10px)'},
+  kathi: { transform: 'translate(10px, -10px)' },
+  karimale: { transform: 'translate(0, -30px) scale(1.1)' },
+  krishna: { transform: 'translate(0px, 0px) scale(1.1)' },
+  rowdrabheeman: {transform: 'scale(1.05)'}
+};
+
 
 function OrnamentsCharacterListPage() {
   const navigate = useNavigate();
@@ -62,8 +77,7 @@ function OrnamentsCharacterListPage() {
                       height: 540,
                       objectFit: 'contain',
                       display: 'block',
-                      ...(char.id === 'pacha' ? { transform: 'translate(25px, -30px)' } : {}),
-                    }}
+                      ...(imageTransforms[char.id] || {})                    }}
                   />
                 </div>
               }
