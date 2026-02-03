@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { sendChatQuery } from 'utils/invokeBackend';
+import { sendChatQuery, getSessionMessages } from 'utils/invokeBackend';
 import { Message, UploadedImage } from '../types';
 import useImageAnalysis from './useImageAnalysis';
 
@@ -34,13 +34,101 @@ Feel free to upload images and ask anything about Kathakali!`,
   timestamp: new Date(),
 });
 
-const useChatMessages = () => {
+const convertBackendMessageToFrontend = (backendMessage: any): Message => {
+  const isUser = backendMessage.role === 'user';
+  
+  if (isUser) {
+    return {
+      id: backendMessage.id,
+      type: 'user',
+      content: backendMessage.content,
+      timestamp: new Date(backendMessage.created_at),
+    };
+  }
+
+  // Assistant message - try to parse as JSON first, otherwise treat as plain text
+  let response;
+  
+  try {
+    // Try to parse as JSON (for structured responses)
+    const parsedContent = JSON.parse(backendMessage.content);
+    if (parsedContent.shortAnswer !== undefined) {
+      response = parsedContent;
+    } else {
+      throw new Error('Not a structured response');
+    }
+  } catch {
+    // If parsing fails or it's not structured, treat as plain text response
+    response = {
+      shortAnswer: backendMessage.content || 'No response available',
+      reasoning: null,
+      sections: [],
+      tables: [],
+      metadata: {
+        hasStructuredContent: false,
+        responseLength: (backendMessage.content || '').length,
+        processingTimestamp: backendMessage.created_at,
+      }
+    };
+  }
+
+  return {
+    id: backendMessage.id,
+    type: 'assistant',
+    response,
+    timestamp: new Date(backendMessage.created_at),
+  };
+};
+
+const useChatMessages = (sessionId?: string) => {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
   const [inputValue, setInputValue] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
   
   const { processImageWithAI } = useImageAnalysis();
+
+  // Load session messages when session changes
+  useEffect(() => {
+    const loadSessionMessages = async () => {
+      if (!sessionId) {
+        // No session, show initial message
+        setMessages([getInitialMessage()]);
+        return;
+      }
+
+      setIsLoadingSession(true);
+      try {
+        console.log('Loading messages for session:', sessionId);
+        const backendMessages = await getSessionMessages(sessionId);
+        console.log('Backend messages received:', backendMessages);
+        
+        if (backendMessages.length === 0) {
+          // Empty session, show initial message
+          setMessages([getInitialMessage()]);
+        } else {
+          // Convert backend messages to frontend format
+          const frontendMessages = backendMessages.map(convertBackendMessageToFrontend);
+          console.log('Converted frontend messages:', frontendMessages);
+          setMessages(frontendMessages);
+        }
+        
+        // Clear input and images when switching sessions
+        setInputValue('');
+        setUploadedImages([]);
+      } catch (error) {
+        console.error('Failed to load session messages:', error);
+        message.error('Failed to load session messages');
+        // Fall back to initial message on error
+        setMessages([getInitialMessage()]);
+      } finally {
+        setIsLoadingSession(false);
+      }
+    };
+
+    loadSessionMessages();
+  }, [sessionId]);
 
   useEffect(() => () => {
       uploadedImages.forEach(image => {
@@ -132,7 +220,7 @@ const useChatMessages = () => {
       }
 
       const firstImageFile = currentImages.length > 0 ? currentImages[0].file : undefined;
-      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis);
+      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis, sessionId);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -176,6 +264,7 @@ const useChatMessages = () => {
     setInputValue,
     uploadedImages,
     isLoading,
+    isLoadingSession,
     handleImageUpload,
     removeImage,
     handleSendMessage,

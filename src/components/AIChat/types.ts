@@ -44,8 +44,25 @@ export interface UploadedImage {
   isAnalyzing?: boolean;
 }
 
+export interface ChatSession {
+  id: string;
+  created_at: string;
+  title?: string;
+  lastMessageAt?: string;
+}
+
 export interface AIChatProps {
   onClose?: () => void;
+  currentSessionId?: string;
+  onSessionChange?: (sessionId: string) => void;
+}
+
+export interface SessionSidebarProps {
+  sessions: ChatSession[];
+  currentSessionId?: string;
+  onSessionSelect: (sessionId: string) => void;
+  onNewSession: () => void;
+  isLoading?: boolean;
 }
 
 export interface ChatHeaderProps {

@@ -3,6 +3,95 @@ import BACKEND_URI from 'configs/env.config';
 import { getCurrentUserToken } from 'configs/supabase.config';
 import { PredictionMultiple, Prediction } from 'types/interface';
 
+export interface ChatSession {
+  id: string;
+  created_at: string;
+  title?: string;
+  lastMessageAt?: string;
+}
+
+export const createNewSession = async (): Promise<ChatSession> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  };
+  
+  try {
+    const token = await getCurrentUserToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.warn('Failed to get auth token for session creation:', error);
+  }
+
+  const response = await fetch(`${BACKEND_URI}/chat/sessions`, {
+    method: 'POST',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create session: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.data || data;
+};
+
+export const getUserSessions = async (): Promise<ChatSession[]> => {
+  const headers: Record<string, string> = {};
+  
+  try {
+    const token = await getCurrentUserToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.warn('Failed to get auth token for sessions:', error);
+    return [];
+  }
+
+  const response = await fetch(`${BACKEND_URI}/chat/sessions`, {
+    method: 'GET',
+    headers,
+  });
+
+  if (!response.ok) {
+    console.warn('Failed to fetch sessions:', response.status);
+    return [];
+  }
+
+  const data = await response.json();
+  return data.data || data || [];
+};
+
+export const getSessionMessages = async (sessionId: string): Promise<any[]> => {
+  const headers: Record<string, string> = {};
+  
+  try {
+    const token = await getCurrentUserToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.warn('Failed to get auth token for session messages:', error);
+    throw new Error('Authentication required to fetch session messages');
+  }
+
+  const response = await fetch(`${BACKEND_URI}/chat/sessions/${sessionId}`, {
+    method: 'GET',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch session messages: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  
+  const messages = data.data || data.messages || data || [];
+  return messages;
+};
+
 const getImageDimensions = (
   imageFile: File,
 ): Promise<{ width: number; height: number }> =>
@@ -124,11 +213,17 @@ export const sendChatQuery = async (
   query: string,
   imageFile?: File,
   imageAnalysis?: string,
+  sessionId?: string,
 ): Promise<ChatbotResponse> => {
   try {
     // Always use FormData to be consistent with backend multer middleware
     const formData = new FormData();
-    formData.append('query', query);
+    formData.append('message', query);
+    formData.append('role', 'user');
+    
+    if (sessionId) {
+      formData.append('sessionId', sessionId);
+    }
     
     if (imageFile) {
       formData.append('image', imageFile);
@@ -150,50 +245,56 @@ export const sendChatQuery = async (
       // Continue without token for anonymous chat
     }
 
-    const response = await fetch(`${BACKEND_URI}/kathakali/chat`, {
+    const response = await fetch(`${BACKEND_URI}/chat/messages`, {
       method: 'POST',
       body: formData,
       headers,
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to get chat response: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Failed to get chat response: ${response.status} ${response.statusText}. Body: ${errorText}`);
     }
 
     const data = await response.json();
     
-    // Parse the response format
-    if (data.shortAnswer !== undefined) {
-      // New structured response format
-      return {
-        shortAnswer: data.shortAnswer || 'I apologize, but I couldn\'t generate a response at the moment.',
-        reasoning: data.reasoning || null,
-        sections: data.sections || [],
-        tables: data.tables || [],
-        metadata: data.metadata || {
+    // Parse the new response format with nested structure
+    // The actual ChatbotResponse is in data.data.response (wrapped in success response)
+    const chatbotResponse = data.data?.response || data.response;
+    
+    if (chatbotResponse && chatbotResponse.shortAnswer !== undefined) {
+      const result = {
+        shortAnswer: chatbotResponse.shortAnswer || 'I apologize, but I couldn\'t generate a response at the moment.',
+        reasoning: chatbotResponse.reasoning || null,
+        sections: chatbotResponse.sections || [],
+        tables: chatbotResponse.tables || [],
+        metadata: chatbotResponse.metadata || {
           hasStructuredContent: false,
           responseLength: 0,
           processingTimestamp: new Date().toISOString(),
         }
       };
+      return result;
     } 
-      // Legacy response format - convert to new format
-      const responseText = data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
-      return {
-        shortAnswer: responseText,
+      // Fallback - try direct data structure or legacy format
+      const responseText = data.shortAnswer || data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
+      
+      const fallbackResult = {
+        shortAnswer: typeof responseText === 'string' ? responseText : responseText.shortAnswer || 'No response available',
         reasoning: null,
         sections: [],
         tables: [],
         metadata: {
           hasStructuredContent: false,
-          responseLength: responseText.length,
+          responseLength: typeof responseText === 'string' ? responseText.length : 0,
           processingTimestamp: new Date().toISOString(),
         }
       };
+      return fallbackResult;
     
-  } catch {
+  } catch (error) {
     // Chat API Error - return error response in new format
-    return {
+    const errorResult = {
       shortAnswer: 'Failed to communicate with the AI assistant',
       reasoning: null,
       sections: [],
@@ -204,5 +305,6 @@ export const sendChatQuery = async (
         processingTimestamp: new Date().toISOString(),
       }
     };
+    return errorResult;
   }
 };
