@@ -10,6 +10,8 @@ import MudrasPage from 'pages/MudrasPage';
 import AdminPage from 'pages/AdminPage';
 import AdminLoginPage from 'pages/AdminLoginPage';
 import ProtectedRoute from 'components/Common/ProtectedRoute';
+import OrnamentsPage from 'pages/OrnamentsPage';
+import OrnamentsCharacterListPage from 'pages/OrnamentsCharacterListPage';
 import Navbar from 'components/Common/Navbar';
 import DropdownNavbar from 'components/Common/DropdownNavbar';
 import useIsMobile from 'utils/isMobile';
@@ -45,6 +47,9 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route path="/cultures/kathakali/ornaments" element={<OrnamentsCharacterListPage />}/>
+              <Route path="/cultures/kathakali/ornaments/:characterId" element={<OrnamentsPage />} />
+
             </Routes>
           </Flex>
         </Flex>
