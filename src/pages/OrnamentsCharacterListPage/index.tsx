@@ -1,4 +1,4 @@
-import { Card, Button, Row, Col } from 'antd';
+import { Card, Row, Col } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import pachaImage from 'assets/images/kathakali-stock-images/pacha.png';
 import minukkufemaleImage from 'assets/images/kathakali-stock-images/minukkufemale.png'

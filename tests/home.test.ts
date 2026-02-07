@@ -36,8 +36,17 @@ test('Calendar section is visible and functional', async ({ page }) => {
   
   await page.locator('h2:has-text("Upcoming Cultural Events")').scrollIntoViewIfNeeded();
   
-  // Wait for calendar to be rendered - look for any month/year pattern more broadly
-  await expect(page.locator('div, h3, h4, span').filter({ hasText: /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/ })).toBeVisible({ timeout: 45000 });
+  // Wait for calendar to be rendered - wait for loading spinner to disappear first
+  // This ensures the calendar data is loaded before checking for month/year
+  await page.waitForFunction(
+    () => {
+      const monthYearElement = document.querySelector('h3');
+      if (!monthYearElement) return false;
+      const text = monthYearElement.textContent;
+      return text && /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/.test(text);
+    },
+    { timeout: 60000 }
+  );
   
   // Check navigation buttons are present - be flexible with selector
   await expect(page.locator('button').filter({ hasText: /[‹<]/ }).first()).toBeVisible({ timeout: 15000 });
@@ -56,10 +65,19 @@ test('Calendar navigation works', async ({ page }) => {
   await expect(page.locator('h2:has-text("Upcoming Cultural Events")')).toBeVisible({ timeout: 45000 });
   await page.locator('h2:has-text("Upcoming Cultural Events")').scrollIntoViewIfNeeded();
   
-  const monthYearLocator = page.locator('div, h3, h4, span').filter({ hasText: /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/ });
-  await expect(monthYearLocator).toBeVisible({ timeout: 45000 });
+  // Wait for calendar to be rendered - use waitForFunction to ensure month/year is visible
+  await page.waitForFunction(
+    () => {
+      const monthYearElement = document.querySelector('h3');
+      if (!monthYearElement) return false;
+      const text = monthYearElement.textContent;
+      return text && /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/.test(text);
+    },
+    { timeout: 60000 }
+  );
   
-  const initialMonthYear = await monthYearLocator.first().textContent();
+  const monthYearLocator = page.locator('h3').first();
+  const initialMonthYear = await monthYearLocator.textContent();
   
   const nextButtonLocator = page.locator('button').filter({ hasText: /[›>]/ }).first();
   await expect(nextButtonLocator).toBeVisible({ timeout: 15000 });
@@ -69,7 +87,7 @@ test('Calendar navigation works', async ({ page }) => {
   
   await page.waitForTimeout(500); // Brief wait for calendar to update
   
-  const newMonthYear = await monthYearLocator.first().textContent();
+  const newMonthYear = await monthYearLocator.textContent();
   expect(newMonthYear).not.toBe(initialMonthYear);
   
   const prevButtonLocator = page.locator('button').filter({ hasText: /[‹<]/ }).first();
@@ -77,6 +95,6 @@ test('Calendar navigation works', async ({ page }) => {
   
   await page.waitForTimeout(500); // Brief wait for calendar to update
   
-  const backMonthYear = await monthYearLocator.first().textContent();
+  const backMonthYear = await monthYearLocator.textContent();
   expect(backMonthYear).toBe(initialMonthYear);
 });
