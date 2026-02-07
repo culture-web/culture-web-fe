@@ -9,6 +9,7 @@ import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
 import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
 import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
 import kuttichamaram from 'assets/images/kathakali-ornaments/kuttichamaram.png';
+import thoda from 'assets/images/kathakali-ornaments/thoda.png';
 import type { Ornament } from './types';
 
 

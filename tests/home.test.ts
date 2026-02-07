@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { baseUrl } from '../playwright.config';
 
 test('Homepage has KathakalAI Button in title', async ({ page }) => {
+
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'KathakalAI Logo KathakalAI' })).toBeVisible();
 });
@@ -29,6 +30,7 @@ test('Clicking on Learn More About KathakalAI brings us to About Us', async ({ p
 });
 
 test('Calendar section is visible and functional', async ({ page }) => {
+
   await page.goto('/');
   await page.waitForLoadState('networkidle');
   

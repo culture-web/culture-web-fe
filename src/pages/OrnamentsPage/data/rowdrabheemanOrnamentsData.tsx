@@ -1,5 +1,5 @@
 import type { Ornament } from './types';
 
-const pachaOrnamentsData: Ornament[] = []
+const rowdrabheemanOrnamentsData: Ornament[] = [];
 
-export default pachaOrnamentsData;
+export default rowdrabheemanOrnamentsData;

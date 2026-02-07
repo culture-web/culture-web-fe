@@ -1,5 +1,16 @@
 import krishnamudi from 'assets/images/kathakali-ornaments/krishnamudi.png';
 import kecchamani from 'assets/images/kathakali-ornaments/kecchamani.png';
+import chevippuvu from 'assets/images/kathakali-ornaments/chevippuvu.png';
+import chutti from 'assets/images/kathakali-ornaments/chutti.png';
+import paruttikkaimani from 'assets/images/kathakali-ornaments/paruttikkaimani.png';
+import tolputtu from 'assets/images/kathakali-ornaments/tolputtu.png';
+import uttariya from 'assets/images/kathakali-ornaments/uttariya.png';
+import kastakatakam from 'assets/images/kathakali-ornaments/kastakatakam.png';
+import kalases from 'assets/images/kathakali-ornaments/kalases.png';
+import pattuval from 'assets/images/kathakali-ornaments/pattuval.png';
+import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
+import tantappatippu from 'assets/images/kathakali-ornaments/tantappatippu.png';
+import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
 import type { Ornament } from './types';
 
 const krishnaOrnamentsData: Ornament[] = [
