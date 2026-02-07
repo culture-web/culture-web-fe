@@ -43,8 +43,9 @@ export default function AdminLoginPage() {
       setTimeout(() => {
         navigate('/k-manage-portal');
       }, 500);
-    } catch (error: any) {
-      message.error(error.message || 'Login failed. Please check your credentials.');
+    } catch (error: unknown) {
+      const err = error as Error;
+      message.error(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }

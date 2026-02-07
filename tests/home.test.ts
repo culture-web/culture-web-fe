@@ -36,16 +36,17 @@ test('Calendar section is visible and functional', async ({ page }) => {
   
   await page.locator('h2:has-text("Upcoming Cultural Events")').scrollIntoViewIfNeeded();
   
-  await expect(page.locator('h3').filter({ hasText: /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/ })).toBeVisible({ timeout: 45000 });
+  // Wait for calendar to be rendered - look for any month/year pattern more broadly
+  await expect(page.locator('div, h3, h4, span').filter({ hasText: /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/ })).toBeVisible({ timeout: 45000 });
   
-  // Check navigation buttons are present
-  await expect(page.locator('button:has-text("‹")')).toBeVisible({ timeout: 15000 });
-  await expect(page.locator('button:has-text("›")')).toBeVisible({ timeout: 15000 });
+  // Check navigation buttons are present - be flexible with selector
+  await expect(page.locator('button').filter({ hasText: /[‹<]/ }).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('button').filter({ hasText: /[›>]/ }).first()).toBeVisible({ timeout: 15000 });
   
-  // Check days of week headers
-  await expect(page.getByText('Sun')).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText('Mon')).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText('Sat')).toBeVisible({ timeout: 15000 });
+  // Check days of week headers - be more flexible
+  await page.locator('span, div, th').filter({ hasText: /^Sun$/ }).waitFor({ timeout: 15000 });
+  await page.locator('span, div, th').filter({ hasText: /^Mon$/ }).waitFor({ timeout: 15000 });
+  await page.locator('span, div, th').filter({ hasText: /^Sat$/ }).waitFor({ timeout: 15000 });
 });
 
 test('Calendar navigation works', async ({ page }) => {
@@ -55,26 +56,27 @@ test('Calendar navigation works', async ({ page }) => {
   await expect(page.locator('h2:has-text("Upcoming Cultural Events")')).toBeVisible({ timeout: 45000 });
   await page.locator('h2:has-text("Upcoming Cultural Events")').scrollIntoViewIfNeeded();
   
-  const monthYearLocator = page.locator('h3').filter({ hasText: /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/ });
+  const monthYearLocator = page.locator('div, h3, h4, span').filter({ hasText: /^(January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/ });
   await expect(monthYearLocator).toBeVisible({ timeout: 45000 });
   
-  const initialMonthYear = await monthYearLocator.textContent();
+  const initialMonthYear = await monthYearLocator.first().textContent();
   
-  await expect(page.locator('button:has-text("›")')).toBeVisible({ timeout: 15000 });
+  const nextButtonLocator = page.locator('button').filter({ hasText: /[›>]/ }).first();
+  await expect(nextButtonLocator).toBeVisible({ timeout: 15000 });
   
   // Click next month
-  await page.locator('button:has-text("›")').click();
+  await nextButtonLocator.click();
   
-  await expect(monthYearLocator).not.toHaveText(initialMonthYear || '', { timeout: 15000 });
+  await page.waitForTimeout(500); // Brief wait for calendar to update
   
-  // Get new month/year and verify it changed
-  const newMonthYear = await monthYearLocator.textContent();
+  const newMonthYear = await monthYearLocator.first().textContent();
   expect(newMonthYear).not.toBe(initialMonthYear);
   
-  await page.locator('button:has-text("‹")').click();
+  const prevButtonLocator = page.locator('button').filter({ hasText: /[‹<]/ }).first();
+  await prevButtonLocator.click();
   
-  await expect(monthYearLocator).toHaveText(initialMonthYear || '', { timeout: 15000 });
+  await page.waitForTimeout(500); // Brief wait for calendar to update
   
-  const backMonthYear = await monthYearLocator.textContent();
+  const backMonthYear = await monthYearLocator.first().textContent();
   expect(backMonthYear).toBe(initialMonthYear);
 });

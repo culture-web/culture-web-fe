@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Layout, Tabs, Button, message, Spin, Card, Row, Col, Statistic, Popconfirm, Table,
+  Layout, Tabs, Button, message, Spin, Card, Popconfirm, Table,
   Form, Input, Divider, Typography, Switch, Tooltip, Tag, Space, Dropdown, Modal, Upload, Select, Checkbox, ConfigProvider, theme, Progress,
 } from 'antd';
 import {
   LogoutOutlined, DeleteOutlined, ReloadOutlined, UploadOutlined,
-  FileTextOutlined, MessageOutlined, FolderOutlined, PlayCircleOutlined,
-  LinkOutlined, EditOutlined, DownloadOutlined, PlusOutlined, FolderAddOutlined, SearchOutlined, FilterOutlined,
+  FileTextOutlined, MessageOutlined, PlayCircleOutlined,
+  EditOutlined, DownloadOutlined, PlusOutlined, FolderAddOutlined, SearchOutlined, FilterOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useStyleToken, useColourToken } from 'themeStyles';
+import { useColourToken } from 'themeStyles';
 import BACKEND_URI from 'configs/env.config';
 import './index.css';
 
@@ -36,6 +36,59 @@ interface ChatMessage {
   }>;
 }
 
+interface FileRecord {
+  name: string;
+  upload_date: string;
+  chunk_number: number;
+  enabled: boolean;
+}
+
+interface JobStatus {
+  id?: number;
+  file_name?: string;
+  status: string;
+  progress: number;
+  start_time?: string;
+  end_time?: string;
+  last_message?: string;
+}
+
+interface IngestJob {
+  status?: string;
+  progress?: number;
+  message?: string;
+  fileName?: string;
+  chunksIngested?: number;
+  pagesProcessed?: number;
+}
+
+interface Chunk {
+  id: number;
+  content: string;
+  source_file: string;
+  page: number | null;
+  keywords: string[];
+  questions: string[];
+  tags: string[];
+  enabled: boolean;
+  created_at: string;
+}
+
+interface EditingChunk {
+  id: number;
+  content: string;
+  keywords: string[];
+  questions: string[];
+  tags: string[];
+  enabled: boolean;
+}
+
+interface MenuItem {
+  key: string;
+  icon: React.ReactNode;
+  label: string;
+}
+
 // Helper function to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem('adminToken');
@@ -46,15 +99,12 @@ const getAuthHeaders = () => {
 };
 
 const AdminPage: React.FC = () => {
-  const styleToken = useStyleToken();
   const colourToken = useColourToken();
-  const [ingestForm] = Form.useForm();
   const [chatForm] = Form.useForm();
   const [uploadTextForm] = Form.useForm();
   const [newFolderForm] = Form.useForm();
   const [stats, setStats] = useState<KBStats | null>(null);
   const [loading, setLoading] = useState(false);
-  const [ingesting, setIngesting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [parsingBusy, setParsingBusy] = useState<Record<string, boolean>>({});
   const [bulkLoading, setBulkLoading] = useState(false);
@@ -71,13 +121,12 @@ const AdminPage: React.FC = () => {
     }
     return [];
   });
-  const [statusMap, setStatusMap] = useState<Record<string, any>>({});
+  const [statusMap, setStatusMap] = useState<Record<string, JobStatus>>({});
   const [activeTab, setActiveTab] = useState<string>('kb');
   const [renameTarget, setRenameTarget] = useState<string | null>(null);
   const [renameForm] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState('');
   const [fileStatusFilter, setFileStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
-  const [dateSort, setDateSort] = useState<'default' | 'newest' | 'oldest'>('default');
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 50 });
@@ -88,19 +137,19 @@ const AdminPage: React.FC = () => {
   const [folderPrefix, setFolderPrefix] = useState('');
   const [folders, setFolders] = useState<string[]>([]);
   const [chunksModalOpen, setChunksModalOpen] = useState(false);
-  const [currentChunks, setCurrentChunks] = useState<any[]>([]);
+  const [currentChunks, setCurrentChunks] = useState<Chunk[]>([]);
   const [currentFileName, setCurrentFileName] = useState<string>('');
   const [editChunkModalOpen, setEditChunkModalOpen] = useState(false);
-  const [editingChunk, setEditingChunk] = useState<any>(null);
+  const [editingChunk, setEditingChunk] = useState<EditingChunk | null>(null);
   const [editChunkForm] = Form.useForm();
-  const [hoveredChunkId, setHoveredChunkId] = useState<number | null>(null);
   const [selectedChunkIds, setSelectedChunkIds] = useState<number[]>([]);
   const [chunkTagFilter, setChunkTagFilter] = useState<string[]>([]);
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [ingestJobs, setIngestJobs] = useState<Record<string, any>>({});
+  const [ingestJobs, setIngestJobs] = useState<Record<string, IngestJob>>({});
   const [rerankerStrategy, setRerankerStrategy] = useState<'embedding-based' | 'cross-encoder'>('embedding-based');
+  const [files, setFiles] = useState<FileRecord[]>([]);
   const navigate = useNavigate();
 
   // Load reranker strategy preference from localStorage on mount
@@ -141,6 +190,159 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const fetchFiles = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/files`, { headers: getAuthHeaders() });
+      if (!response.ok) throw new Error('Failed to load files');
+      const data = await response.json();
+      setFiles(data || []);
+    } catch (e) {
+      console.error('Error loading files:', e);
+      message.error('Failed to load dataset files');
+    }
+  };
+
+  const fetchStatus = async (fileName: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/status`, { headers: getAuthHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      setStatusMap((prev) => ({ ...prev, [fileName]: data }));
+    } catch (error) {
+      console.error('Error fetching status:', error);
+    }
+  };
+
+  // Helper functions used in columns - defined before columns to avoid no-use-before-define
+  const deleteDocumentRequest = (fileName: string) => fetch(
+    `${BACKEND_URI}/k-manage/knowledge-base/${fileName}`,
+    {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    },
+  ).then((res) => {
+    if (!res.ok) throw new Error('Failed to delete document');
+  });
+
+  const toggleEnable = async (fileName: string, enabled: boolean) => {
+    try {
+      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/enable`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ enabled }),
+      });
+      if (!response.ok) throw new Error('Failed to update enabled state');
+      message.success(`${enabled ? 'Enabled' : 'Disabled'} ${fileName}`);
+      await fetchFiles();
+    } catch (error) {
+      console.error('Enable toggle failed:', error);
+      message.error('Failed to update enabled state');
+    }
+  };
+
+  const startParse = async (fileName: string) => {
+    setParsingBusy((prev) => ({ ...prev, [fileName]: true }));
+    try {
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/parse`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error('Start parse failed');
+      await res.json();
+      message.success(`Started parsing: ${fileName}`);
+      
+      // Fetch status immediately and then poll more frequently
+      await fetchStatus(fileName);
+      
+      // Poll status every 500ms for the next 60 seconds to catch completion
+      let pollCount = 0;
+      const statusInterval = setInterval(async () => {
+        pollCount += 1;
+        await fetchStatus(fileName);
+        
+        // Stop polling after 60 seconds or if job is completed/failed
+        if (pollCount > 120) {
+          clearInterval(statusInterval);
+        } else {
+          const status = statusMap[fileName];
+          if (status && (status.status === 'completed' || status.status === 'failed')) {
+            clearInterval(statusInterval);
+            await fetchFiles(); // Refresh file list when done
+            await fetchStats(); // Refresh stats
+          }
+        }
+      }, 500);
+    } catch (e) {
+      console.error('Start parse error:', e);
+      message.error('Failed to start parsing');
+    } finally {
+      setParsingBusy((prev) => ({ ...prev, [fileName]: false }));
+    }
+  };
+
+  const handleViewChunks = async (fileName: string) => {
+    try {
+      setCurrentFileName(fileName);
+      const response = await fetch(
+        `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/chunks`,
+        { headers: getAuthHeaders() }
+      );
+      if (!response.ok) throw new Error('Failed to fetch chunks');
+      const data = await response.json();
+      setCurrentChunks(data.chunks || []);
+      setChunkTagFilter([]);
+      setSelectedChunkIds([]);
+      
+      // Fetch PDF if available
+      const lowerFileName = fileName.toLowerCase();
+      if (lowerFileName.endsWith('.pdf')) {
+        try {
+          const pdfRes = await fetch(
+            `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/pdf`,
+            { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
+          );
+          if (pdfRes.ok) {
+            const blob = await pdfRes.blob();
+            const url = window.URL.createObjectURL(blob);
+            setPdfUrl(url);
+          } else {
+            setPdfUrl('');
+          }
+        } catch {
+          setPdfUrl('');
+        }
+      } else {
+        setPdfUrl('');
+      }
+  
+      setChunksModalOpen(true);
+    } catch (error) {
+      console.error('Error loading chunks:', error);
+      message.error('Failed to load chunks');
+    }
+  };
+
+  const downloadFile = async (fileName: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/export`, {
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      message.error('Failed to download file');
+    }
+  };
+
   const fileColumns = [
     {
       title: 'Name',
@@ -157,7 +359,7 @@ const AdminPage: React.FC = () => {
       title: 'Upload Date',
       dataIndex: 'upload_date',
       key: 'upload_date',
-      sorter: (a: any, b: any) => new Date(a.upload_date).getTime() - new Date(b.upload_date).getTime(),
+      sorter: (a: FileRecord, b: FileRecord) => new Date(a.upload_date).getTime() - new Date(b.upload_date).getTime(),
       defaultSortOrder: 'descend' as const,
       render: (date: string) => (
         <div className="upload-date">
@@ -169,7 +371,7 @@ const AdminPage: React.FC = () => {
       title: 'Enable',
       dataIndex: 'enabled',
       key: 'enabled',
-      render: (enabled: boolean, record: any) => (
+      render: (enabled: boolean, record: FileRecord) => (
         <Switch checked={enabled} onChange={(checked) => toggleEnable(record.name, checked)} />
       ),
     },
@@ -181,7 +383,7 @@ const AdminPage: React.FC = () => {
     {
       title: 'Parse',
       key: 'parse',
-      render: (_: any, record: any) => {
+      render: (_: unknown, record: FileRecord) => {
         const status = statusMap[record.name];
         const progress = status?.progress ?? 0;
         const isParsed = status?.status === 'completed';
@@ -222,7 +424,7 @@ const AdminPage: React.FC = () => {
     {
       title: 'Action',
       key: 'action',
-      render: (_: any, record: { name: string }) => (
+      render: (_: unknown, record: { name: string }) => (
         <Space>
           <Tooltip title="View Chunks">
             <Button type="text" icon={<FileTextOutlined />} onClick={() => handleViewChunks(record.name)} />
@@ -248,20 +450,6 @@ const AdminPage: React.FC = () => {
     },
   ];
 
-  const [files, setFiles] = useState<any[]>([]);
-
-  const fetchFiles = async () => {
-    try {
-      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/files`, { headers: getAuthHeaders() });
-      if (!response.ok) throw new Error('Failed to load files');
-      const data = await response.json();
-      setFiles(data || []);
-    } catch (e) {
-      console.error('Error loading files:', e);
-      message.error('Failed to load dataset files');
-    }
-  };
-
   const fetchFolders = async () => {
     try {
       const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/folders`, { headers: getAuthHeaders() });
@@ -273,11 +461,11 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const upsertIngestJob = (jobId: string, data: any) => {
+  const upsertIngestJob = (jobId: string, data: Partial<IngestJob>) => {
     setIngestJobs((prev) => ({ ...prev, [jobId]: { ...(prev[jobId] || {}), ...data } }));
   };
 
-  const addMenuItems = [
+  const addMenuItems: MenuItem[] = [
     {
       key: 'upload',
       icon: <UploadOutlined />,
@@ -290,7 +478,7 @@ const AdminPage: React.FC = () => {
     },
   ];
 
-  const handleAddMenuClick = ({ key }: any) => {
+  const handleAddMenuClick = ({ key }: { key: string }) => {
     if (key === 'upload') {
       setUploadModalOpen(true);
       setUploadMode('text');
@@ -299,34 +487,6 @@ const AdminPage: React.FC = () => {
       setFolderModalOpen(true);
     }
   };
-
-  const fetchStatus = async (fileName: string) => {
-    try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/status`, { headers: getAuthHeaders() });
-      if (!res.ok) return;
-      const data = await res.json();
-      setStatusMap((prev) => ({ ...prev, [fileName]: data }));
-    } catch {}
-  };
-
-  const filteredFiles = files
-    .filter((f) => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    .filter((f) => (folderFilter ? f.name.startsWith(`${folderFilter}/`) : true))
-    .filter((f) => {
-      if (fileStatusFilter === 'enabled') return f.enabled;
-      if (fileStatusFilter === 'disabled') return !f.enabled;
-      return true;
-    });
-
-  const sortedFiles = (() => {
-    if (dateSort === 'newest') {
-      return [...filteredFiles].sort((a, b) => new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime());
-    }
-    if (dateSort === 'oldest') {
-      return [...filteredFiles].sort((a, b) => new Date(a.upload_date).getTime() - new Date(b.upload_date).getTime());
-    }
-    return filteredFiles;
-  })();
 
   const runBulk = async (label: string, tasks: Promise<void>[]) => {
     if (!selectedRowKeys.length) {
@@ -340,9 +500,9 @@ const AdminPage: React.FC = () => {
       setSelectedRowKeys([]);
       await fetchFiles();
       await fetchStats();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Bulk action error:', error);
-      message.error(error.message || 'Bulk action failed');
+      message.error(error instanceof Error ? error.message : 'Bulk action failed');
     } finally {
       setBulkLoading(false);
     }
@@ -366,11 +526,16 @@ const AdminPage: React.FC = () => {
     const activeJobs = Object.entries(ingestJobs).filter(([, job]) => job.status && !['completed', 'failed'].includes(job.status));
     if (!activeJobs.length) return undefined;
 
+    // eslint-disable-next-line no-restricted-syntax
     const interval = setInterval(async () => {
+      // eslint-disable-next-line no-restricted-syntax
       for (const [jobId] of activeJobs) {
         try {
+          // eslint-disable-next-line no-await-in-loop
           const res = await fetch(`${BACKEND_URI}/k-manage/jobs/${jobId}/status`, { headers: getAuthHeaders() });
+          // eslint-disable-next-line no-continue
           if (!res.ok) continue;
+          // eslint-disable-next-line no-await-in-loop
           const data = await res.json();
           upsertIngestJob(jobId, data);
 
@@ -422,32 +587,6 @@ const AdminPage: React.FC = () => {
     setPagination((prev) => ({ ...prev, current: 1 }));
   }, [searchTerm, folderFilter, files.length]);
 
-  const handleIngestDocument = async (values: any) => {
-    setIngesting(true);
-    try {
-      const response = await fetch(`${BACKEND_URI}/k-manage/ingest`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          fileName: values.fileName,
-          text: values.documentText,
-          metadata: { author: values.author || 'Unknown' },
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to ingest document');
-
-      message.success('Document ingested successfully!');
-      ingestForm.resetFields();
-      await fetchStats();
-    } catch (error: any) {
-      console.error('Error ingesting document:', error);
-      message.error(error.message || 'Failed to ingest document');
-    } finally {
-      setIngesting(false);
-    }
-  };
-
   const handleDeleteDocument = async (fileName: string) => {
     try {
       const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}`, {
@@ -461,7 +600,7 @@ const AdminPage: React.FC = () => {
       await fetchFiles();
       await fetchStats();
       await fetchFolders();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error deleting document:', error);
       message.error('Failed to delete document');
     }
@@ -481,32 +620,6 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const deleteDocumentRequest = (fileName: string) => fetch(
-    `${BACKEND_URI}/k-manage/knowledge-base/${fileName}`,
-    {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    },
-  ).then((res) => {
-    if (!res.ok) throw new Error('Failed to delete document');
-  });
-
-  const toggleEnable = async (fileName: string, enabled: boolean) => {
-    try {
-      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/enable`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ enabled }),
-      });
-      if (!response.ok) throw new Error('Failed to update enabled state');
-      message.success(`${enabled ? 'Enabled' : 'Disabled'} ${fileName}`);
-      await fetchFiles();
-    } catch (error) {
-      console.error('Enable toggle failed:', error);
-      message.error('Failed to update enabled state');
-    }
-  };
-
   const postEnable = (fileName: string, enabled: boolean) => fetch(
     `${BACKEND_URI}/k-manage/knowledge-base/${fileName}/enable`,
     {
@@ -518,77 +631,6 @@ const AdminPage: React.FC = () => {
     if (!res.ok) throw new Error('Failed to update enabled state');
   });
 
-  const reembedFile = async (fileName: string) => {
-    setParsingBusy((prev) => ({ ...prev, [fileName]: true }));
-    try {
-      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/reembed`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Re-embed failed');
-      const data = await response.json();
-      message.success(`Parsed ${fileName} (${data.chunksUpdated} chunks refreshed)`);
-      await fetchFiles();
-      await fetchStats();
-      await fetchStatus(fileName);
-    } catch (error) {
-      console.error('Re-embed error:', error);
-      message.error('Failed to parse/refresh file');
-    } finally {
-      setParsingBusy((prev) => ({ ...prev, [fileName]: false }));
-    }
-  };
-
-  const reembedRequest = (fileName: string) => fetch(
-    `${BACKEND_URI}/k-manage/knowledge-base/${fileName}/reembed`,
-    {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    },
-  ).then((res) => {
-    if (!res.ok) throw new Error('Re-embed failed');
-  });
-
-  const startParse = async (fileName: string) => {
-    setParsingBusy((prev) => ({ ...prev, [fileName]: true }));
-    try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/parse`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error('Start parse failed');
-      const data = await res.json();
-      message.success(`Started parsing: ${fileName}`);
-      
-      // Fetch status immediately and then poll more frequently
-      await fetchStatus(fileName);
-      
-      // Poll status every 500ms for the next 60 seconds to catch completion
-      let pollCount = 0;
-      const statusInterval = setInterval(async () => {
-        pollCount++;
-        await fetchStatus(fileName);
-        
-        // Stop polling after 60 seconds or if job is completed/failed
-        if (pollCount > 120) {
-          clearInterval(statusInterval);
-        } else {
-          const status = statusMap[fileName];
-          if (status && (status.status === 'completed' || status.status === 'failed')) {
-            clearInterval(statusInterval);
-            await fetchFiles(); // Refresh file list when done
-            await fetchStats(); // Refresh stats
-          }
-        }
-      }, 500);
-    } catch (e) {
-      console.error('Start parse error:', e);
-      message.error('Failed to start parsing');
-    } finally {
-      setParsingBusy((prev) => ({ ...prev, [fileName]: false }));
-    }
-  };
-
   const parseRequest = (fileName: string) => fetch(
     `${BACKEND_URI}/k-manage/knowledge-base/${fileName}/parse`,
     {
@@ -598,27 +640,6 @@ const AdminPage: React.FC = () => {
   ).then((res) => {
     if (!res.ok) throw new Error('Start parse failed');
   });
-
-  const downloadFile = async (fileName: string) => {
-    try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/export`, {
-        headers: getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error('Download failed');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${fileName}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('Download error:', e);
-      message.error('Failed to download file');
-    }
-  };
 
   const submitRename = async () => {
     try {
@@ -634,16 +655,17 @@ const AdminPage: React.FC = () => {
       renameForm.resetFields();
       await fetchFiles();
       await fetchStats();
+      return Promise.resolve();
     } catch (e) {
       // Ignore validation errors from form submission
-      if ((e as any)?.errorFields) return Promise.reject(e);
+      if (e && typeof e === 'object' && 'errorFields' in e) return Promise.reject(e);
       console.error('Rename error:', e);
       message.error('Failed to rename');
       return Promise.reject(e);
     }
   };
 
-  const handleUploadText = async (values: any) => {
+  const handleUploadText = async (values: { fileName: string; documentText: string; author?: string }) => {
     setUploading(true);
     const finalName = folderPrefix ? `${folderPrefix}/${values.fileName}` : values.fileName;
     try {
@@ -664,15 +686,15 @@ const AdminPage: React.FC = () => {
       setUploadModalOpen(false);
       await fetchFiles();
       await fetchStats();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload text error:', error);
-      message.error(error.message || 'Failed to upload document');
+      message.error(error instanceof Error ? error.message : 'Failed to upload document');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleUploadPdf = async (values: any) => {
+  const handleUploadPdf = async (values: { pdfFileName?: string }) => {
     if (!pdfFile) {
       message.error('Please choose a PDF file');
       return;
@@ -728,9 +750,9 @@ const AdminPage: React.FC = () => {
 
       setPdfFile(null);
       setUploadModalOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Upload PDF error:', error);
-      message.error(error.message || 'Failed to upload PDF');
+      message.error(error instanceof Error ? error.message : 'Failed to upload PDF');
     } finally {
       setUploading(false);
     }
@@ -760,13 +782,13 @@ const AdminPage: React.FC = () => {
       message.success(`Folder ready: ${trimmed}`);
       setFolderModalOpen(false);
       newFolderForm.resetFields();
-    } catch (e: any) {
-      if (e.errorFields) {
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'errorFields' in e) {
         // Validation errors from form
         return;
       }
       console.error('Create folder error:', e);
-      message.error(e.message || 'Failed to create folder');
+      message.error(e instanceof Error ? e.message : 'Failed to create folder');
     }
   };
 
@@ -781,52 +803,9 @@ const AdminPage: React.FC = () => {
       if (folderFilter === folderName) setFolderFilter(null);
       if (folderPrefix === folderName) setFolderPrefix('');
       await Promise.all([fetchFiles(), fetchStats(), fetchFolders()]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Delete folder error:', error);
-      message.error(error.message || 'Failed to delete folder');
-    }
-  };
-
-  // Fetch chunks for a file
-  const handleViewChunks = async (fileName: string) => {
-    try {
-      setCurrentFileName(fileName);
-      const response = await fetch(
-        `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/chunks`,
-        { headers: getAuthHeaders() }
-      );
-      if (!response.ok) throw new Error('Failed to fetch chunks');
-      const data = await response.json();
-      setCurrentChunks(data.chunks || []);
-      setChunkTagFilter([]);
-      setSelectedChunkIds([]);
-      
-      // Fetch PDF if available
-      const lowerFileName = fileName.toLowerCase();
-      if (lowerFileName.endsWith('.pdf')) {
-        try {
-          const pdfRes = await fetch(
-            `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/pdf`,
-            { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }
-          );
-          if (pdfRes.ok) {
-            const blob = await pdfRes.blob();
-            const url = URL.createObjectURL(blob);
-            setPdfUrl(url);
-            console.log('PDF loaded successfully:', fileName);
-          } else {
-            console.error('Failed to fetch PDF:', pdfRes.status, pdfRes.statusText);
-          }
-        } catch (pdfError) {
-          console.error('Error loading PDF:', pdfError);
-        }
-      } else {
-        setPdfUrl(''); // Clear PDF URL for non-PDF files
-      }
-      setChunksModalOpen(true);
-    } catch (error: any) {
-      console.error('Error fetching chunks:', error);
-      message.error('Failed to load chunks');
+      message.error(error instanceof Error ? error.message : 'Failed to delete folder');
     }
   };
 
@@ -843,7 +822,7 @@ const AdminPage: React.FC = () => {
       );
       if (!response.ok) throw new Error('Failed to update chunk');
       await handleViewChunks(currentFileName);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating chunk:', error);
       message.error('Failed to update chunk');
     }
@@ -866,7 +845,7 @@ const AdminPage: React.FC = () => {
       setSelectedChunkIds([]);
       await handleViewChunks(currentFileName);
       await fetchFiles();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error enabling chunks:', error);
       message.error('Failed to enable chunks');
     }
@@ -889,7 +868,7 @@ const AdminPage: React.FC = () => {
       setSelectedChunkIds([]);
       await handleViewChunks(currentFileName);
       await fetchFiles();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error disabling chunks:', error);
       message.error('Failed to disable chunks');
     }
@@ -912,14 +891,14 @@ const AdminPage: React.FC = () => {
       setSelectedChunkIds([]);
       await handleViewChunks(currentFileName);
       await fetchFiles();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting chunks:', error);
       message.error('Failed to delete chunks');
     }
   };
 
   // Open edit chunk modal
-  const handleEditChunk = (chunk: any) => {
+  const handleEditChunk = (chunk: Chunk) => {
     setEditingChunk(chunk);
     editChunkForm.setFieldsValue({
       content: chunk.content,
@@ -933,10 +912,11 @@ const AdminPage: React.FC = () => {
 
   // Save chunk edits
   const handleSaveChunk = async () => {
+    if (!editingChunk) return;
     try {
       const values = await editChunkForm.validateFields();
       const response = await fetch(
-        `${BACKEND_URI}/k-manage/chunks/${editingChunk.id}`,
+        `${BACKEND_URI}/k-manage/chunks/${editingChunk?.id}`,
         {
           method: 'PUT',
           headers: getAuthHeaders(),
@@ -948,34 +928,13 @@ const AdminPage: React.FC = () => {
       setEditChunkModalOpen(false);
       // Refresh chunks
       await handleViewChunks(currentFileName);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating chunk:', error);
       message.error('Failed to update chunk');
     }
   };
 
-  // Delete chunk
-  const handleDeleteChunk = async (chunkId: number) => {
-    try {
-      const response = await fetch(
-        `${BACKEND_URI}/k-manage/chunks/${chunkId}`,
-        {
-          method: 'DELETE',
-          headers: getAuthHeaders(),
-        }
-      );
-      if (!response.ok) throw new Error('Failed to delete chunk');
-      message.success('Chunk deleted');
-      // Refresh chunks
-      await handleViewChunks(currentFileName);
-      await fetchFiles();
-    } catch (error: any) {
-      console.error('Error deleting chunk:', error);
-      message.error('Failed to delete chunk');
-    }
-  };
-
-  const handleSendMessage = async (values: any) => {
+  const handleSendMessage = async (values: { chatInput: string }) => {
     const userMessage = values.chatInput;
     
     // Add user message to chat
@@ -995,7 +954,7 @@ const AdminPage: React.FC = () => {
         headers: getAuthHeaders(),
         body: JSON.stringify({ 
           query: userMessage,
-          rerankerStrategy: rerankerStrategy, // Pass selected reranking strategy
+          rerankerStrategy, // Pass selected reranking strategy
         }),
       });
 
@@ -1006,8 +965,12 @@ const AdminPage: React.FC = () => {
       let content = data.shortAnswer || '';
       
       // Append sections if available
+      interface Section {
+        title: string;
+        content: string;
+      }
       if (data.sections && data.sections.length > 0) {
-        const sectionsText = data.sections.map((s: any) => 
+        const sectionsText = (data.sections as Section[]).map((s) => 
           `\n\n**${s.title}**\n${s.content}`
         ).join('');
         content += sectionsText;
@@ -1021,9 +984,9 @@ const AdminPage: React.FC = () => {
         citations: data.citations || [],
       };
       setChatMessages((prev) => [...prev, assistantMessage]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Chat error:', error);
-      message.error(error.message || 'Failed to get response');
+      message.error(error instanceof Error ? error.message : 'Failed to get response');
     } finally {
       setChatLoading(false);
     }
@@ -1137,8 +1100,12 @@ const AdminPage: React.FC = () => {
             >
               <Button
                 icon={<FilterOutlined />}
-                type={(fileStatusFilter !== 'all' || dateSort !== 'default') ? 'primary' : 'default'}
-                style={(fileStatusFilter !== 'all' || dateSort !== 'default') ? { background: colourToken.pink, borderColor: colourToken.pink } : {}}
+                type={fileStatusFilter !== 'all' ? 'primary' : 'default'}
+                style={
+                  fileStatusFilter !== 'all'
+                    ? { background: colourToken.pink, borderColor: colourToken.pink }
+                    : {}
+                }
               >
                 Filter
               </Button>
@@ -1168,18 +1135,24 @@ const AdminPage: React.FC = () => {
         {Object.keys(ingestJobs).length > 0 && (
           <Card size="small" style={{ marginBottom: '16px', background: '#2f303a', borderColor: '#3a3d4a' }}>
             <Space direction="vertical" style={{ width: '100%' }}>
-              {Object.entries(ingestJobs).map(([jobId, job]) => (
-                <div key={jobId} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Tag color={job.status === 'completed' ? 'green' : job.status === 'failed' ? 'red' : 'blue'}>
-                    {job.status || 'pending'}
-                  </Tag>
-                  <Text style={{ color: '#e0e0e0' }}>{job.fileName || 'PDF upload'}</Text>
-                  <Text type="secondary" style={{ flex: 1 }}>{job.message || ''}</Text>
-                  <div style={{ width: 180 }}>
-                    <Progress percent={Math.min(100, Math.max(0, Math.round(job.progress || 0)))} size="small" showInfo={false} />
+              {Object.entries(ingestJobs).map(([jobId, job]) => {
+                let statusColor = 'blue';
+                if (job.status === 'completed') statusColor = 'green';
+                else if (job.status === 'failed') statusColor = 'red';
+                
+                return (
+                  <div key={jobId} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Tag color={statusColor}>
+                      {job.status || 'pending'}
+                    </Tag>
+                    <Text style={{ color: '#e0e0e0' }}>{job.fileName || 'PDF upload'}</Text>
+                    <Text type="secondary" style={{ flex: 1 }}>{job.message || ''}</Text>
+                    <div style={{ width: 180 }}>
+                      <Progress percent={Math.min(100, Math.max(0, Math.round(job.progress || 0)))} size="small" showInfo={false} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </Space>
           </Card>
         )}
@@ -1260,13 +1233,21 @@ const AdminPage: React.FC = () => {
                   {selectedRowKeys.length} selected
                 </Text>
               </div>
-            )}
+            )}  
           </div>
 
           {/* Files Table */}
           <Table
             columns={fileColumns.filter((col) => col.key !== 'chunk_number')}
-            dataSource={sortedFiles}
+            dataSource={files
+              .filter((f) => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
+              .filter((f) => (folderFilter ? f.name.startsWith(`${folderFilter}/`) : true))
+              .filter((f) => {
+                if (fileStatusFilter === 'enabled') return f.enabled;
+                if (fileStatusFilter === 'disabled') return !f.enabled;
+                return true;
+              })
+            }
             rowKey={(row) => row.name}
             rowSelection={{
               selectedRowKeys,
@@ -1275,7 +1256,15 @@ const AdminPage: React.FC = () => {
             pagination={{
               current: pagination.current,
               pageSize: pagination.pageSize,
-              total: sortedFiles.length,
+              total: files
+                .filter((f) => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                .filter((f) => (folderFilter ? f.name.startsWith(`${folderFilter}/`) : true))
+                .filter((f) => {
+                  if (fileStatusFilter === 'enabled') return f.enabled;
+                  if (fileStatusFilter === 'disabled') return !f.enabled;
+                  return true;
+                })
+                .length,
               showSizeChanger: true,
               pageSizeOptions: ['10', '20', '50', '100'],
               onChange: (current, pageSize) => setPagination({ current, pageSize }),
@@ -1754,16 +1743,16 @@ const AdminPage: React.FC = () => {
                         {chunk.keywords && chunk.keywords.length > 0 && (
                           <div>
                             <Text style={{ fontSize: '10px', color: '#ababab' }}>Keywords: </Text>
-                            {chunk.keywords.map((kw: string, i: number) => (
-                              <Tag key={i} style={{ fontSize: '9px', margin: '2px' }}>{kw}</Tag>
+                            {chunk.keywords.map((kw: string) => (
+                              <Tag key={`kw-${chunk.id}-${kw}`} style={{ fontSize: '9px', margin: '2px' }}>{kw}</Tag>
                             ))}
                           </div>
                         )}
                         {chunk.questions && chunk.questions.length > 0 && (
                           <div>
                             <Text style={{ fontSize: '10px', color: '#ababab' }}>Questions: </Text>
-                            {chunk.questions.map((q: string, i: number) => (
-                              <Tag key={i} color="purple" style={{ fontSize: '9px', margin: '2px' }}>{q}</Tag>
+                            {chunk.questions.map((q: string) => (
+                              <Tag key={`q-${chunk.id}-${q}`} color="purple" style={{ fontSize: '9px', margin: '2px' }}>{q}</Tag>
                             ))}
                           </div>
                         )}

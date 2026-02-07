@@ -65,5 +65,5 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Authenticated - render children
-  return <>{children}</>;
+  return children;
 }

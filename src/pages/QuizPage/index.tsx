@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Image, Radio, message, Typography, Spin } from 'antd';
+import { Button, Card, Image, Radio, message, Typography } from 'antd';
 import { useColourToken, useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
 import BACKEND_URI from 'configs/env.config';
@@ -97,7 +97,7 @@ const QuizPage: React.FC = () => {
       }
 
       // Transform LLM response to QuizItem format
-      const transformedQuiz: QuizItem[] = data.questions.map((q: any) => ({
+      const transformedQuiz: QuizItem[] = data.questions.map((q: { id: number; question: string; options: string[]; correctAnswer: string; explanation: string }) => ({
         id: q.id,
         question: q.question,
         image: '', // No image for LLM-generated quiz
@@ -112,9 +112,10 @@ const QuizPage: React.FC = () => {
       setScore(0);
       
       message.success(`Generated ${transformedQuiz.length} questions from your learning history!`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error;
       console.error('Error generating quiz from learning:', error);
-      message.error(error.message || 'Failed to generate quiz from chat history');
+      message.error(err.message || 'Failed to generate quiz from chat history');
     } finally {
       setLoadingQuiz(false);
     }
@@ -221,10 +222,10 @@ const QuizPage: React.FC = () => {
                       </div>
                     )}
                     {/* Show explanation if available (from LLM-generated quiz) */}
-                    {(item as any).explanation && (
+                    {item.explanation && (
                       <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #3a3d4a' }}>
                         <Text style={{ color: colourToken.gray, fontSize: '0.9rem' }}>
-                          <strong>Explanation:</strong> {(item as any).explanation}
+                          <strong>Explanation:</strong> {item.explanation}
                         </Text>
                       </div>
                     )}
