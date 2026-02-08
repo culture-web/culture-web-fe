@@ -103,8 +103,9 @@ test('Calendar section is visible and functional', async ({ page }) => {
   );
   
   // Check navigation buttons are present - be flexible with selector
-  await expect(page.locator('button').filter({ hasText: /[<]/ }).first()).toBeVisible({ timeout: 15000 });
-  await expect(page.locator('button').filter({ hasText: /[>]/ }).first()).toBeVisible({ timeout: 15000 });
+  // Note: buttons use Unicode characters ‹ and › not < and >
+  await expect(page.locator('button').filter({ hasText: /[‹<]/ }).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('button').filter({ hasText: /[›>]/ }).first()).toBeVisible({ timeout: 15000 });
   
   // Check days of week headers - be more flexible
   await page.locator('span, div, th').filter({ hasText: /^Sun$/ }).waitFor({ timeout: 15000 });
@@ -133,7 +134,8 @@ test('Calendar navigation works', async ({ page }) => {
   const monthYearLocator = page.locator('h3').first();
   const initialMonthYear = await monthYearLocator.textContent();
   
-  const nextButtonLocator = page.locator('button').filter({ hasText: /[>]/ }).first();
+  // Note: buttons use Unicode characters › not >
+  const nextButtonLocator = page.locator('button').filter({ hasText: /[›>]/ }).first();
   await expect(nextButtonLocator).toBeVisible({ timeout: 15000 });
   
   // Click next month
@@ -144,7 +146,8 @@ test('Calendar navigation works', async ({ page }) => {
   const newMonthYear = await monthYearLocator.textContent();
   expect(newMonthYear).not.toBe(initialMonthYear);
   
-  const prevButtonLocator = page.locator('button').filter({ hasText: /[<]/ }).first();
+  // Note: buttons use Unicode character ‹ not <
+  const prevButtonLocator = page.locator('button').filter({ hasText: /[‹<]/ }).first();
   await prevButtonLocator.click();
   
   await page.waitForTimeout(500); // Brief wait for calendar to update
