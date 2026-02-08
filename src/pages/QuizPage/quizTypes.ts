@@ -4,6 +4,7 @@ export interface QuizItem {
   image: string;
   options: string[];
   correctAnswer: string;
+  explanation?: string;
 }
 
 export interface QuizCategory {

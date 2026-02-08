@@ -6,6 +6,10 @@ import QuizPage from 'pages/QuizPage';
 import MainPage from 'pages/MainPage';
 import KathakaliPage from 'pages/CulturesKathakaliPage';
 import KootiyattamPage from 'pages/CulturesKootiyattamPage';
+import MudrasPage from 'pages/MudrasPage';
+import AdminPage from 'pages/AdminPage';
+import AdminLoginPage from 'pages/AdminLoginPage';
+import ProtectedRoute from 'components/Common/ProtectedRoute';
 import OrnamentsPage from 'pages/OrnamentsPage';
 import OrnamentsCharacterListPage from 'pages/OrnamentsCharacterListPage';
 import Navbar from 'components/Common/Navbar';
@@ -33,8 +37,19 @@ function App() {
                 path="/cultures/kootiyattam"
                 element={<KootiyattamPage />}
               />
+              <Route path="/learn" element={<MudrasPage />} />
+              <Route path="/admin-login" element={<AdminLoginPage />} />
+              <Route 
+                path="/k-manage-portal" 
+                element={
+                  <ProtectedRoute>
+                    <AdminPage />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/cultures/kathakali/ornaments" element={<OrnamentsCharacterListPage />}/>
               <Route path="/cultures/kathakali/ornaments/:characterId" element={<OrnamentsPage />} />
+
             </Routes>
           </Flex>
         </Flex>

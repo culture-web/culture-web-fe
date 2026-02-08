@@ -1,21 +1,16 @@
 import krishnamudi from 'assets/images/kathakali-ornaments/krishnamudi.png';
-import thoda from 'assets/images/kathakali-ornaments/thoda.png';
+import kecchamani from 'assets/images/kathakali-ornaments/kecchamani.png';
 import chevippuvu from 'assets/images/kathakali-ornaments/chevippuvu.png';
 import chutti from 'assets/images/kathakali-ornaments/chutti.png';
-import kazhuthunada from 'assets/images/kathakali-ornaments/kazhuthunada.png';
-import kazhuttaram from 'assets/images/kathakali-ornaments/kazhuttaram.png';
 import paruttikkaimani from 'assets/images/kathakali-ornaments/paruttikkaimani.png';
 import tolputtu from 'assets/images/kathakali-ornaments/tolputtu.png';
-import kuralaram from 'assets/images/kathakali-ornaments/kuralaram.png';
 import uttariya from 'assets/images/kathakali-ornaments/uttariya.png';
 import kastakatakam from 'assets/images/kathakali-ornaments/kastakatakam.png';
 import kalases from 'assets/images/kathakali-ornaments/kalases.png';
 import pattuval from 'assets/images/kathakali-ornaments/pattuval.png';
-import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
 import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
 import tantappatippu from 'assets/images/kathakali-ornaments/tantappatippu.png';
 import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
-import kecchamani from 'assets/images/kathakali-ornaments/kecchamani.png';
 import type { Ornament } from './types';
 
 const krishnaOrnamentsData: Ornament[] = [
@@ -79,7 +74,7 @@ const krishnaOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -93,7 +88,7 @@ const krishnaOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -205,7 +200,7 @@ const krishnaOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,
@@ -219,7 +214,7 @@ const krishnaOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,

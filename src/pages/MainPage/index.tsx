@@ -95,12 +95,9 @@ function MainPage() {
         return;
       }
 
-      const upcomingEventsUrl = new URL('/api/events', BACKEND_URI);
-      upcomingEventsUrl.searchParams.append('upcoming', 'true');
-      upcomingEventsUrl.searchParams.append('limit', eventsPerPage.toString());
-      upcomingEventsUrl.searchParams.append('offset', (page * eventsPerPage).toString());
+      const upcomingEventsUrl = `${BACKEND_URI}/events?upcoming=true&limit=${eventsPerPage}&offset=${page * eventsPerPage}`;
 
-      const upcomingEventsResponse = await fetch(upcomingEventsUrl.toString());
+      const upcomingEventsResponse = await fetch(upcomingEventsUrl);
 
       if (upcomingEventsResponse.ok) {
         const upcomingEventsContentType = upcomingEventsResponse.headers.get('content-type');
@@ -154,11 +151,9 @@ function MainPage() {
         }
 
         // Fetch all events for the calendar (without upcoming filter)
-        const allEventsUrl = new URL('/api/events', BACKEND_URI);
-        allEventsUrl.searchParams.append('limit', '100');
-        allEventsUrl.searchParams.append('offset', '0');
+        const allEventsUrl = `${BACKEND_URI}/events?limit=100&offset=0`;
 
-        const allEventsResponse = await fetch(allEventsUrl.toString());
+        const allEventsResponse = await fetch(allEventsUrl);
         
         if (!allEventsResponse.ok) {
           if (allEventsResponse.status === 404) {

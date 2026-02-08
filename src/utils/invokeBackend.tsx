@@ -123,6 +123,7 @@ export const sendChatQuery = async (
   query: string,
   imageFile?: File,
   imageAnalysis?: string,
+  mudrasMode: boolean = false,
 ): Promise<ChatbotResponse> => {
   try {
     // Always use FormData to be consistent with backend multer middleware
@@ -137,7 +138,10 @@ export const sendChatQuery = async (
       formData.append('imageAnalysis', imageAnalysis);
     }
 
-    const response = await fetch(`${BACKEND_URI}/kathakali/chat`, {
+    // Use chat-mudras endpoint for Mudras RAG mode, otherwise use production chat
+    const endpoint = mudrasMode ? 'chat-mudras' : 'chat';
+
+    const response = await fetch(`${BACKEND_URI}/kathakali/${endpoint}`, {
       method: 'POST',
       body: formData,
     });
