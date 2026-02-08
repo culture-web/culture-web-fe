@@ -41,7 +41,15 @@ test.beforeEach(async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(mockEvents),
+      body: JSON.stringify({
+        success: true,
+        data: mockEvents,
+        pagination: {
+          limit: 100,
+          offset: 0,
+          total: mockEvents.length
+        }
+      }),
     });
   });
 });
