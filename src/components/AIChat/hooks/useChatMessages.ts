@@ -89,6 +89,13 @@ const useChatMessages = (mudrasMode: boolean = false) => {
     }
   }, [messages, mudrasMode]);
 
+  // Clear chat history when component unmounts (browser closed or tab closed)
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('chatHistory');
+    };
+  }, []);
+
   useEffect(() => () => {
       uploadedImages.forEach(image => {
         URL.revokeObjectURL(image.url);
