@@ -77,7 +77,8 @@ const useChatMessages = (mudrasMode: boolean = false) => {
   
   const { processImageWithAI } = useImageAnalysis();
 
-  // Persist chat messages to localStorage when in mudras mode (Learn tab)
+  // Persist chat messages to sessionStorage when in mudras mode (Learn tab)
+  // sessionStorage automatically clears when tab/browser closes
   useEffect(() => {
     if (mudrasMode && messages.length > 1) {
       // Convert messages to Q&A format for quiz generation
@@ -85,14 +86,14 @@ const useChatMessages = (mudrasMode: boolean = false) => {
         role: msg.type === 'user' ? 'user' : 'assistant',
         content: msg.type === 'user' ? msg.content : msg.response?.shortAnswer || '',
       }));
-      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+      sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory));
     }
   }, [messages, mudrasMode]);
 
-  // Clear chat history when component unmounts (browser closed or tab closed)
+  // Clear chat history when component unmounts (navigation or tab close)
   useEffect(() => {
     return () => {
-      localStorage.removeItem('chatHistory');
+      sessionStorage.removeItem('chatHistory');
     };
   }, []);
 

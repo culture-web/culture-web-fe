@@ -59,8 +59,8 @@ const QuizPage: React.FC = () => {
     try {
       setLoadingQuiz(true);
       
-      // Get chat history from localStorage
-      const chatHistory = localStorage.getItem('chatHistory');
+      // Get chat history from sessionStorage (cleared when tab closes)
+      const chatHistory = sessionStorage.getItem('chatHistory');
       if (!chatHistory) {
         message.error('No chat history found. Please chat with the AI first in the Learn tab.');
         return;

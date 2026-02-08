@@ -110,8 +110,8 @@ const AdminPage: React.FC = () => {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    // Load chat history from localStorage on mount
-    const saved = localStorage.getItem('chatHistory');
+    // Load chat history from sessionStorage on mount (cleared when tab closes)
+    const saved = sessionStorage.getItem('chatHistory');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -514,10 +514,10 @@ const AdminPage: React.FC = () => {
     fetchFolders();
   }, []);
 
-  // Save chat messages to localStorage whenever they change
+  // Save chat messages to sessionStorage whenever they change (clears on tab close)
   useEffect(() => {
     if (chatMessages.length > 0) {
-      localStorage.setItem('chatHistory', JSON.stringify(chatMessages));
+      sessionStorage.setItem('chatHistory', JSON.stringify(chatMessages));
     }
   }, [chatMessages]);
 
