@@ -52,8 +52,19 @@ const convertBackendMessageToFrontend = (backendMessage: any): Message => {
   try {
     // Try to parse as JSON (for structured responses)
     const parsedContent = JSON.parse(backendMessage.content);
-    if (parsedContent.shortAnswer !== undefined) {
-      response = parsedContent;
+    
+    if (parsedContent !== undefined) {
+      response = {
+        shortAnswer: parsedContent.shortAnswer || 'No response available',
+        reasoning: parsedContent.reasoning || null,
+        sections: parsedContent.sections || [],
+        tables: parsedContent.tables || [],
+        metadata: parsedContent.metadata || {
+          hasStructuredContent: Boolean(parsedContent.reasoning || parsedContent.sections?.length || parsedContent.tables?.length),
+          responseLength: (parsedContent.shortAnswer || '').length,
+          processingTimestamp: backendMessage.created_at,
+        }
+      };
     } else {
       throw new Error('Not a structured response');
     }
@@ -258,6 +269,28 @@ const useChatMessages = (sessionId?: string) => {
     message.error('Image upload failed');
   };
 
+  // Function to refresh messages for the current session on MESSAGE DELETE
+  const refreshMessages = async () => {
+    if (!sessionId) return;
+    
+    try {
+      console.log('Refreshing messages for session:', sessionId);
+      const backendMessages = await getSessionMessages(sessionId);
+      
+      if (backendMessages.length === 0) {
+        // Empty session, show initial message
+        setMessages([getInitialMessage()]);
+      } else {
+        // Convert backend messages to frontend format
+        const frontendMessages = backendMessages.map(convertBackendMessageToFrontend);
+        setMessages(frontendMessages);
+      }
+    } catch (error) {
+      console.error('Failed to refresh session messages:', error);
+      message.error('Failed to refresh messages');
+    }
+  };
+
   return {
     messages,
     inputValue,
@@ -269,6 +302,7 @@ const useChatMessages = (sessionId?: string) => {
     removeImage,
     handleSendMessage,
     handleImageUploadError,
+    refreshMessages,
   };
 };
 

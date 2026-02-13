@@ -62,6 +62,7 @@ export interface SessionSidebarProps {
   currentSessionId?: string;
   onSessionSelect: (sessionId: string) => void;
   onNewSession: () => void;
+  onDeleteSession: (sessionId: string) => void;
   isLoading?: boolean;
 }
 
@@ -71,11 +72,13 @@ export interface ChatHeaderProps {
 
 export interface MessageBubbleProps {
   message: Message;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 export interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 export interface ImageUploadPreviewProps {

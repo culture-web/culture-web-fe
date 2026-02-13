@@ -92,6 +92,50 @@ export const getSessionMessages = async (sessionId: string): Promise<any[]> => {
   return messages;
 };
 
+export const deleteSession = async (sessionId: string): Promise<void> => {
+  const headers: Record<string, string> = {};
+  
+  try {
+    const token = await getCurrentUserToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    throw new Error('Authentication required to delete session');
+  }
+
+  const response = await fetch(`${BACKEND_URI}/chat/sessions/${sessionId}`, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete session: ${response.status} ${response.statusText}`);
+  }
+};
+
+export const deleteMessage = async (messageId: string): Promise<void> => {
+  const headers: Record<string, string> = {};
+  
+  try {
+    const token = await getCurrentUserToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    throw new Error('Authentication required to delete message');
+  }
+
+  const response = await fetch(`${BACKEND_URI}/chat/messages/${messageId}`, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete message: ${response.status} ${response.statusText}`);
+  }
+};
+
 const getImageDimensions = (
   imageFile: File,
 ): Promise<{ width: number; height: number }> =>

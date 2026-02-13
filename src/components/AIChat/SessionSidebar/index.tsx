@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button, List, Typography, Space } from 'antd';
-import { PlusOutlined, MessageOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Button, List, Typography, Space, Popconfirm } from 'antd';
+import { PlusOutlined, MessageOutlined, ClockCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { SessionSidebarProps } from '../types';
 
 const { Text, Title } = Typography;
@@ -10,6 +10,7 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
   currentSessionId,
   onSessionSelect,
   onNewSession,
+  onDeleteSession,
   isLoading = false
 }) => {
   const formatDate = (dateString: string) => {
@@ -21,18 +22,16 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
 
     if (diffHours < 1) {
       return 'Just now';
-    } else if (diffHours < 24) {
+    } if (diffHours < 24) {
       return `${Math.floor(diffHours)} hours ago`;
-    } else if (diffDays < 7) {
+    } if (diffDays < 7) {
       return `${Math.floor(diffDays)} days ago`;
-    } else {
+    } 
       return date.toLocaleDateString();
-    }
+    
   };
 
-  const getSessionTitle = (session: any) => {
-    return session.title || `Chat ${session.id.slice(-8)}`;
-  };
+  const getSessionTitle = (session: any) => session.title || `Chat ${session.id.slice(-8)}`;
 
   return (
     <div style={{
@@ -87,21 +86,42 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
             >
               <div style={{ width: '100%' }}>
                 <Space direction="vertical" size={4} style={{ width: '100%' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MessageOutlined style={{ color: '#c81f58', fontSize: '14px' }} />
-                    <Text 
-                      strong 
-                      style={{ 
-                        fontSize: '14px',
-                        color: currentSessionId === session.id ? '#c81f58' : '#2b2d38',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        maxWidth: '180px'
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+                      <MessageOutlined style={{ color: '#c81f58', fontSize: '14px' }} />
+                      <Text 
+                        strong 
+                        style={{ 
+                          fontSize: '14px',
+                          color: currentSessionId === session.id ? '#c81f58' : '#2b2d38',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '150px'
+                        }}
+                      >
+                        {getSessionTitle(session)}
+                      </Text>
+                    </div>
+                    <Popconfirm
+                      title="Delete session?"
+                      description="This will permanently delete this chat session and all its messages."
+                      onConfirm={(e) => {
+                        e?.stopPropagation();
+                        onDeleteSession(session.id);
                       }}
+                      okText="Delete"
+                      cancelText="Cancel"
+                      okButtonProps={{ danger: true }}
                     >
-                      {getSessionTitle(session)}
-                    </Text>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        style={{ color: '#8c8c8c', padding: '2px' }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Popconfirm>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <ClockCircleOutlined style={{ color: '#8c8c8c', fontSize: '12px' }} />

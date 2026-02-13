@@ -12,6 +12,7 @@ import {
   uploadImgToExpressionRecBESingle,
   uploadCharacterDataToBE,
   createNewSession,
+  getUserSessions,
 } from 'utils/invokeBackend';
 import RenderCharacterContent from 'components/ContentRender/RenderCharacterContent';
 import RenderExpressionContent from 'components/ContentRender/RenderExpressionContent';
@@ -57,17 +58,29 @@ function KathakaliPage() {
     }
   };
 
-  // Handle opening chat with new session creation
+  // Handle opening chat - use existing session if available, otherwise create new
   const handleOpenChat = async () => {
     setIsCreatingSession(true);
     try {
-      const newSession = await createNewSession();
-      setCurrentSessionId(newSession.id);
-      setIsChatModalOpen(true);
-      message.success('New chat session created');
+      // First, check if there are existing sessions
+      const existingSessions = await getUserSessions();
+      
+      if (existingSessions && existingSessions.length > 0) {
+        // Use the latest (first) session
+        const latestSession = existingSessions[0];
+        setCurrentSessionId(latestSession.id);
+        setIsChatModalOpen(true);
+        message.success('Opened latest chat session');
+      } else {
+        // No existing sessions, create a new one
+        const newSession = await createNewSession();
+        setCurrentSessionId(newSession.id);
+        setIsChatModalOpen(true);
+        message.success('New chat session created');
+      }
     } catch (error) {
-      console.error('Failed to create session:', error);
-      message.error('Failed to create session, opening chat without session');
+      console.error('Failed to handle chat session:', error);
+      message.error('Failed to load session, opening chat without session');
       setIsChatModalOpen(true);
     } finally {
       setIsCreatingSession(false);

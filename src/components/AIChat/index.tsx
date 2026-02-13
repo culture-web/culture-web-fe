@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Divider, message } from 'antd';
 import useIsMobile from 'utils/isMobile';
-import { createNewSession, getUserSessions } from 'utils/invokeBackend';
+import { createNewSession, getUserSessions, deleteSession, deleteMessage } from 'utils/invokeBackend';
 import { AIChatProps, ChatSession } from './types';
 import useChatMessages from './hooks/useChatMessages';
 import ChatHeader from './ChatHeader';
@@ -24,6 +24,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     handleImageUpload,
     removeImage,
     handleSendMessage,
+    refreshMessages,
   } = useChatMessages(activeSessionId);
   
   const isMobile = useIsMobile();
@@ -33,7 +34,11 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     const loadSessions = async () => {
       try {
         const userSessions = await getUserSessions();
-        setSessions(userSessions);
+        // Sort sessions in descending order by creation time (latest first)
+        const sortedSessions = userSessions.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setSessions(sortedSessions);
       } catch (error) {
         console.warn('Failed to load sessions:', error);
       }
@@ -65,6 +70,45 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     onSessionChange?.(sessionId);
   };
 
+  // Handle session deletion
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      await deleteSession(sessionId);
+      setSessions(prev => prev.filter(session => session.id !== sessionId));
+      
+      // If we deleted the active session, switch to first available session or create new one
+      if (activeSessionId === sessionId) {
+        const remainingSessions = sessions.filter(session => session.id !== sessionId);
+        if (remainingSessions.length > 0) {
+          const newActiveSession = remainingSessions[0];
+          setActiveSessionId(newActiveSession.id);
+          onSessionChange?.(newActiveSession.id);
+        } else {
+          setActiveSessionId(undefined);
+          onSessionChange?.('');
+        }
+      }
+      
+      message.success('Session deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      message.error('Failed to delete session');
+    }
+  };
+
+  // Handle message deletion
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      await deleteMessage(messageId);
+      message.success('Message deleted successfully');
+      // Refresh messages to ensure deleted message is gone
+      await refreshMessages();
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+      message.error('Failed to delete message');
+    }
+  };
+
   if (isMobile) {
     // Mobile layout - no sidebar
     return (
@@ -78,13 +122,17 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
           overflow: 'hidden',
           boxShadow: '0 8px 32px rgba(43, 45, 56, 0.1)',
         }}
-        bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%' }}
+        bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}
       >
         <ChatHeader onClose={onClose} />
         
-        <MessageList messages={messages} isLoading={isLoading || isLoadingSession} />
+        <MessageList 
+          messages={messages} 
+          isLoading={isLoading || isLoadingSession}
+          onDeleteMessage={handleDeleteMessage}
+        />
 
-        <Divider style={{ margin: 0 }} />
+        <Divider style={{ margin: 0, flexShrink: 0 }} />
 
         <ChatInput
           value={inputValue}
@@ -112,15 +160,16 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
         overflow: 'hidden',
         boxShadow: '0 8px 32px rgba(43, 45, 56, 0.1)',
       }}
-      bodyStyle={{ padding: 0, display: 'flex', height: '100%' }}
+      bodyStyle={{ padding: 0, display: 'flex', height: '100%', overflow: 'hidden' }}
     >
-      <div style={{ display: 'flex', height: '100%' }}>
+      <div style={{ display: 'flex', height: '100%', width: '100%' }}>
         {/* Left Sidebar - Sessions */}
         <SessionSidebar 
           sessions={sessions}
           currentSessionId={activeSessionId}
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
+          onDeleteSession={handleDeleteSession}
           isLoading={isCreatingSession}
         />
 
@@ -129,13 +178,19 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
           flex: 1, 
           display: 'flex', 
           flexDirection: 'column',
-          minWidth: 0 
+          minWidth: 0,
+          height: '100%',
+          overflow: 'hidden'
         }}>
           <ChatHeader onClose={onClose} />
           
-          <MessageList messages={messages} isLoading={isLoading} />
+          <MessageList 
+            messages={messages} 
+            isLoading={isLoading}
+            onDeleteMessage={handleDeleteMessage}
+          />
 
-          <Divider style={{ margin: 0 }} />
+          <Divider style={{ margin: 0, flexShrink: 0 }} />
 
           <ChatInput
             value={inputValue}
