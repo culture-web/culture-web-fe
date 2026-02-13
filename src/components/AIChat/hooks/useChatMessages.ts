@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { sendChatQuery, getSessionMessages } from 'utils/invokeBackend';
+import { sendChatQuery, getSessionMessages, BackendMessage } from 'utils/invokeBackend';
 import { Message, UploadedImage } from '../types';
 import useImageAnalysis from './useImageAnalysis';
 
@@ -69,8 +69,7 @@ Feel free to ask anything about mudras, traditions, and Indian classical arts!`,
 const getInitialMessage = (mudrasMode: boolean = false): Message => 
   mudrasMode ? getMudrasMessage() : getKathakaliMessage();
 
-
-const convertBackendMessageToFrontend = (backendMessage: any): Message => {
+const convertBackendMessageToFrontend = (backendMessage: BackendMessage): Message => {
   const isUser = backendMessage.role === 'user';
   
   if (isUser) {

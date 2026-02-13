@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, List, Typography, Space, Popconfirm } from 'antd';
 import { PlusOutlined, MessageOutlined, ClockCircleOutlined, DeleteOutlined } from '@ant-design/icons';
-import { SessionSidebarProps } from '../types';
+import { SessionSidebarProps, ChatSession } from '../types';
 
 const { Text, Title } = Typography;
 
@@ -31,7 +31,7 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
     
   };
 
-  const getSessionTitle = (session: any) => session.title || `Chat ${session.id.slice(-8)}`;
+  const getSessionTitle = (session: ChatSession) => session.title || `Chat ${session.id.slice(-8)}`;
 
   return (
     <div style={{

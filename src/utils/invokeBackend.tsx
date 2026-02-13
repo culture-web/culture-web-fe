@@ -3,6 +3,13 @@ import BACKEND_URI from 'configs/env.config';
 import { getCurrentUserToken } from 'configs/supabase.config';
 import { PredictionMultiple, Prediction } from 'types/interface';
 
+export interface BackendMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
 export interface ChatSession {
   id: string;
   created_at: string;
@@ -64,7 +71,7 @@ export const getUserSessions = async (): Promise<ChatSession[]> => {
   return data.data || data || [];
 };
 
-export const getSessionMessages = async (sessionId: string): Promise<any[]> => {
+export const getSessionMessages = async (sessionId: string): Promise<BackendMessage[]> => {
   const headers: Record<string, string> = {};
   
   try {
@@ -100,7 +107,7 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-  } catch (error) {
+  } catch {
     throw new Error('Authentication required to delete session');
   }
 
@@ -122,7 +129,7 @@ export const deleteMessage = async (messageId: string): Promise<void> => {
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-  } catch (error) {
+  } catch {
     throw new Error('Authentication required to delete message');
   }
 
@@ -344,7 +351,7 @@ export const sendChatQuery = async (
       };
       return fallbackResult;
     
-  } catch (error) {
+  } catch {
     // Chat API Error - return error response in new format
     const errorResult = {
       shortAnswer: 'Failed to communicate with the AI assistant',
