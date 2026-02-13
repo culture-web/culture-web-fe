@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { sendChatQuery } from 'utils/invokeBackend';
+import { sendChatQuery, getSessionMessages, BackendMessage } from 'utils/invokeBackend';
 import { Message, UploadedImage } from '../types';
 import useImageAnalysis from './useImageAnalysis';
 
@@ -69,33 +69,112 @@ Feel free to ask anything about mudras, traditions, and Indian classical arts!`,
 const getInitialMessage = (mudrasMode: boolean = false): Message => 
   mudrasMode ? getMudrasMessage() : getKathakaliMessage();
 
-const useChatMessages = (mudrasMode: boolean = false) => {
+const convertBackendMessageToFrontend = (backendMessage: BackendMessage): Message => {
+  const isUser = backendMessage.role === 'user';
+  
+  if (isUser) {
+    return {
+      id: backendMessage.id,
+      type: 'user',
+      content: backendMessage.content,
+      timestamp: new Date(backendMessage.created_at),
+    };
+  }
+
+  // Assistant message - try to parse as JSON first, otherwise treat as plain text
+  let response;
+  
+  try {
+    // Try to parse as JSON (for structured responses)
+    const parsedContent = JSON.parse(backendMessage.content);
+    
+    if (parsedContent !== undefined) {
+      response = {
+        shortAnswer: parsedContent.shortAnswer || 'No response available',
+        reasoning: parsedContent.reasoning || null,
+        sections: parsedContent.sections || [],
+        tables: parsedContent.tables || [],
+        metadata: parsedContent.metadata || {
+          hasStructuredContent: Boolean(parsedContent.reasoning || parsedContent.sections?.length || parsedContent.tables?.length),
+          responseLength: (parsedContent.shortAnswer || '').length,
+          processingTimestamp: backendMessage.created_at,
+        }
+      };
+    } else {
+      throw new Error('Not a structured response');
+    }
+  } catch {
+    // If parsing fails or it's not structured, treat as plain text response
+    response = {
+      shortAnswer: backendMessage.content || 'No response available',
+      reasoning: null,
+      sections: [],
+      tables: [],
+      metadata: {
+        hasStructuredContent: false,
+        responseLength: (backendMessage.content || '').length,
+        processingTimestamp: backendMessage.created_at,
+      }
+    };
+  }
+
+  return {
+    id: backendMessage.id,
+    type: 'assistant',
+    response,
+    timestamp: new Date(backendMessage.created_at),
+  };
+};
+
+const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudrasMode: boolean = false) => {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage(mudrasMode)]);
   const [inputValue, setInputValue] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSession, setIsLoadingSession] = useState(false);
   
   const { processImageWithAI } = useImageAnalysis();
 
-  // Persist chat messages to sessionStorage when in mudras mode (Learn tab)
-  // sessionStorage automatically clears when tab/browser closes
+  // Load session messages when session changes
   useEffect(() => {
-    if (mudrasMode && messages.length > 1) {
-      // Convert messages to Q&A format for quiz generation
-      const chatHistory = messages.slice(1).map(msg => ({
-        role: msg.type === 'user' ? 'user' : 'assistant',
-        content: msg.type === 'user' ? msg.content : msg.response?.shortAnswer || '',
-      }));
-      sessionStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-    }
-  }, [messages, mudrasMode]);
+    const loadSessionMessages = async () => {
+      if (!sessionId) {
+        // No session, show initial message
+        setMessages([getInitialMessage()]);
+        return;
+      }
 
-  // Clear chat history when component unmounts (navigation or tab close)
-  useEffect(() => {
-    return () => {
-      sessionStorage.removeItem('chatHistory');
+      setIsLoadingSession(true);
+      try {
+        console.log('Loading messages for session:', sessionId);
+        const backendMessages = await getSessionMessages(sessionId);
+        console.log('Backend messages received:', backendMessages);
+        
+        if (backendMessages.length === 0) {
+          // Empty session, show initial message
+          setMessages([getInitialMessage()]);
+        } else {
+          // Convert backend messages to frontend format
+          const frontendMessages = backendMessages.map(convertBackendMessageToFrontend);
+          console.log('Converted frontend messages:', frontendMessages);
+          setMessages(frontendMessages);
+        }
+        
+        // Clear input and images when switching sessions
+        setInputValue('');
+        setUploadedImages([]);
+      } catch (error) {
+        console.error('Failed to load session messages:', error);
+        message.error('Failed to load session messages');
+        // Fall back to initial message on error
+        setMessages([getInitialMessage()]);
+      } finally {
+        setIsLoadingSession(false);
+      }
     };
-  }, []);
+
+    loadSessionMessages();
+  }, [sessionId]);
 
   useEffect(() => () => {
       uploadedImages.forEach(image => {
@@ -156,6 +235,10 @@ const useChatMessages = (mudrasMode: boolean = false) => {
 
     const userMessageId = Date.now().toString();
     
+    // Check if this is the first user message (excluding initial AI greeting)
+    const userMessages = messages.filter(msg => msg.type === 'user');
+    const isFirstMessage = userMessages.length === 0;
+    
     const userMessage: Message = {
       id: userMessageId,
       type: 'user',
@@ -187,7 +270,7 @@ const useChatMessages = (mudrasMode: boolean = false) => {
       }
 
       const firstImageFile = currentImages.length > 0 ? currentImages[0].file : undefined;
-      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis, mudrasMode);
+      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis, sessionId, mudrasMode);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -197,6 +280,11 @@ const useChatMessages = (mudrasMode: boolean = false) => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      
+      // If this was the first message, trigger session update to refresh session list
+      if (isFirstMessage && onSessionUpdate) {
+        onSessionUpdate();
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
@@ -225,16 +313,40 @@ const useChatMessages = (mudrasMode: boolean = false) => {
     message.error('Image upload failed');
   };
 
+  // Function to refresh messages for the current session on MESSAGE DELETE
+  const refreshMessages = async () => {
+    if (!sessionId) return;
+    
+    try {
+      console.log('Refreshing messages for session:', sessionId);
+      const backendMessages = await getSessionMessages(sessionId);
+      
+      if (backendMessages.length === 0) {
+        // Empty session, show initial message
+        setMessages([getInitialMessage()]);
+      } else {
+        // Convert backend messages to frontend format
+        const frontendMessages = backendMessages.map(convertBackendMessageToFrontend);
+        setMessages(frontendMessages);
+      }
+    } catch (error) {
+      console.error('Failed to refresh session messages:', error);
+      message.error('Failed to refresh messages');
+    }
+  };
+
   return {
     messages,
     inputValue,
     setInputValue,
     uploadedImages,
     isLoading,
+    isLoadingSession,
     handleImageUpload,
     removeImage,
     handleSendMessage,
     handleImageUploadError,
+    refreshMessages,
   };
 };
 

@@ -2,13 +2,15 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "configs/*": ["src/configs/*"],
+      "*": ["src/*", "src/types/*"],
+      "assets/*": ["src/assets/*"],
       "components/*": ["src/components/*"],
+      "configs/*": ["src/configs/*"],
+      "contexts/*": ["src/contexts/*"],
       "pages/*": ["src/pages/*"],
       "types/*": ["src/types/*"],
       "utils/*": ["src/utils/*"],
-      "assets/*": ["src/assets/*"],
-      "themeStyles": ["src/themeStyles.ts"]
+      "themeStyles": ["src/themeStyles"]
     },
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],

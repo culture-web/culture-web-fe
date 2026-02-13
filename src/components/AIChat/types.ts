@@ -44,8 +44,26 @@ export interface UploadedImage {
   isAnalyzing?: boolean;
 }
 
+export interface ChatSession {
+  id: string;
+  created_at: string;
+  title?: string;
+  lastMessageAt?: string;
+}
+
 export interface AIChatProps {
   onClose?: () => void;
+  currentSessionId?: string;
+  onSessionChange?: (sessionId: string) => void;
+}
+
+export interface SessionSidebarProps {
+  sessions: ChatSession[];
+  currentSessionId?: string;
+  onSessionSelect: (sessionId: string) => void;
+  onNewSession: () => void;
+  onDeleteSession: (sessionId: string) => void;
+  isLoading?: boolean;
 }
 
 export interface ChatHeaderProps {
@@ -54,11 +72,13 @@ export interface ChatHeaderProps {
 
 export interface MessageBubbleProps {
   message: Message;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 export interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 export interface ImageUploadPreviewProps {

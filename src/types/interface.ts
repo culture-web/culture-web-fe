@@ -44,3 +44,40 @@ export interface GetEventsApiResponse {
     total: number;
   };
 }
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  user_metadata?: {
+    name?: string;
+    full_name?: string;
+  };
+  createdAt?: string;
+  created_at?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  session: object | null; // Supabase session object
+}
+
+export interface SignInCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignUpCredentials {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+  message?: string;
+}
