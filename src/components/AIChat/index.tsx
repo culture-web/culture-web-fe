@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Divider, message } from 'antd';
 import useIsMobile from 'utils/isMobile';
 import { createNewSession, getUserSessions, deleteSession, deleteMessage } from 'utils/invokeBackend';
+import { useLocation } from 'react-router-dom';
 import { AIChatProps, ChatSession } from './types';
 import useChatMessages from './hooks/useChatMessages';
 import ChatHeader from './ChatHeader';
@@ -13,6 +14,14 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>(currentSessionId);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const location = useLocation();
+  const [mudrasMode, setMudrasMode] = useState(false);
+  
+  // Auto-detect mode based on current page
+  useEffect(() => {
+    const isMudrasPage = location.pathname === '/learn';
+    setMudrasMode(isMudrasPage);
+  }, [location.pathname]);
 
   const loadSessions = useCallback(async () => {
     try {
@@ -40,7 +49,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     removeImage,
     handleSendMessage,
     refreshMessages,
-  } = useChatMessages(activeSessionId, loadSessions);
+  } = useChatMessages(activeSessionId, loadSessions, mudrasMode);
   
   const isMobile = useIsMobile();
 
@@ -184,7 +193,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
           height: '100%',
           overflow: 'hidden'
         }}>
-          <ChatHeader onClose={onClose} />
+          <ChatHeader onClose={onClose} mudrasMode={mudrasMode}/>
           
           <MessageList 
             messages={messages} 

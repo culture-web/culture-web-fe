@@ -81,6 +81,14 @@ function Navbar() {
           Cultures
         </NavLink>
         <NavLink
+          to="/learn"
+          style={({ isActive }) =>
+            isActive ? activeLinkStyles : defaultLinkStyles
+          }
+        >
+          Learn
+        </NavLink>
+        <NavLink
           to="/about-us"
           style={({ isActive }) =>
             isActive ? activeLinkStyles : defaultLinkStyles

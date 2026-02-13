@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import kathakaliImage from 'assets/images/kathakali-stock-images/kathakali6.jpg';
 import ImageUpload from 'components/FileUploads/ImageUpload';
 import AIChat from 'components/AIChat';
@@ -91,6 +92,7 @@ function KathakaliPage() {
   const handleSessionChange = (sessionId: string) => {
     setCurrentSessionId(sessionId);
   };
+  const navigate = useNavigate();
 
   return (
     <Flex vertical align="center">
@@ -221,6 +223,11 @@ function KathakaliPage() {
               and display the name of the expression. Simply upload an image of
               a Kathakali expression to see the result.
             </Text>
+            <Flex gap="large" style={{ margin: '0.5rem 0rem' }}>
+              <Button onClick={() => navigate('ornaments')}>
+                Learn more about ornaments worn by Kathakali characters
+              </Button>
+            </Flex>
           </Flex>
         </section>
 

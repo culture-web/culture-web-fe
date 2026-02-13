@@ -5,7 +5,11 @@ import { ChatHeaderProps } from '../types';
 
 const { Text, Title } = Typography;
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose }) => {
+interface ChatHeaderPropsWithMode extends ChatHeaderProps {
+  mudrasMode?: boolean;
+}
+
+const ChatHeader: React.FC<ChatHeaderPropsWithMode> = ({ onClose, mudrasMode = false }) => {
   const chatHeaderStyle = {
     background: 'linear-gradient(135deg, #2b2d38 0%, #c81f58 100%)',
     color: '#fff',
@@ -18,9 +22,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose }) => {
       <Flex justify="space-between" align="center">
         <Space>
           <RobotOutlined style={{ fontSize: '24px' }} />
-          <Title level={4} style={{ color: '#fff', margin: 0 }}>
-            Kathakali AI Assistant
-          </Title>
+          <div>
+            <Title level={4} style={{ color: '#fff', margin: 0 }}>
+              Kathakali AI Assistant
+            </Title>
+            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px' }}>
+              {mudrasMode ? '🙏 Cultural Knowledge Guide' : '💃 Kathakali Expert'}
+            </Text>
+          </div>
         </Space>
         {onClose && (
           <Button 
@@ -32,8 +41,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose }) => {
           </Button>
         )}
       </Flex>
-      <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
-        Ask me about Kathakali characters, expressions, stories, and traditions
+      <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', display: 'block', marginTop: '8px' }}>
+        {mudrasMode 
+          ? 'Ask me about mudras, traditions, and cultural knowledge'
+          : 'Ask me about Kathakali characters, expressions, stories, and traditions'
+        }
       </Text>
     </div>
   );

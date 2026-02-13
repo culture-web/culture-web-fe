@@ -258,6 +258,7 @@ export const sendChatQuery = async (
   imageFile?: File,
   imageAnalysis?: string,
   sessionId?: string,
+  mudrasMode: boolean = false,
 ): Promise<ChatbotResponse> => {
   try {
     // Always use FormData to be consistent with backend multer middleware
@@ -289,7 +290,10 @@ export const sendChatQuery = async (
       // Continue without token for anonymous chat
     }
 
-    const response = await fetch(`${BACKEND_URI}/chat/messages`, {
+    // Use chat-mudras endpoint for Mudras RAG mode, otherwise use production chat
+    const urlEndpoint = mudrasMode ? `${BACKEND_URI}/kathakali/chat-mudras` : `${BACKEND_URI}/chat/messages`;
+
+    const response = await fetch(urlEndpoint, {
       method: 'POST',
       body: formData,
       headers,

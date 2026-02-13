@@ -4,7 +4,7 @@ import { sendChatQuery, getSessionMessages } from 'utils/invokeBackend';
 import { Message, UploadedImage } from '../types';
 import useImageAnalysis from './useImageAnalysis';
 
-const getInitialMessage = (): Message => ({
+const getKathakaliMessage = (): Message => ({
   id: '1',
   type: 'assistant',
   response: {
@@ -33,6 +33,42 @@ Feel free to upload images and ask anything about Kathakali!`,
   },
   timestamp: new Date(),
 });
+
+const getMudrasMessage = (): Message => ({
+  id: '1',
+  type: 'assistant',
+  response: {
+    shortAnswer: `Welcome to the Mudras & Cultural Knowledge Guide! I'm here to help you learn about:
+
+🙏 **Mudra Types & Meanings** - Single-hand (Asamyuta) and two-hand (Samyuta) mudras
+🎭 **Dance Forms** - Mudras in Kathakali, Bharatanatyam, Kootiyattam, and other classical arts
+📖 **Cultural Significance** - History, traditions, and storytelling through hand gestures
+🎪 **Expression & Emotion** - How mudras convey meanings, narratives, and sentiments
+🌿 **Traditions & Rituals** - Ancient origins and modern practice of mudras
+
+**Try asking:**
+• "What is the significance of the Pataka mudra?"
+• "How are mudras used differently in Kathakali versus Bharatanatyam?"
+• "Explain the story-telling through mudras"
+• "What are the different types of mudras and their meanings?"
+• "Tell me about mudras in classical Indian dance"
+
+Feel free to ask anything about mudras, traditions, and Indian classical arts!`,
+    reasoning: null,
+    sections: [],
+    tables: [],
+    metadata: {
+      hasStructuredContent: false,
+      responseLength: 0,
+      processingTimestamp: new Date().toISOString(),
+    }
+  },
+  timestamp: new Date(),
+});
+
+const getInitialMessage = (mudrasMode: boolean = false): Message => 
+  mudrasMode ? getMudrasMessage() : getKathakaliMessage();
+
 
 const convertBackendMessageToFrontend = (backendMessage: any): Message => {
   const isUser = backendMessage.role === 'user';
@@ -91,8 +127,8 @@ const convertBackendMessageToFrontend = (backendMessage: any): Message => {
   };
 };
 
-const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void) => {
-  const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
+const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudrasMode: boolean = false) => {
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage(mudrasMode)]);
   const [inputValue, setInputValue] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -235,7 +271,7 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void) => {
       }
 
       const firstImageFile = currentImages.length > 0 ? currentImages[0].file : undefined;
-      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis, sessionId);
+      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis, sessionId, mudrasMode);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
