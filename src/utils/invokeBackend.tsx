@@ -263,6 +263,10 @@ export const sendChatQuery = async (
   try {
     // Always use FormData to be consistent with backend multer middleware
     const formData = new FormData();
+    
+    // TODO: For mudras backward compatibility, to update to use the "message" field
+    formData.append('query', query);
+
     formData.append('message', query);
     formData.append('role', 'user');
     
