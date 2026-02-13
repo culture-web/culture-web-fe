@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Divider, message } from 'antd';
 import useIsMobile from 'utils/isMobile';
 import { createNewSession, getUserSessions, deleteSession, deleteMessage } from 'utils/invokeBackend';
@@ -14,6 +14,21 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>(currentSessionId);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
 
+  const loadSessions = useCallback(async () => {
+    try {
+      console.log('Loading sessions...');
+      const userSessions = await getUserSessions();
+      console.log('Sessions loaded:', userSessions);
+      // Sort sessions in descending order by creation time (latest first)
+      const sortedSessions = userSessions.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setSessions(sortedSessions);
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+    }
+  }, []);
+
   const {
     messages,
     inputValue,
@@ -25,27 +40,14 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     removeImage,
     handleSendMessage,
     refreshMessages,
-  } = useChatMessages(activeSessionId);
+  } = useChatMessages(activeSessionId, loadSessions);
   
   const isMobile = useIsMobile();
 
   // Load user sessions on mount
   useEffect(() => {
-    const loadSessions = async () => {
-      try {
-        const userSessions = await getUserSessions();
-        // Sort sessions in descending order by creation time (latest first)
-        const sortedSessions = userSessions.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        setSessions(sortedSessions);
-      } catch (error) {
-        console.warn('Failed to load sessions:', error);
-      }
-    };
-
     loadSessions();
-  }, []);
+  }, [loadSessions]);
 
   // Handle new session creation
   const handleNewSession = async () => {

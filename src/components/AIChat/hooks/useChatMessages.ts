@@ -91,7 +91,7 @@ const convertBackendMessageToFrontend = (backendMessage: any): Message => {
   };
 };
 
-const useChatMessages = (sessionId?: string) => {
+const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void) => {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage()]);
   const [inputValue, setInputValue] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -200,6 +200,10 @@ const useChatMessages = (sessionId?: string) => {
 
     const userMessageId = Date.now().toString();
     
+    // Check if this is the first user message (excluding initial AI greeting)
+    const userMessages = messages.filter(msg => msg.type === 'user');
+    const isFirstMessage = userMessages.length === 0;
+    
     const userMessage: Message = {
       id: userMessageId,
       type: 'user',
@@ -241,6 +245,11 @@ const useChatMessages = (sessionId?: string) => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      
+      // If this was the first message, trigger session update to refresh session list
+      if (isFirstMessage && onSessionUpdate) {
+        onSessionUpdate();
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
