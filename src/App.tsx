@@ -8,12 +8,12 @@ import KathakaliPage from 'pages/CulturesKathakaliPage';
 import KootiyattamPage from 'pages/CulturesKootiyattamPage';
 import OrnamentsPage from 'pages/OrnamentsPage';
 import OrnamentsCharacterListPage from 'pages/OrnamentsCharacterListPage';
-import PachaOrnamentGamePage from 'pages/OrnamentGame';
+import OrnamentGamePage from 'pages/OrnamentGame'; // Renamed from PachaOrnamentGamePage
 import Navbar from 'components/Common/Navbar';
 import DropdownNavbar from 'components/Common/DropdownNavbar';
 import useIsMobile from 'utils/isMobile';
 import { ConfigProvider, Flex } from 'antd';
-import themeStyles from './themeStyles'; // Import your custom theme
+import themeStyles from './themeStyles';
 
 function App() {
   const isMobile = useIsMobile();
@@ -36,7 +36,9 @@ function App() {
               />
               <Route path="/cultures/kathakali/ornaments" element={<OrnamentsCharacterListPage />}/>
               <Route path="/cultures/kathakali/ornaments/:characterId" element={<OrnamentsPage />} />
-              <Route path="/quiz/ornaments" element={<PachaOrnamentGamePage />} />
+              
+              {/* UPDATED: Dynamic route for any character */}
+              <Route path="/cultures/kathakali/ornaments/:characterId/game" element={<OrnamentGamePage />} />
             </Routes>
           </Flex>
         </Flex>

@@ -27,6 +27,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: veil,
+    labelPosition: { x: 380, y: 50 } 
   },
   {
     id: 'kurunira',

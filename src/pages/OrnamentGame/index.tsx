@@ -2,29 +2,35 @@ import { Typography, Flex, Button, Card, Progress, Input, Space, Tag } from 'ant
 import { LeftOutlined, CheckCircleFilled, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useStyleToken } from 'themeStyles';
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import type { Ornament } from '../OrnamentsPage/types';
 import characterConfigs from '../OrnamentsPage/characterConfigs';
-import pachaOrnamentsData from '../OrnamentsPage/data/pachaOrnamentsData';
 
 const { Title } = Typography;
 
-function PachaOrnamentGamePage() {
+function OrnamentGamePage() {
   const styleToken = useStyleToken();
   const navigate = useNavigate();
+  const { characterId } = useParams<{ characterId: string }>();
 
-  const pachaConfig = characterConfigs?.['pacha'] || { image: '', imageStyle: {}, svgStyle: {} };
-  const rawOrnaments: Ornament[] = Array.isArray(pachaOrnamentsData) ? pachaOrnamentsData : [];
+  const characterConfig = characterConfigs?.[characterId || 'pacha'];
+  
+  if (!characterConfig) {
+    return (
+      <Flex vertical align="center" justify="center" style={{ minHeight: '80vh' }}>
+        <Title level={3}>Character "{characterId}" not found</Title>
+        <Button type="primary" onClick={() => navigate('/quiz')}>Back to Quiz</Button>
+      </Flex>
+    );
+  }
 
-  // 1) ALL ornaments for drawing silhouettes (24 items including pairs)
-  const allOrnaments = rawOrnaments;
+  const { title, image, data: rawOrnaments } = characterConfig;
 
-  // 2) UNIQUE ornaments by name for quiz inputs (17 unique names)
+  const allOrnaments = rawOrnaments || [];
   const uniqueOrnaments = Array.from(
     new Map(allOrnaments.map(o => [o.name, o])).values()
   );
 
-  // 3) Assign quiz numbers to unique ornaments (1,2,3,...17)
   const numberedUniqueOrnaments = uniqueOrnaments.map((ornament, index) => ({
     ...ornament,
     quizNumber: index + 1,
@@ -32,29 +38,24 @@ function PachaOrnamentGamePage() {
 
   const totalOrnaments = numberedUniqueOrnaments.length;
 
-  // 4) Map: name -> quiz number (so pairs like Thoda1/Thoda2 both map to same number)
   const nameToQuizNumber: Record<string, number> = {};
   numberedUniqueOrnaments.forEach(o => {
     nameToQuizNumber[o.name] = o.quizNumber;
   });
 
-  // 5) Extract unique names for reference list (no duplicates)
   const uniqueNames = [...new Set(uniqueOrnaments.map(o => o.name))].sort();
 
-  // State
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [answers, setAnswers] = useState<{[key: number]: string}>({});
   const [feedback, setFeedback] = useState<{[key: number]: 'correct' | 'wrong' | null}>({});
 
   const correctAnswers = Object.values(feedback).filter(f => f === 'correct').length;
-  const progress = totalOrnaments > 0 ? (correctAnswers / totalOrnaments) * 100 : 0;
+  const progress = totalOrnaments > 0 ? ((correctAnswers / totalOrnaments) * 100).toFixed(1) : 0;
 
-  // Handle input change
   const handleInputChange = (number: number, value: string) => {
     setAnswers(prev => ({ ...prev, [number]: value }));
   };
 
-  // Handle answer submission
   const handleSubmitAnswer = useCallback((number: number) => {
     const userAnswer = answers[number]?.trim().toLowerCase() || '';
     if (!userAnswer) return;
@@ -65,20 +66,16 @@ function PachaOrnamentGamePage() {
     const correctName = correctOrnament.name.toLowerCase().trim();
 
     if (userAnswer === correctName) {
-      // Correct answer
       setFeedback(prev => ({ ...prev, [number]: 'correct' }));
 
-      // Reveal ALL paths with this name (handles pairs like Thoda1/Thoda2)
       const idsToReveal = allOrnaments
         .filter(o => o.name === correctOrnament.name)
         .map(o => o.id);
 
       setRevealedIds(prev => new Set([...prev, ...idsToReveal]));
     } else {
-      // Wrong answer
       setFeedback(prev => ({ ...prev, [number]: 'wrong' }));
       
-      // Clear wrong feedback after 2 seconds
       setTimeout(() => {
         setFeedback(prev => ({ ...prev, [number]: null }));
       }, 2000);
@@ -91,7 +88,6 @@ function PachaOrnamentGamePage() {
     setFeedback({});
   };
 
-  // Calculate center of SVG path
   const getPathCenter = (pathD: string): { x: number; y: number } => {
     if (!pathD || pathD.length < 10) return { x: 0, y: 0 };
     
@@ -121,10 +117,9 @@ function PachaOrnamentGamePage() {
       padding: '20px 0'
     }}>
       <Title style={styleToken.pageHeadingTextStyle}>
-        Pacha Ornament Quiz
+        {title} Ornament Game
       </Title>
       
-      {/* Progress & Controls */}
       <Card style={{ width: '100%', maxWidth: 1400 }}>
         <Flex justify="space-between" align="center">
           <div>Progress: <strong>{correctAnswers}/{totalOrnaments}</strong></div>
@@ -136,48 +131,61 @@ function PachaOrnamentGamePage() {
         </Flex>
       </Card>
 
-      {/* Game Area - EQUAL HEIGHT COLUMNS */}
       <Flex gap={40} justify="center" align="stretch" style={{ width: '100%', maxWidth: 1400 }}>
         
-        {/* LEFT COLUMN: CHARACTER + REFERENCE LIST - STRETCHED TO MATCH RIGHT */}
         <Flex vertical gap={20} style={{ flex: 1, maxWidth: 600 }}>
-          {/* CHARACTER WITH NUMBERS - Takes up most space */}
           <div style={{ 
             position: 'relative', 
             borderRadius: 16,
             padding: 20,
             boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
             background: '#fafafa',
-            flex: 1,  // Takes available space
+            flex: 1,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            overflow: 'hidden'
           }}>
-            <div style={{ position: 'relative', width: '100%' }}>
+            <div style={{ 
+              position: 'relative', 
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
               <img 
-                src={pachaConfig.image} 
-                alt="Pacha" 
+                src={image} 
+                alt={title} 
                 style={{ 
-                  width: '100%', 
-                  height: 'auto',
-                  display: 'block'
+                  width: '100%',
+                  height: '100%',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  objectPosition: 'center',
+                  display: 'block',
+                  transform: 'none'
                 }} 
               />
 
-              {/* SVG - ALL ORNAMENTS with numbers */}
-              <svg viewBox="0 0 960 1280" preserveAspectRatio="xMidYMid meet" style={{ 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                width: '100%', 
-                height: '100%',
-                zIndex: 2,
-                pointerEvents: 'none'
-              }}>
+              <svg 
+                viewBox="0 0 960 1280" 
+                preserveAspectRatio="xMidYMid meet" 
+                style={{ 
+                  position: 'absolute', 
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '100%', 
+                  height: '100%',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  zIndex: 2,
+                  pointerEvents: 'none'
+                }}
+              >
                 <defs>
-                  <filter id="textShadow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="white" floodOpacity="1"/>
-                  </filter>
                   <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                     <feMerge>
@@ -187,18 +195,23 @@ function PachaOrnamentGamePage() {
                   </filter>
                 </defs>
 
-                {allOrnaments.map(({ id, name, pathD }) => {
+                {allOrnaments.map(({ id, name, pathD, labelPosition }: any) => {
                   if (!pathD) return null;
                   
                   const quizNumber = nameToQuizNumber[name];
-                  const center = getPathCenter(pathD);
+                  const autoCenter = getPathCenter(pathD);
+                  
+                  // USE labelPosition if available, otherwise auto-calculate
+                  const center = labelPosition 
+                    ? { x: labelPosition.x, y: labelPosition.y } 
+                    : autoCenter;
+                  
                   const isRevealed = revealedIds.has(id);
                   
                   if (center.x === 0 && center.y === 0) return null;
 
                   return (
                     <g key={id}>
-                      {/* Silhouette */}
                       <path
                         d={pathD}
                         fill={!isRevealed ? '#222' : 'transparent'}
@@ -208,7 +221,6 @@ function PachaOrnamentGamePage() {
                         pointerEvents="none"
                       />
                       
-                      {/* Number on silhouette */}
                       {!isRevealed && quizNumber && (
                         <>
                           <circle
@@ -241,13 +253,9 @@ function PachaOrnamentGamePage() {
             </div>
           </div>
 
-          {/* REFERENCE LIST - Fixed height at bottom */}
           <Card 
             title="Available Ornament Names" 
-            style={{ 
-              width: '100%',
-              flexShrink: 0  // Don't shrink this card
-            }}
+            style={{ width: '100%', flexShrink: 0 }}
             headStyle={{ background: '#f0f0f0', fontWeight: 600 }}
           >
             <Flex wrap="wrap" gap={8}>
@@ -278,7 +286,6 @@ function PachaOrnamentGamePage() {
           </Card>
         </Flex>
 
-        {/* RIGHT: INPUT BOXES - FULL HEIGHT WITH SCROLL */}
         <Card 
           title={`Type Ornament Names (1-${totalOrnaments})`}
           style={{ 
@@ -385,4 +392,4 @@ function PachaOrnamentGamePage() {
   );
 }
 
-export default PachaOrnamentGamePage;
+export default OrnamentGamePage;
