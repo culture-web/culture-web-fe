@@ -1,4 +1,4 @@
-import { Typography, Flex, Button, Card, Progress, Input, Space } from 'antd';
+import { Typography, Flex, Button, Card, Progress, Input, Space, Tag } from 'antd';
 import { LeftOutlined, CheckCircleFilled, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useStyleToken } from 'themeStyles';
 import { useState, useCallback } from 'react';
@@ -37,6 +37,9 @@ function PachaOrnamentGamePage() {
   numberedUniqueOrnaments.forEach(o => {
     nameToQuizNumber[o.name] = o.quizNumber;
   });
+
+  // 5) Extract unique names for reference list (no duplicates)
+  const uniqueNames = [...new Set(uniqueOrnaments.map(o => o.name))].sort();
 
   // State
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
@@ -122,7 +125,7 @@ function PachaOrnamentGamePage() {
       </Title>
       
       {/* Progress & Controls */}
-      <Card style={{ width: '100%', maxWidth: 800 }}>
+      <Card style={{ width: '100%', maxWidth: 1400 }}>
         <Flex justify="space-between" align="center">
           <div>Progress: <strong>{correctAnswers}/{totalOrnaments}</strong></div>
           <Progress percent={progress} size="small" style={{ width: 200 }} />
@@ -133,186 +136,239 @@ function PachaOrnamentGamePage() {
         </Flex>
       </Card>
 
-      {/* Game Area */}
-      <Flex gap={40} justify="center" align="start" style={{ width: '100%', maxWidth: 1400 }}>
+      {/* Game Area - EQUAL HEIGHT COLUMNS */}
+      <Flex gap={40} justify="center" align="stretch" style={{ width: '100%', maxWidth: 1400 }}>
         
-        {/* LEFT: CHARACTER WITH NUMBERS ON SILHOUETTES */}
-        <div style={{ 
-          position: 'relative', 
-          maxWidth: 600, 
-          borderRadius: 16,
-          padding: 20,
-          boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
-        }}>
-          <img 
-            src={pachaConfig.image} 
-            alt="Pacha" 
-            style={{ 
-              width: '100%', 
-              height: 'auto', 
-              maxHeight: 760,
-              display: 'block'
-            }} 
-          />
-
-          {/* SVG - ALL ORNAMENTS with numbers (24 paths, but using shared numbers for pairs) */}
-          <svg viewBox="0 0 960 1280" preserveAspectRatio="xMidYMid meet" style={{ 
-            position: 'absolute', 
-            top: 20, 
-            left: 20, 
-            width: 'calc(100% - 40px)', 
-            height: 'calc(100% - 40px)',
-            zIndex: 2,
-            pointerEvents: 'none'
+        {/* LEFT COLUMN: CHARACTER + REFERENCE LIST - STRETCHED TO MATCH RIGHT */}
+        <Flex vertical gap={20} style={{ flex: 1, maxWidth: 600 }}>
+          {/* CHARACTER WITH NUMBERS - Takes up most space */}
+          <div style={{ 
+            position: 'relative', 
+            borderRadius: 16,
+            padding: 20,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            background: '#fafafa',
+            flex: 1,  // Takes available space
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}>
-            <defs>
-              <filter id="textShadow" x="-50%" y="-50%" width="200%" height="200%">
-                <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="white" floodOpacity="1"/>
-              </filter>
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <img 
+                src={pachaConfig.image} 
+                alt="Pacha" 
+                style={{ 
+                  width: '100%', 
+                  height: 'auto',
+                  display: 'block'
+                }} 
+              />
 
-            {allOrnaments.map(({ id, name, pathD }) => {
-              if (!pathD) return null;
-              
-              const quizNumber = nameToQuizNumber[name]; // Same number for pairs
-              const center = getPathCenter(pathD);
-              const isRevealed = revealedIds.has(id);
-              
-              if (center.x === 0 && center.y === 0) return null;
+              {/* SVG - ALL ORNAMENTS with numbers */}
+              <svg viewBox="0 0 960 1280" preserveAspectRatio="xMidYMid meet" style={{ 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                width: '100%', 
+                height: '100%',
+                zIndex: 2,
+                pointerEvents: 'none'
+              }}>
+                <defs>
+                  <filter id="textShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="white" floodOpacity="1"/>
+                  </filter>
+                  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {allOrnaments.map(({ id, name, pathD }) => {
+                  if (!pathD) return null;
+                  
+                  const quizNumber = nameToQuizNumber[name];
+                  const center = getPathCenter(pathD);
+                  const isRevealed = revealedIds.has(id);
+                  
+                  if (center.x === 0 && center.y === 0) return null;
+
+                  return (
+                    <g key={id}>
+                      {/* Silhouette */}
+                      <path
+                        d={pathD}
+                        fill={!isRevealed ? '#222' : 'transparent'}
+                        fillOpacity={0.88}
+                        stroke="#fff"
+                        strokeWidth="3"
+                        pointerEvents="none"
+                      />
+                      
+                      {/* Number on silhouette */}
+                      {!isRevealed && quizNumber && (
+                        <>
+                          <circle
+                            cx={center.x}
+                            cy={center.y}
+                            r="22"
+                            fill="white"
+                            stroke="#1890ff"
+                            strokeWidth="3"
+                            filter="url(#glow)"
+                          />
+                          <text
+                            x={center.x}
+                            y={center.y}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fontSize="26"
+                            fontWeight="bold"
+                            fill="#1890ff"
+                            fontFamily="Arial, sans-serif"
+                          >
+                            {quizNumber}
+                          </text>
+                        </>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
+
+          {/* REFERENCE LIST - Fixed height at bottom */}
+          <Card 
+            title="Available Ornament Names" 
+            style={{ 
+              width: '100%',
+              flexShrink: 0  // Don't shrink this card
+            }}
+            headStyle={{ background: '#f0f0f0', fontWeight: 600 }}
+          >
+            <Flex wrap="wrap" gap={8}>
+              {uniqueNames.map((name, index) => {
+                const quizNumber = nameToQuizNumber[name];
+                const isUsed = feedback[quizNumber] === 'correct';
+                
+                return (
+                  <Tag 
+                    key={index}
+                    color={isUsed ? 'success' : 'blue'}
+                    style={{ 
+                      fontSize: 14, 
+                      padding: '6px 12px',
+                      margin: 0,
+                      opacity: isUsed ? 0.5 : 1,
+                      textDecoration: isUsed ? 'line-through' : 'none'
+                    }}
+                  >
+                    {name} {isUsed && '✓'}
+                  </Tag>
+                );
+              })}
+            </Flex>
+            <div style={{ marginTop: 12, fontSize: 12, color: '#666', fontStyle: 'italic' }}>
+              💡 Tip: Match the numbered silhouettes with these ornament names
+            </div>
+          </Card>
+        </Flex>
+
+        {/* RIGHT: INPUT BOXES - FULL HEIGHT WITH SCROLL */}
+        <Card 
+          title={`Type Ornament Names (1-${totalOrnaments})`}
+          style={{ 
+            flex: 1, 
+            maxWidth: 400,
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+          headStyle={{ 
+            background: '#f0f0f0', 
+            fontWeight: 600,
+            fontSize: 16,
+            textAlign: 'center'
+          }}
+          bodyStyle={{ 
+            flex: 1,
+            overflow: 'auto',
+            padding: 16
+          }}
+        >
+          <Flex vertical gap={12}>
+            {numberedUniqueOrnaments.map(({ quizNumber, name }) => {
+              const isCorrect = feedback[quizNumber] === 'correct';
+              const isWrong = feedback[quizNumber] === 'wrong';
 
               return (
-                <g key={id}>
-                  {/* Silhouette - disappears when revealed */}
-                  <path
-                    d={pathD}
-                    fill={!isRevealed ? '#222' : 'transparent'}
-                    fillOpacity={0.88}
-                    stroke="#fff"
-                    strokeWidth="3"
-                    pointerEvents="none"
-                  />
-                  
-                  {/* Number on silhouette - only show if NOT revealed */}
-                  {!isRevealed && quizNumber && (
-                    <>
-                      {/* White circle background */}
-                      <circle
-                        cx={center.x}
-                        cy={center.y}
-                        r="22"
-                        fill="white"
-                        stroke="#1890ff"
-                        strokeWidth="3"
-                        filter="url(#glow)"
-                      />
-                      {/* Number text */}
-                      <text
-                        x={center.x}
-                        y={center.y}
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontSize="26"
-                        fontWeight="bold"
-                        fill="#1890ff"
-                        fontFamily="Arial, sans-serif"
-                      >
-                        {quizNumber}
-                      </text>
-                    </>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-        </div>
-
-        {/* RIGHT: INPUT BOXES - One per unique ornament (17 total) */}
-        <Flex vertical gap={12} style={{ width: 350, maxWidth: 350, maxHeight: 700, overflowY: 'auto' }}>
-          <div style={{ 
-            fontSize: 18, 
-            fontWeight: 'bold', 
-            textAlign: 'center',
-            marginBottom: 12
-          }}>
-            Type Ornament Names (1-{totalOrnaments})
-          </div>
-          
-          {numberedUniqueOrnaments.map(({ quizNumber, name }) => {
-            const isCorrect = feedback[quizNumber] === 'correct';
-            const isWrong = feedback[quizNumber] === 'wrong';
-
-            return (
-              <Card 
-                key={quizNumber}
-                style={{ 
-                  background: isCorrect ? '#f6ffed' : isWrong ? '#fff2f0' : '#fafafa',
-                  borderColor: isCorrect ? '#52c41a' : isWrong ? '#ff4d4f' : '#d9d9d9',
-                  border: `2px solid`,
-                  transition: 'all 0.3s ease',
-                  boxShadow: isCorrect ? '0 2px 8px rgba(82,196,26,0.3)' : 'none'
-                }}
-                bodyStyle={{ padding: 12 }}
-              >
-                <Flex align="center" gap={12}>
-                  <div style={{ 
-                    width: 40, 
-                    height: 40, 
-                    background: isCorrect ? '#52c41a' : '#1890ff',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: 'white',
-                    flexShrink: 0
-                  }}>
-                    {isCorrect ? <CheckOutlined /> : quizNumber}
-                  </div>
-                  
-                  <Input
-                    placeholder={`Type name for #${quizNumber}`}
-                    value={answers[quizNumber] || ''}
-                    onChange={(e) => handleInputChange(quizNumber, e.target.value)}
-                    onPressEnter={() => handleSubmitAnswer(quizNumber)}
-                    onBlur={() => handleSubmitAnswer(quizNumber)}
-                    disabled={isCorrect}
-                    status={isWrong ? 'error' : undefined}
-                    suffix={isWrong ? <CloseOutlined style={{ color: '#ff4d4f' }} /> : null}
-                    style={{ 
-                      flex: 1,
-                      background: isCorrect ? '#f0f0f0' : 'white'
-                    }}
-                  />
+                <Card 
+                  key={quizNumber}
+                  style={{ 
+                    background: isCorrect ? '#f6ffed' : isWrong ? '#fff2f0' : '#fafafa',
+                    borderColor: isCorrect ? '#52c41a' : isWrong ? '#ff4d4f' : '#d9d9d9',
+                    border: `2px solid`,
+                    transition: 'all 0.3s ease',
+                    boxShadow: isCorrect ? '0 2px 8px rgba(82,196,26,0.3)' : 'none'
+                  }}
+                  bodyStyle={{ padding: 12 }}
+                >
+                  <Flex align="center" gap={12}>
+                    <div style={{ 
+                      width: 40, 
+                      height: 40, 
+                      background: isCorrect ? '#52c41a' : '#1890ff',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      color: 'white',
+                      flexShrink: 0
+                    }}>
+                      {isCorrect ? <CheckOutlined /> : quizNumber}
+                    </div>
+                    
+                    <Input
+                      placeholder={`Type name for #${quizNumber}`}
+                      value={answers[quizNumber] || ''}
+                      onChange={(e) => handleInputChange(quizNumber, e.target.value)}
+                      onPressEnter={() => handleSubmitAnswer(quizNumber)}
+                      onBlur={() => handleSubmitAnswer(quizNumber)}
+                      disabled={isCorrect}
+                      status={isWrong ? 'error' : undefined}
+                      suffix={isWrong ? <CloseOutlined style={{ color: '#ff4d4f' }} /> : null}
+                      style={{ 
+                        flex: 1,
+                        background: isCorrect ? '#f0f0f0' : 'white'
+                      }}
+                    />
+                    
+                    {isCorrect && (
+                      <CheckCircleFilled style={{ color: '#52c41a', fontSize: 20 }} />
+                    )}
+                  </Flex>
                   
                   {isCorrect && (
-                    <CheckCircleFilled style={{ color: '#52c41a', fontSize: 20 }} />
+                    <div style={{ 
+                      marginTop: 8, 
+                      fontSize: 13, 
+                      color: '#52c41a', 
+                      textAlign: 'center',
+                      fontWeight: '500'
+                    }}>
+                      ✓ {name}
+                    </div>
                   )}
-                </Flex>
-                
-                {/* Show correct answer when revealed */}
-                {isCorrect && (
-                  <div style={{ 
-                    marginTop: 8, 
-                    fontSize: 13, 
-                    color: '#52c41a', 
-                    textAlign: 'center',
-                    fontWeight: '500'
-                  }}>
-                    ✓ {name}
-                  </div>
-                )}
-              </Card>
-            );
-          })}
-        </Flex>
+                </Card>
+              );
+            })}
+          </Flex>
+        </Card>
       </Flex>
 
       <Button 
