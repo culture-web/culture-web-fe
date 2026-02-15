@@ -10,7 +10,7 @@ import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import SessionSidebar from './SessionSidebar';
 
-const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionChange }) => {
+const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionChange, isGuest = false }) => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>(currentSessionId);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -49,14 +49,16 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     removeImage,
     handleSendMessage,
     refreshMessages,
-  } = useChatMessages(activeSessionId, loadSessions, mudrasMode);
+  } = useChatMessages(activeSessionId, loadSessions, mudrasMode, isGuest);
   
   const isMobile = useIsMobile();
 
-  // Load user sessions on mount
+  // Load user sessions on mount (skip for guest users)
   useEffect(() => {
-    loadSessions();
-  }, [loadSessions]);
+    if (!isGuest) {
+      loadSessions();
+    }
+  }, [loadSessions, isGuest]);
 
   // Handle new session creation
   const handleNewSession = async () => {
@@ -120,8 +122,8 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     }
   };
 
-  if (isMobile) {
-    // Mobile layout - no sidebar
+  if (isMobile || isGuest) {
+    // Mobile layout or guest mode - no sidebar
     return (
       <Card 
         style={{ 
@@ -135,7 +137,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
         }}
         bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}
       >
-        <ChatHeader onClose={onClose} />
+        <ChatHeader onClose={onClose} isGuest={isGuest} />
         
         <MessageList 
           messages={messages} 
@@ -193,7 +195,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
           height: '100%',
           overflow: 'hidden'
         }}>
-          <ChatHeader onClose={onClose} mudrasMode={mudrasMode}/>
+          <ChatHeader onClose={onClose} mudrasMode={mudrasMode} isGuest={isGuest}/>
           
           <MessageList 
             messages={messages} 

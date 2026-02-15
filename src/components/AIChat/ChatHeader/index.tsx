@@ -7,9 +7,10 @@ const { Text, Title } = Typography;
 
 interface ChatHeaderPropsWithMode extends ChatHeaderProps {
   mudrasMode?: boolean;
+  isGuest?: boolean;
 }
 
-const ChatHeader: React.FC<ChatHeaderPropsWithMode> = ({ onClose, mudrasMode = false }) => {
+const ChatHeader: React.FC<ChatHeaderPropsWithMode> = ({ onClose, mudrasMode = false, isGuest = false }) => {
   const chatHeaderStyle = {
     background: 'linear-gradient(135deg, #2b2d38 0%, #c81f58 100%)',
     color: '#fff',
@@ -47,6 +48,32 @@ const ChatHeader: React.FC<ChatHeaderPropsWithMode> = ({ onClose, mudrasMode = f
           : 'Ask me about Kathakali characters, expressions, stories, and traditions'
         }
       </Text>
+      {isGuest && (
+        <div style={{ 
+          marginTop: '12px', 
+          padding: '8px 12px', 
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+          borderRadius: '6px',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          <Text style={{ 
+            color: '#fff', 
+            fontSize: '12px', 
+            display: 'block',
+            fontWeight: 500
+          }}>
+            ⚠️ <strong>Temporary Chat Session</strong>
+          </Text>
+          <Text style={{ 
+            color: 'rgba(255,255,255,0.9)', 
+            fontSize: '11px', 
+            display: 'block',
+            marginTop: '4px'
+          }}>
+            This chat will reset when closed. Create an account or sign in for persistent chat history.
+          </Text>
+        </div>
+      )}
     </div>
   );
 };

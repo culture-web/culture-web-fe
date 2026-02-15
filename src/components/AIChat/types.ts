@@ -55,6 +55,7 @@ export interface AIChatProps {
   onClose?: () => void;
   currentSessionId?: string;
   onSessionChange?: (sessionId: string) => void;
+  isGuest?: boolean;
 }
 
 export interface SessionSidebarProps {
