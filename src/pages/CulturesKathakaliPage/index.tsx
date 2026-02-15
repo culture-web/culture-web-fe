@@ -19,6 +19,7 @@ import RenderCharacterContent from 'components/ContentRender/RenderCharacterCont
 import RenderExpressionContent from 'components/ContentRender/RenderExpressionContent';
 import { useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
+import { useAuth } from 'contexts/AuthContext';
 
 const { Text, Title } = Typography;
 
@@ -35,7 +36,7 @@ function KathakaliPage() {
   // const [isExpressionModalMultipleOpen, setIsExpressionModalMultipleOpen] =
   //   useState(false);
   
-
+  const { isAuthenticated } = useAuth();
   const styleToken = useStyleToken();
   const isMobile = useIsMobile();
 
@@ -63,7 +64,15 @@ function KathakaliPage() {
   const handleOpenChat = async () => {
     setIsCreatingSession(true);
     try {
-      // First, check if there are existing sessions
+      // If user is not authenticated, open chat without session
+      if (!isAuthenticated) {
+        setCurrentSessionId(undefined);
+        setIsChatModalOpen(true);
+        message.info('Opened temporary chat session');
+        return;
+      }
+
+      // For authenticated users, check if there are existing sessions
       const existingSessions = await getUserSessions();
       
       if (existingSessions && existingSessions.length > 0) {
@@ -293,6 +302,7 @@ function KathakaliPage() {
           onClose={() => setIsChatModalOpen(false)} 
           currentSessionId={currentSessionId}
           onSessionChange={handleSessionChange}
+          isGuest={!isAuthenticated}
         />
       </Modal>
 

@@ -1,15 +1,24 @@
 import { useState } from 'react';
 import AIChat from 'components/AIChat';
 import FloatingChatButton from 'components/FloatingChatButton';
-import { Flex, Typography, Button, Modal } from 'antd';
+import { Flex, Typography, Button, Modal, message } from 'antd';
 import { MessageOutlined } from '@ant-design/icons';
 import { useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
+import { useAuth } from 'contexts/AuthContext';
+import {
+  createNewSession,
+  getUserSessions,
+} from 'utils/invokeBackend';
 
 const { Text, Title } = Typography;
 
 function MudrasPage() {
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<string | undefined>();
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  
+  const { isAuthenticated } = useAuth();
   const styleToken = useStyleToken();
   const isMobile = useIsMobile();
 
@@ -21,6 +30,48 @@ function MudrasPage() {
       {modal}
     </div>
   );
+
+  // Handle opening chat - use existing session if available, otherwise create new
+  const handleOpenChat = async () => {
+    setIsCreatingSession(true);
+    try {
+      // If user is not authenticated, open chat without session
+      if (!isAuthenticated) {
+        setCurrentSessionId(undefined);
+        setIsChatModalOpen(true);
+        message.info('Opened temporary chat session');
+        return;
+      }
+
+      // For authenticated users, check if there are existing sessions
+      const existingSessions = await getUserSessions();
+      
+      if (existingSessions && existingSessions.length > 0) {
+        // Use the latest (first) session
+        const latestSession = existingSessions[0];
+        setCurrentSessionId(latestSession.id);
+        setIsChatModalOpen(true);
+        message.success('Opened latest chat session');
+      } else {
+        // No existing sessions, create a new one
+        const newSession = await createNewSession();
+        setCurrentSessionId(newSession.id);
+        setIsChatModalOpen(true);
+        message.success('New chat session created');
+      }
+    } catch (error) {
+      console.error('Failed to handle chat session:', error);
+      message.error('Failed to load session, opening chat without session');
+      setIsChatModalOpen(true);
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+
+  // Handle session change from chat component
+  const handleSessionChange = (sessionId: string) => {
+    setCurrentSessionId(sessionId);
+  };
 
   return (
     <Flex vertical align="center">
@@ -61,7 +112,8 @@ function MudrasPage() {
             <Button 
               type="primary"
               icon={<MessageOutlined />}
-              onClick={() => setIsChatModalOpen(true)}
+              onClick={handleOpenChat}
+              loading={isCreatingSession}
               style={{ 
                 backgroundColor: '#c81f58',
                 borderColor: '#c81f58',
@@ -96,12 +148,17 @@ function MudrasPage() {
         closable={false}
         modalRender={modalRender}
       >
-        <AIChat onClose={() => setIsChatModalOpen(false)} />
+        <AIChat 
+          onClose={() => setIsChatModalOpen(false)} 
+          currentSessionId={currentSessionId}
+          onSessionChange={handleSessionChange}
+          isGuest={!isAuthenticated}
+        />
       </Modal>
 
       {/* Floating Chat Button */}
       <FloatingChatButton 
-        onClick={() => setIsChatModalOpen(true)}
+        onClick={handleOpenChat}
         isMobile={isMobile}
       />
     </Flex>

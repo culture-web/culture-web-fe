@@ -34,6 +34,39 @@ Feel free to upload images and ask anything about Kathakali!`,
   timestamp: new Date(),
 });
 
+const getGuestKathakaliMessage = (): Message => ({
+  id: '1',
+  type: 'assistant',
+  response: {
+    shortAnswer: `Welcome! I'm your Kathakali AI assistant. This is a **temporary chat session** that will reset when you close the chat.
+
+🎭 **I can help you with:**
+• **Character Recognition** - Upload images and I'll identify Kathakali characters
+• **Expression Analysis** - I'll recognize the nine emotions (Navarasas)
+• **Cultural Knowledge** - Ask about stories, traditions, and meanings
+• **Performance Context** - Learn about specific scenes and narratives
+
+**Try asking:**
+• "What character is this and what story are they from?"
+• "Explain the significance of this makeup style"
+• "What does this expression represent?"
+• "Tell me about Kathakali music and instruments"
+
+⚠️ **Note:** Your chat history won't be saved. Create an account or sign in to keep your conversations!
+
+Feel free to upload images and ask anything about Kathakali!`,
+    reasoning: null,
+    sections: [],
+    tables: [],
+    metadata: {
+      hasStructuredContent: false,
+      responseLength: 0,
+      processingTimestamp: new Date().toISOString(),
+    }
+  },
+  timestamp: new Date(),
+});
+
 const getMudrasMessage = (): Message => ({
   id: '1',
   type: 'assistant',
@@ -66,8 +99,47 @@ Feel free to ask anything about mudras, traditions, and Indian classical arts!`,
   timestamp: new Date(),
 });
 
-const getInitialMessage = (mudrasMode: boolean = false): Message => 
-  mudrasMode ? getMudrasMessage() : getKathakaliMessage();
+const getGuestMudrasMessage = (): Message => ({
+  id: '1',
+  type: 'assistant',
+  response: {
+    shortAnswer: `Welcome to the Mudras & Cultural Knowledge Guide! This is a **temporary chat session** that will reset when you close the chat.
+
+🙏 **I can help you learn about:**
+• **Mudra Types & Meanings** - Single-hand (Asamyuta) and two-hand (Samyuta) mudras
+• **Dance Forms** - Mudras in Kathakali, Bharatanatyam, Kootiyattam, and other classical arts
+• **Cultural Significance** - History, traditions, and storytelling through hand gestures
+• **Expression & Emotion** - How mudras convey meanings, narratives, and sentiments
+• **Traditions & Rituals** - Ancient origins and modern practice of mudras
+
+**Try asking:**
+• "What is the significance of the Pataka mudra?"
+• "How are mudras used differently in Kathakali versus Bharatanatyam?"
+• "Explain the story-telling through mudras"
+• "What are the different types of mudras and their meanings?"
+• "Tell me about mudras in classical Indian dance"
+
+⚠️ **Note:** Your chat history won't be saved. Create an account or sign in to keep your conversations!
+
+Feel free to ask anything about mudras, traditions, and Indian classical arts!`,
+    reasoning: null,
+    sections: [],
+    tables: [],
+    metadata: {
+      hasStructuredContent: false,
+      responseLength: 0,
+      processingTimestamp: new Date().toISOString(),
+    }
+  },
+  timestamp: new Date(),
+});
+
+const getInitialMessage = (mudrasMode: boolean = false, isGuest: boolean = false): Message => {
+  if (isGuest) {
+    return mudrasMode ? getGuestMudrasMessage() : getGuestKathakaliMessage();
+  }
+  return mudrasMode ? getMudrasMessage() : getKathakaliMessage();
+};
 
 const convertBackendMessageToFrontend = (backendMessage: BackendMessage): Message => {
   const isUser = backendMessage.role === 'user';
@@ -126,8 +198,8 @@ const convertBackendMessageToFrontend = (backendMessage: BackendMessage): Messag
   };
 };
 
-const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudrasMode: boolean = false) => {
-  const [messages, setMessages] = useState<Message[]>([getInitialMessage(mudrasMode)]);
+const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudrasMode: boolean = false, isGuest: boolean = false) => {
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage(mudrasMode, isGuest)]);
   const [inputValue, setInputValue] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -140,7 +212,7 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudra
     const loadSessionMessages = async () => {
       if (!sessionId) {
         // No session, show initial message
-        setMessages([getInitialMessage()]);
+        setMessages([getInitialMessage(mudrasMode, isGuest)]);
         return;
       }
 
@@ -152,7 +224,7 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudra
         
         if (backendMessages.length === 0) {
           // Empty session, show initial message
-          setMessages([getInitialMessage()]);
+          setMessages([getInitialMessage(mudrasMode, isGuest)]);
         } else {
           // Convert backend messages to frontend format
           const frontendMessages = backendMessages.map(convertBackendMessageToFrontend);
@@ -167,14 +239,14 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudra
         console.error('Failed to load session messages:', error);
         message.error('Failed to load session messages');
         // Fall back to initial message on error
-        setMessages([getInitialMessage()]);
+        setMessages([getInitialMessage(mudrasMode, isGuest)]);
       } finally {
         setIsLoadingSession(false);
       }
     };
 
     loadSessionMessages();
-  }, [sessionId]);
+  }, [sessionId, mudrasMode, isGuest]);
 
   useEffect(() => () => {
       uploadedImages.forEach(image => {
