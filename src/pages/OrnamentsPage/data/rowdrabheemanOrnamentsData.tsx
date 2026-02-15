@@ -210,6 +210,7 @@ const pachaOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 570, y: 580 } 
   },
   {
     id: 'Kastakatakam1',
@@ -278,6 +279,7 @@ const pachaOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 100, y: 780 } 
   },
   {
     id: 'Pattu Val2',

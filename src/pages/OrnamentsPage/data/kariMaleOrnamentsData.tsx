@@ -124,6 +124,7 @@ const kariMaleOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 500, y: 880 } 
   },
   {
     id: 'Kastakatakam1',
@@ -192,6 +193,7 @@ const kariMaleOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 200, y: 740 } 
   },
   {
     id: 'Pattu Val2',
@@ -220,6 +222,7 @@ const kariMaleOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: patiarannanam,
+    labelPosition: { x: 570, y: 740 } 
   },
   {
     id: 'Ottanakku',

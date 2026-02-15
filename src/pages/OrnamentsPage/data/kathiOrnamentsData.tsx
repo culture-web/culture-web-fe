@@ -102,6 +102,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: kathichutti,
+    labelPosition: { x: 365, y: 500 } 
   },
   {
     id: 'chutti2',
@@ -243,6 +244,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 300, y: 1000 } 
   },
   {
     id: 'Uttariya2',
@@ -256,6 +258,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 650, y: 980 } 
   },
   {
     id: 'Kastakatakam1',
@@ -324,6 +327,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 200, y: 880 } 
   },
   {
     id: 'Pattu Val2',
@@ -338,6 +342,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 720, y: 860 } 
   },
   {
     id: 'Patiarannanam',

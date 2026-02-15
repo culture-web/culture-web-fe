@@ -28,6 +28,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: kuttichamaram,
+    labelPosition: { x: 450, y: 320 } 
   },
   {
     id: 'thoda1',
@@ -69,6 +70,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: chuttituni,
+    labelPosition: { x: 400, y: 500 } 
   },
   {
     id: 'chutti',
@@ -84,6 +86,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: thadichutti,
+    labelPosition: { x: 360, y: 560 } 
   },
     {
     id: 'chutti2',
@@ -154,6 +157,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: kuralaram,
+    labelPosition: { x: 400, y: 940 } 
   },
   
   {
@@ -168,6 +172,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 210, y: 1050 } 
   },
   {
     id: 'Uttariya2',
@@ -181,6 +186,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 600, y: 1050 } 
   },
   
   {
@@ -222,6 +228,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 150, y: 940 } 
   },
   {
     id: 'Pattu Val2',
@@ -236,6 +243,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 800, y: 980 } 
   },
   
   {
@@ -251,6 +259,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: patiarannanam,
+    labelPosition: { x: 330, y: 1100 } 
   },
   
   {

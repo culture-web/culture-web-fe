@@ -306,6 +306,7 @@ const pachaOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 780, y: 850 } 
   },
   {
     id: 'Patiarannanam',
