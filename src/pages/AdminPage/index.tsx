@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define, react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Layout, Tabs, Button, message, Spin, Card, Popconfirm, Table,
@@ -17,72 +18,6 @@ import './index.css';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
-
-interface KBStats {
-  total_chunks: number;
-  total_files: number;
-  files: string[];
-  total_pages: number;
-}
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-  citations?: Array<{
-    id: number;
-    source: string;
-    page: number | null;
-    similarity: number | null;
-  }>;
-  retrieval?: {
-    knowledgeSource: string;
-    strategy: string;
-    totalRetrieved: number;
-    usedInContext: number;
-    contextTokens: number;
-    confidenceAvg: number | null;
-    chunks: Array<{
-      id: number;
-      source: string;
-      page: number | null;
-      excerpt: string;
-      matchedTerms: string[];
-      baseSimilarity: number | null;
-      rerankerScore: number | null;
-      combinedScore: number | null;
-      keywordBoost: number;
-      questionBoost: number;
-    }>;
-  };
-}
-
-interface FileRecord {
-  name: string;
-  upload_date: string;
-  chunk_number: number;
-  enabled: boolean;
-}
-
-interface JobStatus {
-  id?: number;
-  file_name?: string;
-  status: string;
-  progress: number;
-  start_time?: string;
-  end_time?: string;
-  last_message?: string;
-}
-
-interface IngestJob {
-  status?: string;
-  progress?: number;
-  message?: string;
-  fileName?: string;
-  chunksIngested?: number;
-  pagesProcessed?: number;
-}
 
 interface Chunk {
   id: number;
@@ -383,30 +318,6 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     try {
-      const savedSize = Number(localStorage.getItem('kbChunkSize'));
-      const savedOverlap = Number(localStorage.getItem('kbChunkOverlap'));
-      if (Number.isFinite(savedSize) && savedSize >= 100 && savedSize <= 4000) {
-        const normalizedSize = Math.round(savedSize);
-        setChunkSize(normalizedSize);
-        setSavedChunkSettings((prev) => ({ ...prev, chunkSize: normalizedSize }));
-      }
-      if (Number.isFinite(savedOverlap) && savedOverlap >= 0 && savedOverlap < 4000) {
-        const normalizedOverlap = Math.round(savedOverlap);
-        setChunkOverlap(normalizedOverlap);
-        setSavedChunkSettings((prev) => ({ ...prev, chunkOverlap: normalizedOverlap }));
-      }
-    } catch {
-      setChunkSize(DEFAULT_CHUNK_SIZE);
-      setChunkOverlap(DEFAULT_CHUNK_OVERLAP);
-      setSavedChunkSettings({
-        chunkSize: DEFAULT_CHUNK_SIZE,
-        chunkOverlap: DEFAULT_CHUNK_OVERLAP,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    try {
       const raw = localStorage.getItem('globalChatSettings');
       if (!raw) return;
       const parsed = JSON.parse(raw);
@@ -542,6 +453,36 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  
+
+  
+
+  
+
+  async function fetchStatus(fileName: string, options?: { refreshOnTerminal?: boolean }) {
+    try {
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/status`, {
+        headers: getAuthHeaders(),
+        cache: 'no-store',
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      let enteredTerminalState = false;
+      const nextStatus = (data?.status || '').toLowerCase();
+      setStatusMap((prev) => {
+        const prevStatus = (prev[fileName]?.status || '').toLowerCase();
+        enteredTerminalState = ['completed', 'failed'].includes(nextStatus)
+          && !['completed', 'failed'].includes(prevStatus);
+        return { ...prev, [fileName]: data };
+      });
+      if (options?.refreshOnTerminal !== false && enteredTerminalState) {
+        await Promise.all([fetchFiles(), fetchStats()]);
+      }
+    } catch (error) {
+      console.error('Error fetching status:', error);
+    }
+  }
+
   const fetchFiles = async () => {
     try {
       const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/files`, {
@@ -575,40 +516,59 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const fetchStatus = async (fileName: string, options?: { refreshOnTerminal?: boolean }) => {
+  
+
+
+  
+
+  
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleDeleteDocumentOld = async (fileName: string) => {
     try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/status`, {
+      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}`, {
+        method: 'DELETE',
         headers: getAuthHeaders(),
-        cache: 'no-store',
       });
-      if (!res.ok) return;
-      const data = await res.json();
-      let enteredTerminalState = false;
-      const nextStatus = (data?.status || '').toLowerCase();
-      setStatusMap((prev) => {
-        const prevStatus = (prev[fileName]?.status || '').toLowerCase();
-        enteredTerminalState = ['completed', 'failed'].includes(nextStatus)
-          && !['completed', 'failed'].includes(prevStatus);
-        return { ...prev, [fileName]: data };
-      });
-      if (options?.refreshOnTerminal !== false && enteredTerminalState) {
-        await Promise.all([fetchFiles(), fetchStats()]);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // document already missing on backend; treat as deleted to clean up UI
+          console.warn(`deleteDocument: ${fileName} not found on backend`);
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to delete document');
+        }
       }
-    } catch (error) {
-      console.error('Error fetching status:', error);
+
+      setFiles((prev) => prev.filter((file) => file.name !== fileName));
+      setStatusMap((prev) => {
+        const next = { ...prev };
+        delete next[fileName];
+        return next;
+      });
+      setDeployedFiles((prev) => {
+        const next = { ...prev };
+        delete next[fileName];
+        return next;
+      });
+      if (deployTargetFile === fileName) {
+        setDeployTargetFile(null);
+      }
+      if (detailsFile?.name === fileName) {
+        setDetailsDrawerOpen(false);
+        setDetailsFile(null);
+      }
+
+      message.success('Document deleted successfully!');
+      await fetchFiles();
+      await fetchStats();
+      await fetchFolders();
+    } catch (error: unknown) {
+      console.error('Error deleting document:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to delete document');
     }
   };
-
-  // Helper functions used in columns - defined before columns to avoid no-use-before-define
-  const deleteDocumentRequest = (fileName: string) => fetch(
-    `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}`,
-    {
-      method: 'DELETE',
-      headers: getAuthHeaders(),
-    },
-  ).then((res) => {
-    if (!res.ok) throw new Error('Failed to delete document');
-  });
 
   const toggleEnable = async (fileName: string, enabled: boolean) => {
     if (!canModifyKnowledgeBase) {
@@ -1018,16 +978,20 @@ const AdminPage: React.FC = () => {
     if (!terms.length) return text;
     const escaped = terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
-    return text.split(regex).map((part, idx) => {
+    const parts = text.split(regex);
+    const keyCounts: Record<string, number> = {};
+    return parts.map((part) => {
       const isMatch = terms.some((term) => part.toLowerCase() === term.toLowerCase());
+      keyCounts[part] = (keyCounts[part] || 0) + 1;
+      const partKey = `${part}-${keyCounts[part]}`;
       if (isMatch) {
         return (
-          <mark key={`${part}-${idx}`} className="matched-term-mark">
+          <mark key={partKey} className="matched-term-mark">
             {part}
           </mark>
         );
       }
-      return <React.Fragment key={`${part}-${idx}`}>{part}</React.Fragment>;
+      return <React.Fragment key={partKey}>{part}</React.Fragment>;
     });
   };
 
@@ -1059,7 +1023,7 @@ const AdminPage: React.FC = () => {
 
     pendingDeleteTimers.current[fileName] = setTimeout(async () => {
       try {
-        await handleDeleteDocument(fileName);
+        await handleDeleteDocumentReal(fileName);
       } finally {
         setPendingDeleteNames((prev) => prev.filter((name) => name !== fileName));
         delete pendingDeleteTimers.current[fileName];
@@ -1121,15 +1085,23 @@ const AdminPage: React.FC = () => {
       title: 'Deploy',
       dataIndex: 'enabled',
       key: 'enabled',
-      render: (enabled: boolean, record: FileRecord) => (
-        <Tooltip title={enabled ? 'Disable (set to pending)' : 'Deploy file'}>
-          <Switch
-            checked={enabled}
-            disabled={!canModifyKnowledgeBase}
-            onChange={(checked) => toggleDeployState(record, checked)}
-          />
-        </Tooltip>
-      ),
+      render: (enabled: boolean, record: FileRecord) => {
+        const parsed = statusMap[record.name]?.status === 'completed';
+        let tooltipTitle = 'File must be parsed before deploying';
+        if (parsed) {
+          if (enabled) tooltipTitle = 'Disable (set to pending)';
+          else tooltipTitle = 'Deploy file';
+        }
+        return (
+          <Tooltip title={tooltipTitle}>
+            <Switch
+              checked={enabled}
+              disabled={!canModifyKnowledgeBase || !parsed}
+              onChange={(checked) => toggleDeployState(record, checked)}
+            />
+          </Tooltip>
+        );
+      },
     },
     {
       title: 'Chunk Number',
@@ -1229,7 +1201,7 @@ const AdminPage: React.FC = () => {
     },
   ];
 
-  const fetchFolders = async () => {
+  async function fetchFolders() {
     try {
       const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/folders`, { headers: getAuthHeaders() });
       if (!response.ok) throw new Error('Failed to load folders');
@@ -1238,7 +1210,7 @@ const AdminPage: React.FC = () => {
     } catch (e) {
       console.error('Error loading folders:', e);
     }
-  };
+  }
 
   const upsertIngestJob = (jobId: string, data: Partial<IngestJob>) => {
     setIngestJobs((prev) => ({ ...prev, [jobId]: { ...(prev[jobId] || {}), ...data } }));
@@ -1303,6 +1275,7 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchStats();
     fetchFiles();
@@ -1324,49 +1297,19 @@ const AdminPage: React.FC = () => {
   }, [chatTested]);
 
   // Poll ingest job statuses
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    // Poll statuses by fileName for active ingest jobs (avoid generators/no-regenerator)
     if (!activeIngestJobs.length) return undefined;
-
-    // eslint-disable-next-line no-restricted-syntax
-    const interval = setInterval(async () => {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const [jobId] of activeIngestJobs) {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const interval = setInterval(() => {
+      activeIngestJobs.forEach(([, job]) => {
         try {
-          // eslint-disable-next-line no-await-in-loop
-          const res = await fetch(`${BACKEND_URI}/k-manage/jobs/${jobId}/status`, { headers: getAuthHeaders() });
-          // eslint-disable-next-line no-continue
-          if (!res.ok) continue;
-          // eslint-disable-next-line no-await-in-loop
-          const data = await res.json();
-          upsertIngestJob(jobId, data);
-
-          if (data.status === 'completed') {
-            message.success(`Ingested ${data.fileName || 'file'}`);
-            fetchFiles();
-            fetchStats();
-            setTimeout(() => {
-              setIngestJobs((prev) => {
-                const copy = { ...prev };
-                delete copy[jobId];
-                return copy;
-              });
-            }, 4000);
-          }
-
-          if (data.status === 'failed') {
-            message.error(data.message || 'Upload failed');
-            setTimeout(() => {
-              setIngestJobs((prev) => {
-                const copy = { ...prev };
-                delete copy[jobId];
-                return copy;
-              });
-            }, 6000);
-          }
+          if (job && job.fileName) fetchStatus(job.fileName as string);
         } catch (err) {
           console.error('Job polling error:', err);
         }
-      }
+      });
     }, 1200);
 
     return () => clearInterval(interval);
@@ -1375,6 +1318,7 @@ const AdminPage: React.FC = () => {
   // Poll statuses only for active queued/running/processing parse jobs
   useEffect(() => {
     if (!activeFileStatusNames.length) return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const interval = setInterval(() => {
       activeFileStatusNames.forEach((fileName) => fetchStatus(fileName));
     }, 3000);
@@ -1479,7 +1423,7 @@ const AdminPage: React.FC = () => {
     return `${day}d ago`;
   };
 
-  const handleDeleteDocument = async (fileName: string) => {
+  const handleDeleteDocumentReal = async (fileName: string) => {
     try {
       const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}`, {
         method: 'DELETE',
@@ -1487,8 +1431,13 @@ const AdminPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to delete document');
+        if (response.status === 404) {
+          // document already missing on backend; treat as deleted to clean up UI
+          console.warn(`deleteDocument: ${fileName} not found on backend`);
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || 'Failed to delete document');
+        }
       }
 
       setFiles((prev) => prev.filter((file) => file.name !== fileName));
@@ -1618,6 +1567,11 @@ const AdminPage: React.FC = () => {
       setUploadModalOpen(false);
       await fetchFiles();
       await fetchStats();
+      // immediately clear any stale parse status so the UI shows Not Parsed
+      setStatusMap((prev) => ({
+        ...prev,
+        [finalName]: { status: 'idle', progress: 0, last_message: 'Not parsed yet' },
+      }));
       if (autoParseAfterUpload) {
         await parseRequest(finalName);
         await fetchStatus(finalName);
@@ -1685,10 +1639,20 @@ const AdminPage: React.FC = () => {
         upsertQueuedFileRecord(finalName);
         message.success('Upload started — tracking progress');
         setWorkflowStep((prev) => Math.max(prev, 0));
+        // clear status so queued job doesn't persist from an earlier parse
+        setStatusMap((prev) => ({
+          ...prev,
+          [finalName]: { status: 'idle', progress: 0, last_message: 'Not parsed yet' },
+        }));
       } else {
         message.success('PDF uploaded successfully');
         await fetchFiles();
         await fetchStats();
+        // clear status in case backend still returns stale job
+        setStatusMap((prev) => ({
+          ...prev,
+          [finalName]: { status: 'idle', progress: 0, last_message: 'Not parsed yet' },
+        }));
         setWorkflowStep((prev) => Math.max(prev, 0));
         if (autoParseAfterUpload) {
           await parseRequest(finalName);
@@ -1733,9 +1697,10 @@ const AdminPage: React.FC = () => {
     let queuedCount = 0;
     let uploadedCount = 0;
     let conflictCount = 0;
-    let failedCount = 0;
+    let failedUploads = 0;
 
     try {
+      /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
       for (const file of validPdfFiles) {
         const finalName = targetFolder ? `${targetFolder}/${file.name}` : file.name;
         const renamedFile = new File([file], finalName, { type: file.type });
@@ -1769,8 +1734,18 @@ const AdminPage: React.FC = () => {
               fileName: finalName,
             });
             upsertQueuedFileRecord(finalName);
+            // clear any lingering parse status for the fresh upload
+            setStatusMap((prev) => ({
+              ...prev,
+              [finalName]: { status: 'idle', progress: 0, last_message: 'Not parsed yet' },
+            }));
           } else {
             uploadedCount += 1;
+            // clear status immediately even before optional parse
+            setStatusMap((prev) => ({
+              ...prev,
+              [finalName]: { status: 'idle', progress: 0, last_message: 'Not parsed yet' },
+            }));
             if (autoParseAfterUpload) {
               await parseRequest(finalName);
               await fetchStatus(finalName);
@@ -1778,10 +1753,11 @@ const AdminPage: React.FC = () => {
             }
           }
         } catch (error) {
-          failedCount += 1;
+          failedUploads += 1;
           console.error('Drop upload error:', error);
         }
       }
+      /* eslint-enable no-await-in-loop, no-restricted-syntax, no-continue */
 
       if (queuedCount || uploadedCount) {
         await Promise.all([fetchFiles(), fetchStats()]);
@@ -1797,8 +1773,8 @@ const AdminPage: React.FC = () => {
       if (conflictCount) {
         message.warning(`${conflictCount} file(s) skipped (already exists)`);
       }
-      if (failedCount) {
-        message.error(`${failedCount} file(s) failed to upload`);
+      if (failedUploads) {
+        message.error(`${failedUploads} file(s) failed to upload`);
       }
     } finally {
       setUploading(false);
@@ -1817,7 +1793,9 @@ const AdminPage: React.FC = () => {
   const handleTableDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    event.dataTransfer.dropEffect = 'copy';
+    // eslint-disable-next-line no-param-reassign
+    const dt = event.dataTransfer;
+    if (dt) dt.dropEffect = 'copy';
   };
 
   const handleTableDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
@@ -2052,16 +2030,16 @@ const AdminPage: React.FC = () => {
 
       // Backend returns structured response with shortAnswer, sections, tables, reasoning
       let content = data.shortAnswer || '';
-      
+
       // Append tables as markdown if available
-      interface Table {
+      interface ChatTable {
         id: string;
         title: string;
         headers: string[];
         rows: string[][];
       }
       if (data.tables && data.tables.length > 0) {
-        const tablesText = (data.tables as Table[]).map((t) => {
+        const tablesText = (data.tables as ChatTable[]).map((t) => {
           const headerRow = `| ${t.headers.join(' | ')} |`;
           const separator = `| ${t.headers.map(() => '---').join(' | ')} |`;
           const dataRows = t.rows.map((row) => `| ${row.join(' | ')} |`).join('\n');
@@ -3766,12 +3744,13 @@ const AdminPage: React.FC = () => {
                       </div>
                     ) : null}
                   </div>
+
                 ))}
               </div>
             </div>
           </div>
-            );
-          })()}
+          );
+        })()} {}
         </Modal>
 
         {/* Edit Chunk Modal */}

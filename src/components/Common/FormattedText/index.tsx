@@ -57,45 +57,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
     return { headers, rows };
   };
 
-  const renderTable = (table: ParsedTable, key: string) => (
-    <div key={key} style={{ overflowX: 'auto', margin: '10px 0' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '14px' }}>
-        <thead>
-          <tr>
-            {table.headers.map((header, index) => (
-              <th
-                key={`${key}-header-${header}-${index}`}
-                style={{
-                  border: '1px solid #d9d9d9',
-                  padding: '8px',
-                  textAlign: 'left',
-                  background: '#f5f5f5',
-                  fontWeight: 600,
-                }}
-              >
-                {formatInlineText(header, `${key}-header-text-${index}`)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {table.rows.map((row, rowIndex) => (
-            <tr key={`${key}-row-${rowIndex}`}>
-              {table.headers.map((_, colIndex) => (
-                <td
-                  key={`${key}-cell-${rowIndex}-${colIndex}`}
-                  style={{ border: '1px solid #e8e8e8', padding: '8px', verticalAlign: 'top' }}
-                >
-                  {formatInlineText(row[colIndex] || '', `${key}-cell-text-${rowIndex}-${colIndex}`)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
+  // utility for inline markdown-style formatting used throughout component
   const formatInlineText = (text: string, keyPrefix: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
     let currentIndex = 0;
@@ -188,6 +150,50 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
     return parts.length > 0 ? parts : [<span key={`${keyPrefix}-default`}>{text}</span>];
   };
 
+  const renderTable = (table: ParsedTable, key: string) => (
+    <div key={key} style={{ overflowX: 'auto', margin: '10px 0' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '14px' }}>
+        <thead>
+          <tr>
+            {table.headers.map((header) => (
+              <th
+                key={`${key}-header-${header}`}
+                style={{
+                  border: '1px solid #d9d9d9',
+                  padding: '8px',
+                  textAlign: 'left',
+                  background: '#f5f5f5',
+                  fontWeight: 600,
+                }}
+              >
+                {formatInlineText(header, `${key}-header-text-${header}`)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row) => {
+            const rowKey = row.filter(Boolean).join('-') || `${Math.random()}`;
+            return (
+              <tr key={`${key}-row-${rowKey}`}>
+                {table.headers.map((_, colIndex) => {
+                  const cellKey = row[colIndex] ? `${rowKey}-${row[colIndex]}` : `${rowKey}-${colIndex}`;
+                  return (
+                    <td
+                      key={`${key}-cell-${cellKey}`}
+                      style={{ border: '1px solid #e8e8e8', padding: '8px', verticalAlign: 'top' }}
+                    >
+                      {formatInlineText(row[colIndex] || '', `${key}-cell-text-${cellKey}`)}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>);
+
   const renderLine = (line: string, contentKey: string): React.ReactNode => {
     // Check if line is a heading
     const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
@@ -229,6 +235,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
 
   while (index < lines.length) {
     const line = lines[index];
+    let handled = false;
 
     // Try markdown table block: header + separator + 0..n data rows
     if (isTableRow(line) && index + 1 < lines.length && isTableSeparator(lines[index + 1])) {
@@ -243,20 +250,20 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
       if (parsedTable) {
         nodes.push(renderTable(parsedTable, `table-${index}`));
         index = cursor;
-        continue;
+        handled = true;
       }
     }
 
-    if (line.trim() === '') {
-      emptyLineCounter += 1;
-      nodes.push(<div key={`empty-line-${emptyLineCounter}`} style={{ height: '16px' }} />);
+    if (!handled) {
+      if (line.trim() === '') {
+        emptyLineCounter += 1;
+        nodes.push(<div key={`empty-line-${emptyLineCounter}`} style={{ height: '16px' }} />);
+      } else {
+        const contentKey = line.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_') || `line-${index}`;
+        nodes.push(renderLine(line, contentKey));
+      }
       index += 1;
-      continue;
     }
-
-    const contentKey = line.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_') || `line-${index}`;
-    nodes.push(renderLine(line, contentKey));
-    index += 1;
   }
   
   return (
