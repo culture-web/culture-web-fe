@@ -254,6 +254,11 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudra
       });
     }, [uploadedImages]);
 
+  // Clear chat history when component unmounts (navigation or tab close)
+  useEffect(() => () => {
+      sessionStorage.removeItem('chatHistory');
+    }, []);
+
   const handleImageUpload = async (file: File) => {
     const imageId = Date.now().toString();
     const imageUrl = URL.createObjectURL(file);
