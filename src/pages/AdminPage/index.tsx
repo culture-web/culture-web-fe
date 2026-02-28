@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Layout, Tabs, Button, message, Spin, Card, Popconfirm, Table,
-  Form, Input, Divider, Typography, Switch, Tooltip, Tag, Space, Dropdown, Modal, Upload, Select, Checkbox, ConfigProvider, theme, Progress,
+  Form, Input, Divider, Typography, Switch, Tooltip, Tag, Space, Dropdown, Modal, Upload, Select, Checkbox, ConfigProvider, theme, Progress, Drawer, Empty, Steps, Slider, InputNumber,
 } from 'antd';
 import {
   LogoutOutlined, DeleteOutlined, ReloadOutlined, UploadOutlined,
   FileTextOutlined, MessageOutlined, PlayCircleOutlined,
   EditOutlined, DownloadOutlined, PlusOutlined, FolderAddOutlined, SearchOutlined, FilterOutlined,
+  CheckCircleOutlined, CloseCircleOutlined, WarningOutlined, DatabaseOutlined, InboxOutlined, CloudUploadOutlined, TeamOutlined, QuestionCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useColourToken } from 'themeStyles';
 import BACKEND_URI from 'configs/env.config';
+import FormattedText from 'components/Common/FormattedText';
 import './index.css';
 
 const { Header, Content } = Layout;
@@ -34,6 +36,26 @@ interface ChatMessage {
     page: number | null;
     similarity: number | null;
   }>;
+  retrieval?: {
+    knowledgeSource: string;
+    strategy: string;
+    totalRetrieved: number;
+    usedInContext: number;
+    contextTokens: number;
+    confidenceAvg: number | null;
+    chunks: Array<{
+      id: number;
+      source: string;
+      page: number | null;
+      excerpt: string;
+      matchedTerms: string[];
+      baseSimilarity: number | null;
+      rerankerScore: number | null;
+      combinedScore: number | null;
+      keywordBoost: number;
+      questionBoost: number;
+    }>;
+  };
 }
 
 interface FileRecord {
@@ -74,6 +96,36 @@ interface Chunk {
   created_at: string;
 }
 
+interface FileAiSummary {
+  executiveSummary: string;
+  keyConcepts: string[];
+  topicsCovered: string[];
+  suggestedTags: string[];
+  exampleQuestions: string[];
+}
+
+interface FileSummaryResponse {
+  fileName: string;
+  chunkCount: number;
+  sampledChunkIds: number[];
+  samplingStrategy: string;
+  summary: FileAiSummary;
+  generatedAt: string;
+}
+
+interface FileActivityRecord {
+  id: number;
+  file_name: string;
+  action: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+interface FileActivityHistoryResponse {
+  fileName: string;
+  activities: FileActivityRecord[];
+}
+
 interface EditingChunk {
   id: number;
   content: string;
@@ -89,6 +141,48 @@ interface MenuItem {
   label: string;
 }
 
+type ManagedUserRole = 'admin' | 'editor' | 'viewer';
+
+const DEFAULT_CHUNK_SIZE = 1000;
+const DEFAULT_CHUNK_OVERLAP = 200;
+
+interface ManagedUser {
+  id: string;
+  username: string;
+  email: string;
+  role: ManagedUserRole;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface GlobalChatSettings {
+  systemPrompt: string;
+  similarityThreshold: number;
+  vectorWeight: number;
+  topN: number;
+  multiTurnOptimization: boolean;
+}
+
+const DEFAULT_GLOBAL_CHAT_SETTINGS: GlobalChatSettings = {
+  systemPrompt: 'You are an intelligent assistant. Please summarize the content of the knowledge base to answer the question. Please list the data in the knowledge base and answer in detail. When all knowledge base content is irrelevant to the question, your answer must include the sentence "The answer you are looking for is not found in the knowledge base!" Answers need to consider chat history.',
+  similarityThreshold: 0.2,
+  vectorWeight: 0.3,
+  topN: 8,
+  multiTurnOptimization: true,
+};
+
+const normalizeGlobalChatSettings = (
+  settings: GlobalChatSettings,
+): GlobalChatSettings => ({
+  ...settings,
+  similarityThreshold: Number(Math.max(0, Math.min(1, settings.similarityThreshold)).toFixed(2)),
+  vectorWeight: Number(Math.max(0, Math.min(1, settings.vectorWeight)).toFixed(2)),
+  topN: Math.max(1, Math.min(20, Math.round(settings.topN))),
+  multiTurnOptimization: settings.multiTurnOptimization !== false,
+  systemPrompt: String(settings.systemPrompt || DEFAULT_GLOBAL_CHAT_SETTINGS.systemPrompt),
+});
+
 // Helper function to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem('adminToken');
@@ -103,6 +197,9 @@ const AdminPage: React.FC = () => {
   const [chatForm] = Form.useForm();
   const [uploadTextForm] = Form.useForm();
   const [newFolderForm] = Form.useForm();
+  const [userForm] = Form.useForm();
+  const [changePasswordForm] = Form.useForm();
+  const [adminResetPasswordForm] = Form.useForm();
   const [stats, setStats] = useState<KBStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -111,7 +208,7 @@ const AdminPage: React.FC = () => {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     // Load chat history from sessionStorage on mount (cleared when tab closes)
-    const saved = sessionStorage.getItem('chatHistory');
+    const saved = sessionStorage.getItem('adminChatHistory');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -120,6 +217,13 @@ const AdminPage: React.FC = () => {
       }
     }
     return [];
+  });
+  const [chatTested, setChatTested] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('adminChatTested') === '1';
+    } catch {
+      return false;
+    }
   });
   const [statusMap, setStatusMap] = useState<Record<string, JobStatus>>({});
   const [activeTab, setActiveTab] = useState<string>('kb');
@@ -150,21 +254,268 @@ const AdminPage: React.FC = () => {
   const [ingestJobs, setIngestJobs] = useState<Record<string, IngestJob>>({});
   const [rerankerStrategy, setRerankerStrategy] = useState<'embedding-based' | 'cross-encoder'>('embedding-based');
   const [files, setFiles] = useState<FileRecord[]>([]);
+  const [parseStatusFilter, setParseStatusFilter] = useState<string>('all');
+  const [isTableDragActive, setIsTableDragActive] = useState(false);
+  const [selectedKnowledgeSource, setSelectedKnowledgeSource] = useState<string>('all');
+  const [chunkSize, setChunkSize] = useState<number>(DEFAULT_CHUNK_SIZE);
+  const [chunkOverlap, setChunkOverlap] = useState<number>(DEFAULT_CHUNK_OVERLAP);
+  const [savedChunkSettings, setSavedChunkSettings] = useState<{ chunkSize: number; chunkOverlap: number }>({
+    chunkSize: DEFAULT_CHUNK_SIZE,
+    chunkOverlap: DEFAULT_CHUNK_OVERLAP,
+  });
+  const [globalChatSettings, setGlobalChatSettings] = useState<GlobalChatSettings>(DEFAULT_GLOBAL_CHAT_SETTINGS);
+  const [savedGlobalChatSettings, setSavedGlobalChatSettings] = useState<GlobalChatSettings>(
+    DEFAULT_GLOBAL_CHAT_SETTINGS,
+  );
+  const [savedIngestionSettings, setSavedIngestionSettings] = useState<{
+    autoParseAfterUpload: boolean;
+    rerankerStrategy: 'embedding-based' | 'cross-encoder';
+  }>({
+    autoParseAfterUpload: true,
+    rerankerStrategy: 'embedding-based',
+  });
+  const [autoParseAfterUpload, setAutoParseAfterUpload] = useState(true);
+  const [workflowStep, setWorkflowStep] = useState<number>(0);
+  const [deployTargetFile, setDeployTargetFile] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('kbDeployTargetFile');
+    } catch {
+      return null;
+    }
+  });
+  const [deployedFiles, setDeployedFiles] = useState<Record<string, string>>(() => {
+    try {
+      const stored = localStorage.getItem('kbDeployedFiles');
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [detailsFile, setDetailsFile] = useState<FileRecord | null>(null);
+  const [pendingDeleteNames, setPendingDeleteNames] = useState<string[]>([]);
+  const [fileSummaries, setFileSummaries] = useState<Record<string, FileSummaryResponse>>({});
+  const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
+  const [fileActivities, setFileActivities] = useState<Record<string, FileActivityRecord[]>>({});
+  const [activityLoading, setActivityLoading] = useState<Record<string, boolean>>({});
+  const [timeTick, setTimeTick] = useState<number>(Date.now());
+  const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+  const [userCreating, setUserCreating] = useState(false);
+  const [roleUpdating, setRoleUpdating] = useState<Record<string, boolean>>({});
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [changingOwnPassword, setChangingOwnPassword] = useState(false);
+  const [resetTargetUser, setResetTargetUser] = useState<ManagedUser | null>(null);
+  const [adminResetPasswordLoading, setAdminResetPasswordLoading] = useState(false);
+  const pendingDeleteTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const tableDragDepth = useRef<number>(0);
   const navigate = useNavigate();
+  const currentKbUserRole = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('adminUser');
+      if (!raw) return 'viewer';
+      const parsed = JSON.parse(raw);
+      return String(parsed?.role || 'viewer').toLowerCase();
+    } catch {
+      return 'viewer';
+    }
+  }, []);
+
+  const currentKbRoleLabel = useMemo(() => {
+    if (currentKbUserRole === 'admin') return 'Admin';
+    if (currentKbUserRole === 'editor') return 'Editor';
+    return 'Viewer';
+  }, [currentKbUserRole]);
+
+  const currentKbRoleActions = useMemo(() => {
+    if (currentKbUserRole === 'admin') {
+      return [
+        'Manage users and roles',
+        'Reset user passwords',
+        'Upload / parse / delete files',
+        'Enable / disable chunks',
+        'Chat testing and deploy controls',
+      ];
+    }
+    if (currentKbUserRole === 'editor') {
+      return [
+        'Upload / parse files',
+        'Enable / disable chunks',
+        'Edit chunk content',
+        'Chat testing',
+      ];
+    }
+    return [
+      'View knowledge base files',
+      'Read parse status',
+      'Chat testing',
+    ];
+  }, [currentKbUserRole]);
+
+  const canModifyKnowledgeBase = currentKbUserRole !== 'viewer';
 
   // Load reranker strategy preference from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('rerankerStrategy');
+    const savedAutoParse = localStorage.getItem('kbAutoParseAfterUpload');
+    const nextAutoParse = savedAutoParse !== 'false';
+    setAutoParseAfterUpload(nextAutoParse);
     if (saved === 'cross-encoder' || saved === 'embedding-based') {
       setRerankerStrategy(saved);
+      setSavedIngestionSettings({
+        autoParseAfterUpload: nextAutoParse,
+        rerankerStrategy: saved,
+      });
+      return;
+    }
+    setSavedIngestionSettings({
+      autoParseAfterUpload: nextAutoParse,
+      rerankerStrategy: 'embedding-based',
+    });
+  }, []);
+
+  // Keep reranker in state; persisted by Save All
+  const handleRerankerStrategyChange = (value: 'embedding-based' | 'cross-encoder') => {
+    setRerankerStrategy(value);
+  };
+
+  useEffect(() => {
+    try {
+      const savedSize = Number(localStorage.getItem('kbChunkSize'));
+      const savedOverlap = Number(localStorage.getItem('kbChunkOverlap'));
+      if (Number.isFinite(savedSize) && savedSize >= 100 && savedSize <= 4000) {
+        const normalizedSize = Math.round(savedSize);
+        setChunkSize(normalizedSize);
+        setSavedChunkSettings((prev) => ({ ...prev, chunkSize: normalizedSize }));
+      }
+      if (Number.isFinite(savedOverlap) && savedOverlap >= 0 && savedOverlap < 4000) {
+        const normalizedOverlap = Math.round(savedOverlap);
+        setChunkOverlap(normalizedOverlap);
+        setSavedChunkSettings((prev) => ({ ...prev, chunkOverlap: normalizedOverlap }));
+      }
+    } catch {
+      setChunkSize(DEFAULT_CHUNK_SIZE);
+      setChunkOverlap(DEFAULT_CHUNK_OVERLAP);
+      setSavedChunkSettings({
+        chunkSize: DEFAULT_CHUNK_SIZE,
+        chunkOverlap: DEFAULT_CHUNK_OVERLAP,
+      });
     }
   }, []);
 
-  // Save reranker strategy to localStorage when it changes
-  const handleRerankerStrategyChange = (value: 'embedding-based' | 'cross-encoder') => {
-    setRerankerStrategy(value);
-    localStorage.setItem('rerankerStrategy', value);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('globalChatSettings');
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const vectorWeight = Number(parsed?.vectorWeight);
+      const normalized = normalizeGlobalChatSettings({
+        systemPrompt: typeof parsed?.systemPrompt === 'string' && parsed.systemPrompt.trim().length > 0
+          ? parsed.systemPrompt
+          : DEFAULT_GLOBAL_CHAT_SETTINGS.systemPrompt,
+        similarityThreshold: Number.isFinite(Number(parsed?.similarityThreshold))
+          ? Math.max(0, Math.min(1, Number(parsed.similarityThreshold)))
+          : DEFAULT_GLOBAL_CHAT_SETTINGS.similarityThreshold,
+        vectorWeight: Number.isFinite(vectorWeight)
+          ? Math.max(0, Math.min(1, vectorWeight))
+          : DEFAULT_GLOBAL_CHAT_SETTINGS.vectorWeight,
+        topN: Number.isFinite(Number(parsed?.topN))
+          ? Math.max(1, Math.min(20, Math.round(Number(parsed.topN))))
+          : DEFAULT_GLOBAL_CHAT_SETTINGS.topN,
+        multiTurnOptimization: parsed?.multiTurnOptimization !== false,
+      });
+      setGlobalChatSettings(normalized);
+      setSavedGlobalChatSettings(normalized);
+    } catch {
+      setGlobalChatSettings(DEFAULT_GLOBAL_CHAT_SETTINGS);
+      setSavedGlobalChatSettings(DEFAULT_GLOBAL_CHAT_SETTINGS);
+    }
+  }, []);
+
+  const saveAllConfiguration = () => {
+    const normalizedSize = Math.max(100, Math.min(4000, Math.round(chunkSize)));
+    const normalizedOverlap = Math.max(0, Math.min(normalizedSize - 1, Math.round(chunkOverlap)));
+    const normalizedGlobal = normalizeGlobalChatSettings(globalChatSettings);
+
+    setChunkSize(normalizedSize);
+    setChunkOverlap(normalizedOverlap);
+    setSavedChunkSettings({ chunkSize: normalizedSize, chunkOverlap: normalizedOverlap });
+
+    setGlobalChatSettings(normalizedGlobal);
+    setSavedGlobalChatSettings(normalizedGlobal);
+
+    setSavedIngestionSettings({
+      autoParseAfterUpload,
+      rerankerStrategy,
+    });
+
+    localStorage.setItem('kbChunkSize', String(normalizedSize));
+    localStorage.setItem('kbChunkOverlap', String(normalizedOverlap));
+    localStorage.setItem('globalChatSettings', JSON.stringify(normalizedGlobal));
+    localStorage.setItem('rerankerStrategy', rerankerStrategy);
+    localStorage.setItem('kbAutoParseAfterUpload', String(autoParseAfterUpload));
+    message.success('All configuration saved');
   };
+
+  const resetConfigurationDefaults = () => {
+    setAutoParseAfterUpload(true);
+    setRerankerStrategy('embedding-based');
+
+    setChunkSize(DEFAULT_CHUNK_SIZE);
+    setChunkOverlap(DEFAULT_CHUNK_OVERLAP);
+    setSavedChunkSettings({
+      chunkSize: DEFAULT_CHUNK_SIZE,
+      chunkOverlap: DEFAULT_CHUNK_OVERLAP,
+    });
+
+    setGlobalChatSettings(DEFAULT_GLOBAL_CHAT_SETTINGS);
+    setSavedGlobalChatSettings(DEFAULT_GLOBAL_CHAT_SETTINGS);
+    setSavedIngestionSettings({
+      autoParseAfterUpload: true,
+      rerankerStrategy: 'embedding-based',
+    });
+
+    localStorage.setItem('kbChunkSize', String(DEFAULT_CHUNK_SIZE));
+    localStorage.setItem('kbChunkOverlap', String(DEFAULT_CHUNK_OVERLAP));
+    localStorage.setItem('globalChatSettings', JSON.stringify(DEFAULT_GLOBAL_CHAT_SETTINGS));
+    localStorage.setItem('rerankerStrategy', 'embedding-based');
+    localStorage.setItem('kbAutoParseAfterUpload', 'true');
+    message.success('Configuration reset to defaults');
+  };
+
+  const hasUnsavedConfig = useMemo(() => {
+    const chunkChanged = chunkSize !== savedChunkSettings.chunkSize
+      || chunkOverlap !== savedChunkSettings.chunkOverlap;
+    const ingestionChanged = autoParseAfterUpload !== savedIngestionSettings.autoParseAfterUpload
+      || rerankerStrategy !== savedIngestionSettings.rerankerStrategy;
+    const normalizedCurrentGlobal = normalizeGlobalChatSettings(globalChatSettings);
+    const normalizedSavedGlobal = normalizeGlobalChatSettings(savedGlobalChatSettings);
+    const globalChanged = JSON.stringify(normalizedCurrentGlobal) !== JSON.stringify(normalizedSavedGlobal);
+    return chunkChanged || ingestionChanged || globalChanged;
+  }, [
+    autoParseAfterUpload,
+    rerankerStrategy,
+    chunkSize,
+    chunkOverlap,
+    savedChunkSettings,
+    globalChatSettings,
+    savedGlobalChatSettings,
+    savedIngestionSettings,
+  ]);
+
+  useEffect(() => {
+    localStorage.setItem('kbDeployedFiles', JSON.stringify(deployedFiles));
+  }, [deployedFiles]);
+
+  useEffect(() => {
+    if (!deployTargetFile) {
+      localStorage.removeItem('kbDeployTargetFile');
+      return;
+    }
+    localStorage.setItem('kbDeployTargetFile', deployTargetFile);
+  }, [deployTargetFile]);
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -178,6 +529,7 @@ const AdminPage: React.FC = () => {
     try {
       const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/stats`, {
         headers: getAuthHeaders(),
+        cache: 'no-store',
       });
       if (!response.ok) throw new Error('Failed to fetch stats');
       const data = await response.json();
@@ -192,22 +544,56 @@ const AdminPage: React.FC = () => {
 
   const fetchFiles = async () => {
     try {
-      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/files`, { headers: getAuthHeaders() });
+      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/files`, {
+        headers: getAuthHeaders(),
+        cache: 'no-store',
+      });
       if (!response.ok) throw new Error('Failed to load files');
       const data = await response.json();
-      setFiles(data || []);
+      const nextFiles: FileRecord[] = data || [];
+      const queuedIngestFiles = Object.values(ingestJobs)
+        .filter((job) => ['queued', 'running', 'processing'].includes((job.status || '').toLowerCase()) && !!job.fileName)
+        .map((job) => job.fileName as string);
+      setFiles((prev) => {
+        const merged = [...nextFiles];
+        const prevMap = new Map(prev.map((file) => [file.name, file]));
+        queuedIngestFiles.forEach((fileName) => {
+          if (merged.some((file) => file.name === fileName)) return;
+          merged.unshift(prevMap.get(fileName) || {
+            name: fileName,
+            upload_date: new Date().toISOString(),
+            chunk_number: 0,
+            enabled: true,
+          });
+        });
+        return merged;
+      });
+      await Promise.all(nextFiles.map((file) => fetchStatus(file.name, { refreshOnTerminal: false })));
     } catch (e) {
       console.error('Error loading files:', e);
       message.error('Failed to load dataset files');
     }
   };
 
-  const fetchStatus = async (fileName: string) => {
+  const fetchStatus = async (fileName: string, options?: { refreshOnTerminal?: boolean }) => {
     try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/status`, { headers: getAuthHeaders() });
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/status`, {
+        headers: getAuthHeaders(),
+        cache: 'no-store',
+      });
       if (!res.ok) return;
       const data = await res.json();
-      setStatusMap((prev) => ({ ...prev, [fileName]: data }));
+      let enteredTerminalState = false;
+      const nextStatus = (data?.status || '').toLowerCase();
+      setStatusMap((prev) => {
+        const prevStatus = (prev[fileName]?.status || '').toLowerCase();
+        enteredTerminalState = ['completed', 'failed'].includes(nextStatus)
+          && !['completed', 'failed'].includes(prevStatus);
+        return { ...prev, [fileName]: data };
+      });
+      if (options?.refreshOnTerminal !== false && enteredTerminalState) {
+        await Promise.all([fetchFiles(), fetchStats()]);
+      }
     } catch (error) {
       console.error('Error fetching status:', error);
     }
@@ -215,7 +601,7 @@ const AdminPage: React.FC = () => {
 
   // Helper functions used in columns - defined before columns to avoid no-use-before-define
   const deleteDocumentRequest = (fileName: string) => fetch(
-    `${BACKEND_URI}/k-manage/knowledge-base/${fileName}`,
+    `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}`,
     {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -225,8 +611,12 @@ const AdminPage: React.FC = () => {
   });
 
   const toggleEnable = async (fileName: string, enabled: boolean) => {
+    if (!canModifyKnowledgeBase) {
+      message.warning('Viewer role cannot change file status');
+      return;
+    }
     try {
-      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/enable`, {
+      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/enable`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ enabled }),
@@ -240,38 +630,76 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const toggleDeployState = async (record: FileRecord, shouldDeploy: boolean) => {
+    if (!canModifyKnowledgeBase) {
+      message.warning('Viewer role cannot deploy or disable files');
+      return;
+    }
+
+    const fileName = record.name;
+    const status = (statusMap[fileName]?.status || '').toLowerCase();
+    const isParsed = status === 'completed' || Number(record.chunk_number || 0) > 0;
+
+    if (shouldDeploy && !isParsed) {
+      message.warning('File must be parsed before deploy');
+      return;
+    }
+
+    await toggleEnable(fileName, shouldDeploy);
+
+    if (shouldDeploy) {
+      setDeployedFiles((prev) => ({ ...prev, [fileName]: new Date().toISOString() }));
+      await logFileActivity(fileName, 'deploy', { via: 'toggle' });
+      setWorkflowStep((prev) => Math.max(prev, 3));
+      message.success(`Deployed: ${fileName}`);
+      return;
+    }
+
+    setDeployedFiles((prev) => {
+      const next = { ...prev };
+      delete next[fileName];
+      return next;
+    });
+    setWorkflowStep((prev) => Math.min(prev, 2));
+    message.success(`Pending: ${fileName}`);
+  };
+
   const startParse = async (fileName: string) => {
+    if (!canModifyKnowledgeBase) {
+      message.warning('Viewer role cannot parse or re-parse files');
+      return;
+    }
     setParsingBusy((prev) => ({ ...prev, [fileName]: true }));
     try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/parse`, {
+      setStatusMap((prev) => ({
+        ...prev,
+        [fileName]: {
+          ...(prev[fileName] || {}),
+          status: 'queued',
+          progress: 0,
+          last_message: 'Queued',
+        },
+      }));
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/parse`, {
         method: 'POST',
         headers: getAuthHeaders(),
+        body: JSON.stringify({ chunkSize, chunkOverlap }),
       });
-      if (!res.ok) throw new Error('Start parse failed');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          message.warning(errorData.error || `Parse already in progress: ${fileName}`);
+          await fetchStatus(fileName);
+          return;
+        }
+        throw new Error(errorData.error || 'Start parse failed');
+      }
       await res.json();
       message.success(`Started parsing: ${fileName}`);
+      setWorkflowStep((prev) => Math.max(prev, 1));
       
-      // Fetch status immediately and then poll more frequently
+      // Fetch status immediately; active polling effect handles subsequent updates
       await fetchStatus(fileName);
-      
-      // Poll status every 500ms for the next 60 seconds to catch completion
-      let pollCount = 0;
-      const statusInterval = setInterval(async () => {
-        pollCount += 1;
-        await fetchStatus(fileName);
-        
-        // Stop polling after 60 seconds or if job is completed/failed
-        if (pollCount > 120) {
-          clearInterval(statusInterval);
-        } else {
-          const status = statusMap[fileName];
-          if (status && (status.status === 'completed' || status.status === 'failed')) {
-            clearInterval(statusInterval);
-            await fetchFiles(); // Refresh file list when done
-            await fetchStats(); // Refresh stats
-          }
-        }
-      }, 500);
     } catch (e) {
       console.error('Start parse error:', e);
       message.error('Failed to start parsing');
@@ -324,7 +752,7 @@ const AdminPage: React.FC = () => {
 
   const downloadFile = async (fileName: string) => {
     try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}/export`, {
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/export`, {
         headers: getAuthHeaders(),
       });
       if (!res.ok) throw new Error('Download failed');
@@ -343,17 +771,339 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  // Computed dashboard values
+  const enabledCount = files.filter((f) => f.enabled).length;
+  const needsParsingCount = files.filter((f) => {
+    const s = statusMap[f.name];
+    return f.enabled && (!s || (s.status !== 'completed' && s.status !== 'processing'));
+  }).length;
+  const failedCount = files.filter((f) => statusMap[f.name]?.status === 'failed').length;
+  const parsingCount = files.filter((f) => {
+    const s = statusMap[f.name];
+    return s?.status === 'processing' || (s?.progress && s.progress > 0 && s.progress < 100);
+  }).length;
+  const totalFilesCount = Math.max(stats?.total_files || 0, files.length);
+  const avgChunksPerFile = files.length > 0
+    ? Math.round(files.reduce((sum, f) => sum + f.chunk_number, 0) / files.length)
+    : 0;
+
+  const knowledgeSourceOptions = useMemo(() => {
+    const fileOptions = files.map((file) => ({
+      label: `File: ${file.name}`,
+      value: file.name,
+    }));
+    const folderOptions = folders.map((folder) => ({
+      label: `Folder: ${folder}/`,
+      value: `${folder}/`,
+    }));
+    return [{ label: 'All Sources', value: 'all' }, ...folderOptions, ...fileOptions];
+  }, [files, folders]);
+
+  const filteredManagedUsers = useMemo(() => {
+    const term = userSearchTerm.trim().toLowerCase();
+    if (!term) return managedUsers;
+    return managedUsers.filter((user) =>
+      user.username.toLowerCase().includes(term)
+      || user.email.toLowerCase().includes(term)
+      || user.role.toLowerCase().includes(term),
+    );
+  }, [managedUsers, userSearchTerm]);
+
+  const activeFileStatusNames = useMemo(
+    () => Object.entries(statusMap)
+      .filter(([, status]) => ['queued', 'running', 'processing'].includes((status?.status || '').toLowerCase()))
+      .map(([fileName]) => fileName),
+    [statusMap],
+  );
+
+  const activeIngestJobs = useMemo(
+    () => Object.entries(ingestJobs)
+      .filter(([, job]) => ['queued', 'running', 'processing'].includes((job.status || '').toLowerCase())),
+    [ingestJobs],
+  );
+
+  const fetchFileSummary = async (fileName: string, force = false) => {
+    if (!fileName) return;
+    if (!force && fileSummaries[fileName]) return;
+    setSummaryLoading((prev) => ({ ...prev, [fileName]: true }));
+    try {
+      const res = await fetch(
+        `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/summary`,
+        { headers: getAuthHeaders() },
+      );
+      if (!res.ok) throw new Error('Failed to generate summary');
+      const data = (await res.json()) as FileSummaryResponse;
+      setFileSummaries((prev) => ({ ...prev, [fileName]: data }));
+    } catch (error: unknown) {
+      console.error('Summary generation failed:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to generate summary');
+    } finally {
+      setSummaryLoading((prev) => ({ ...prev, [fileName]: false }));
+    }
+  };
+
+  const fetchManagedUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await fetch(`${BACKEND_URI}/k-manage/users`, {
+        headers: getAuthHeaders(),
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to load users');
+      }
+      const data = await response.json();
+      setManagedUsers(data.users || []);
+    } catch (error: unknown) {
+      console.error('Error loading users:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to load users');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleCreateManagedUser = async () => {
+    try {
+      const values = await userForm.validateFields();
+      setUserCreating(true);
+      const response = await fetch(`${BACKEND_URI}/k-manage/users`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to create user');
+      }
+
+      message.success('User created successfully');
+      setCreateUserModalOpen(false);
+      userForm.resetFields();
+      await fetchManagedUsers();
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'errorFields' in error) return;
+      console.error('Create user error:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to create user');
+    } finally {
+      setUserCreating(false);
+    }
+  };
+
+  const handleUpdateUserRole = async (userId: string, role: ManagedUserRole) => {
+    setRoleUpdating((prev) => ({ ...prev, [userId]: true }));
+    try {
+      const response = await fetch(`${BACKEND_URI}/k-manage/users/${encodeURIComponent(userId)}/role`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ role }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update role');
+      }
+      setManagedUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, role } : user)));
+      message.success('Role updated');
+    } catch (error: unknown) {
+      console.error('Update user role error:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to update role');
+    } finally {
+      setRoleUpdating((prev) => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const handleAdminResetUserPassword = async () => {
+    if (!resetTargetUser) return;
+    try {
+      const values = await adminResetPasswordForm.validateFields();
+      setAdminResetPasswordLoading(true);
+      const response = await fetch(`${BACKEND_URI}/k-manage/users/${encodeURIComponent(resetTargetUser.id)}/reset-password`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ newPassword: values.newPassword }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to reset password');
+      }
+      message.success(`Password reset for ${resetTargetUser.username}`);
+      setResetTargetUser(null);
+      adminResetPasswordForm.resetFields();
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'errorFields' in error) return;
+      message.error(error instanceof Error ? error.message : 'Failed to reset password');
+    } finally {
+      setAdminResetPasswordLoading(false);
+    }
+  };
+
+  const handleChangeOwnPassword = async () => {
+    try {
+      const values = await changePasswordForm.validateFields();
+      setChangingOwnPassword(true);
+      const response = await fetch(`${BACKEND_URI}/auth/change-password`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword,
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Failed to change password');
+      }
+      message.success('Password changed successfully');
+      setChangePasswordModalOpen(false);
+      changePasswordForm.resetFields();
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'errorFields' in error) return;
+      message.error(error instanceof Error ? error.message : 'Failed to change password');
+    } finally {
+      setChangingOwnPassword(false);
+    }
+  };
+
+  const fetchFileActivities = async (fileName: string, force = false) => {
+    if (!fileName) return;
+    if (!force && fileActivities[fileName]) return;
+    setActivityLoading((prev) => ({ ...prev, [fileName]: true }));
+    try {
+      const res = await fetch(
+        `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/activity`,
+        { headers: getAuthHeaders() },
+      );
+      if (!res.ok) throw new Error('Failed to load activity history');
+      const data = (await res.json()) as FileActivityHistoryResponse;
+      setFileActivities((prev) => ({ ...prev, [fileName]: data.activities || [] }));
+    } catch (error: unknown) {
+      console.error('Activity history fetch failed:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to load activity history');
+    } finally {
+      setActivityLoading((prev) => ({ ...prev, [fileName]: false }));
+    }
+  };
+
+  const logFileActivity = async (fileName: string, action: 'test' | 'deploy', metadata: Record<string, unknown> = {}) => {
+    if (!fileName) return;
+    try {
+      const res = await fetch(
+        `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/activity`,
+        {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ action, metadata }),
+        },
+      );
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to store ${action} activity`);
+      }
+    } catch (error: unknown) {
+      console.error('Activity log failed:', error);
+    }
+  };
+
+  const openDetailsPanel = (fileName: string) => {
+    const target = files.find((file) => file.name === fileName) || null;
+    setDetailsFile(target);
+    setDeployTargetFile(fileName);
+    setDetailsDrawerOpen(true);
+    fetchFileSummary(fileName);
+    fetchFileActivities(fileName);
+  };
+
+  const renderHighlightedText = (text: string, terms: string[]) => {
+    if (!terms.length) return text;
+    const escaped = terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`(${escaped.join('|')})`, 'gi');
+    return text.split(regex).map((part, idx) => {
+      const isMatch = terms.some((term) => part.toLowerCase() === term.toLowerCase());
+      if (isMatch) {
+        return (
+          <mark key={`${part}-${idx}`} className="matched-term-mark">
+            {part}
+          </mark>
+        );
+      }
+      return <React.Fragment key={`${part}-${idx}`}>{part}</React.Fragment>;
+    });
+  };
+
+  const undoScheduledDelete = (fileName: string) => {
+    const timer = pendingDeleteTimers.current[fileName];
+    if (timer) {
+      clearTimeout(timer);
+      delete pendingDeleteTimers.current[fileName];
+    }
+    setPendingDeleteNames((prev) => prev.filter((name) => name !== fileName));
+    message.success(`Restored: ${fileName}`);
+  };
+
+  const scheduleDeleteWithUndo = (fileName: string) => {
+    if (pendingDeleteTimers.current[fileName]) return;
+    setPendingDeleteNames((prev) => [...prev, fileName]);
+    message.open({
+      type: 'warning',
+      duration: 5,
+      content: (
+        <Space>
+          <span>File deleted: {fileName}</span>
+          <Button size="small" onClick={() => undoScheduledDelete(fileName)}>
+            Undo
+          </Button>
+        </Space>
+      ),
+    });
+
+    pendingDeleteTimers.current[fileName] = setTimeout(async () => {
+      try {
+        await handleDeleteDocument(fileName);
+      } finally {
+        setPendingDeleteNames((prev) => prev.filter((name) => name !== fileName));
+        delete pendingDeleteTimers.current[fileName];
+      }
+    }, 5000);
+  };
+
   const fileColumns = [
     {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => (
-        <div className="file-name">
-          <FileTextOutlined />
-          <Text strong>{text}</Text>
-        </div>
-      ),
+      render: (text: string, record: FileRecord) => {
+        const status = statusMap[record.name];
+        const isParsed = status?.status === 'completed';
+        const isFailed = status?.status === 'failed';
+        const isParsing = status?.status === 'processing' || (status?.progress && status.progress > 0 && status.progress < 100);
+
+        let statusColor: 'default' | 'green' | 'blue' | 'red' | 'orange' = 'default';
+        let statusLabel = 'Pending';
+        if (record.enabled) {
+          if (isFailed) { statusColor = 'red'; statusLabel = 'Failed'; }
+          else if (isParsing) { statusColor = 'blue'; statusLabel = 'Parsing'; }
+          else if (isParsed) { statusColor = 'green'; statusLabel = 'Ready'; }
+          else { statusColor = 'orange'; statusLabel = 'Not Parsed'; }
+        }
+
+        return (
+          <div className="file-name">
+            <Tooltip title={statusLabel}>
+              <Tag color={statusColor} className="file-status-tag">{statusLabel}</Tag>
+            </Tooltip>
+            <FileTextOutlined />
+            <Button
+              type="link"
+              className="file-name-link"
+              onClick={() => openDetailsPanel(record.name)}
+            >
+              {text}
+            </Button>
+            {deployedFiles[record.name] && <Tag color="purple">Deployed</Tag>}
+          </div>
+        );
+      },
     },
     {
       title: 'Upload Date',
@@ -368,11 +1118,17 @@ const AdminPage: React.FC = () => {
       ),
     },
     {
-      title: 'Enable',
+      title: 'Deploy',
       dataIndex: 'enabled',
       key: 'enabled',
       render: (enabled: boolean, record: FileRecord) => (
-        <Switch checked={enabled} onChange={(checked) => toggleEnable(record.name, checked)} />
+        <Tooltip title={enabled ? 'Disable (set to pending)' : 'Deploy file'}>
+          <Switch
+            checked={enabled}
+            disabled={!canModifyKnowledgeBase}
+            onChange={(checked) => toggleDeployState(record, checked)}
+          />
+        </Tooltip>
       ),
     },
     {
@@ -403,20 +1159,35 @@ const AdminPage: React.FC = () => {
           <Space>
             {progress > 0 && progress < 100 && (
               <Tooltip title={tip}>
-                <Tag color="blue">{`Parsing ${progress}%`}</Tag>
+                <div className="parse-progress-wrap">
+                  <Progress
+                    percent={Math.round(progress)}
+                    size="small"
+                    strokeColor={{ '0%': '#1890ff', '100%': '#52c41a' }}
+                    style={{ marginBottom: 0 }}
+                  />
+                </div>
               </Tooltip>
             )}
             {isParsed && (
               <Tooltip title={tip}>
-                <Tag color="green">Parsed</Tag>
+                <Tag color="green"><CheckCircleOutlined /> Parsed</Tag>
               </Tooltip>
             )}
-            <Button
-              type="text"
-              icon={isParsed ? <ReloadOutlined /> : <PlayCircleOutlined />}
-              loading={!!parsingBusy[record.name]}
-              onClick={() => startParse(record.name)}
-            />
+            {status?.status === 'failed' && (
+              <Tooltip title={tip}>
+                <Tag color="red"><CloseCircleOutlined /> Failed</Tag>
+              </Tooltip>
+            )}
+            <Tooltip title={isParsed ? 'Re-parse file' : 'Parse file'}>
+              <Button
+                type="text"
+                icon={isParsed ? <ReloadOutlined /> : <PlayCircleOutlined />}
+                loading={!!parsingBusy[record.name]}
+                disabled={!canModifyKnowledgeBase}
+                onClick={() => startParse(record.name)}
+              />
+            </Tooltip>
           </Space>
         );
       },
@@ -430,21 +1201,29 @@ const AdminPage: React.FC = () => {
             <Button type="text" icon={<FileTextOutlined />} onClick={() => handleViewChunks(record.name)} />
           </Tooltip>
           <Tooltip title="Rename">
-            <Button type="text" icon={<EditOutlined />} onClick={() => { setRenameTarget(record.name); renameForm.setFieldsValue({ newName: record.name }); }} />
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              disabled={!canModifyKnowledgeBase}
+              onClick={() => { setRenameTarget(record.name); renameForm.setFieldsValue({ newName: record.name }); }}
+            />
           </Tooltip>
           <Tooltip title="Download">
             <Button type="text" icon={<DownloadOutlined />} onClick={() => downloadFile(record.name)} />
           </Tooltip>
-          <Button
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            type="text"
-            onClick={() => {
-              setDeleteTarget(record.name);
-              setDeleteModalOpen(true);
-            }}
-          />
+          <Tooltip title="Delete">
+            <Button
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              type="text"
+              disabled={!canModifyKnowledgeBase}
+              onClick={() => {
+                setDeleteTarget(record.name);
+                setDeleteModalOpen(true);
+              }}
+            />
+          </Tooltip>
         </Space>
       ),
     },
@@ -465,6 +1244,18 @@ const AdminPage: React.FC = () => {
     setIngestJobs((prev) => ({ ...prev, [jobId]: { ...(prev[jobId] || {}), ...data } }));
   };
 
+  const upsertQueuedFileRecord = (fileName: string) => {
+    setFiles((prev) => {
+      if (prev.some((file) => file.name === fileName)) return prev;
+      return [{
+        name: fileName,
+        upload_date: new Date().toISOString(),
+        chunk_number: 0,
+        enabled: true,
+      }, ...prev];
+    });
+  };
+
   const addMenuItems: MenuItem[] = [
     {
       key: 'upload',
@@ -479,6 +1270,10 @@ const AdminPage: React.FC = () => {
   ];
 
   const handleAddMenuClick = ({ key }: { key: string }) => {
+    if (!canModifyKnowledgeBase) {
+      message.warning('Viewer role cannot upload or create folders');
+      return;
+    }
     if (key === 'upload') {
       setUploadModalOpen(true);
       setUploadMode('text');
@@ -517,19 +1312,25 @@ const AdminPage: React.FC = () => {
   // Save chat messages to sessionStorage whenever they change (clears on tab close)
   useEffect(() => {
     if (chatMessages.length > 0) {
-      sessionStorage.setItem('chatHistory', JSON.stringify(chatMessages));
+      sessionStorage.setItem('adminChatHistory', JSON.stringify(chatMessages));
+      sessionStorage.setItem('adminChatTested', '1');
+      setChatTested(true);
     }
   }, [chatMessages]);
 
+  useEffect(() => {
+    if (!chatTested) return;
+    sessionStorage.setItem('adminChatTested', '1');
+  }, [chatTested]);
+
   // Poll ingest job statuses
   useEffect(() => {
-    const activeJobs = Object.entries(ingestJobs).filter(([, job]) => job.status && !['completed', 'failed'].includes(job.status));
-    if (!activeJobs.length) return undefined;
+    if (!activeIngestJobs.length) return undefined;
 
     // eslint-disable-next-line no-restricted-syntax
     const interval = setInterval(async () => {
       // eslint-disable-next-line no-restricted-syntax
-      for (const [jobId] of activeJobs) {
+      for (const [jobId] of activeIngestJobs) {
         try {
           // eslint-disable-next-line no-await-in-loop
           const res = await fetch(`${BACKEND_URI}/k-manage/jobs/${jobId}/status`, { headers: getAuthHeaders() });
@@ -569,32 +1370,145 @@ const AdminPage: React.FC = () => {
     }, 1200);
 
     return () => clearInterval(interval);
-  }, [ingestJobs]);
+  }, [activeIngestJobs]);
 
-  // Poll statuses for running jobs - more frequently for faster jobs
+  // Poll statuses only for active queued/running/processing parse jobs
   useEffect(() => {
+    if (!activeFileStatusNames.length) return undefined;
     const interval = setInterval(() => {
-      files.forEach((f) => fetchStatus(f.name));
-    }, 1000); // Changed from 3000ms to 1000ms for faster updates
+      activeFileStatusNames.forEach((fileName) => fetchStatus(fileName));
+    }, 3000);
     return () => clearInterval(interval);
-  }, [files]);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  }, [activeFileStatusNames]);
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, current: 1 }));
   }, [searchTerm, folderFilter, files.length]);
 
+  useEffect(() => () => {
+    Object.values(pendingDeleteTimers.current).forEach((timer) => clearTimeout(timer));
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeTick(Date.now());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchManagedUsers();
+    }
+    if (activeTab === 'chat') {
+      setChatTested(true);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!files.length) {
+      setDeployTargetFile(null);
+      setWorkflowStep(0);
+      return;
+    }
+
+    const fileMap = new Map(files.map((file) => [file.name, file]));
+    const validFileNames = new Set(fileMap.keys());
+    const deployedEntries = Object.entries(deployedFiles)
+      .filter(([fileName]) => validFileNames.has(fileName))
+      .sort(([, deployedAtA], [, deployedAtB]) => new Date(deployedAtB).getTime() - new Date(deployedAtA).getTime());
+
+    const parsedFile = files.find((file) => {
+      const status = (statusMap[file.name]?.status || '').toLowerCase();
+      return status === 'completed' || Number(file.chunk_number || 0) > 0;
+    })?.name;
+
+    const preferredFileName = (
+      (deployTargetFile && validFileNames.has(deployTargetFile) ? deployTargetFile : null)
+      || deployedEntries[0]?.[0]
+      || parsedFile
+      || files[0].name
+    );
+
+    if (!deployTargetFile && preferredFileName) {
+      setDeployTargetFile(preferredFileName);
+    }
+
+    if (deployTargetFile && !validFileNames.has(deployTargetFile)) {
+      setDeployTargetFile(preferredFileName || null);
+    }
+
+    const preferredFile = fileMap.get(preferredFileName);
+    const preferredStatus = (statusMap[preferredFileName]?.status || '').toLowerCase();
+    const isParsed = preferredStatus === 'completed' || Number(preferredFile?.chunk_number || 0) > 0;
+    const hasChatTesting = chatTested || activeTab === 'chat' || chatMessages.length > 0;
+    const isDeployed = Boolean(preferredFileName && deployedFiles[preferredFileName]);
+
+    let nextStep = 0;
+    if (isParsed) nextStep = 1;
+    if (hasChatTesting) nextStep = Math.max(nextStep, 2);
+    if (isDeployed) nextStep = 3;
+
+    setWorkflowStep((prev) => (prev === nextStep ? prev : nextStep));
+  }, [files, statusMap, deployedFiles, deployTargetFile, activeTab, chatMessages.length, chatTested]);
+
+  useEffect(() => {
+    if (!files.length) {
+      return;
+    }
+    const validFileNames = new Set(files.map((file) => file.name));
+    setDeployedFiles((prev) => {
+      const filtered = Object.fromEntries(
+        Object.entries(prev).filter(([fileName]) => validFileNames.has(fileName)),
+      );
+      if (Object.keys(filtered).length === Object.keys(prev).length) return prev;
+      return filtered;
+    });
+  }, [files]);
+
+  const formatRelativeTime = (timestamp: number) => {
+    const diffMs = Math.max(0, timeTick - timestamp);
+    const sec = Math.floor(diffMs / 1000);
+    if (sec < 5) return 'just now';
+    if (sec < 60) return `${sec}s ago`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}m ago`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}h ago`;
+    const day = Math.floor(hr / 24);
+    return `${day}d ago`;
+  };
+
   const handleDeleteDocument = async (fileName: string) => {
     try {
-      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${fileName}`, {
+      const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       });
 
-      if (!response.ok) throw new Error('Failed to delete document');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to delete document');
+      }
+
+      setFiles((prev) => prev.filter((file) => file.name !== fileName));
+      setStatusMap((prev) => {
+        const next = { ...prev };
+        delete next[fileName];
+        return next;
+      });
+      setDeployedFiles((prev) => {
+        const next = { ...prev };
+        delete next[fileName];
+        return next;
+      });
+      if (deployTargetFile === fileName) {
+        setDeployTargetFile(null);
+      }
+      if (detailsFile?.name === fileName) {
+        setDetailsDrawerOpen(false);
+        setDetailsFile(null);
+      }
 
       message.success('Document deleted successfully!');
       await fetchFiles();
@@ -602,16 +1516,17 @@ const AdminPage: React.FC = () => {
       await fetchFolders();
     } catch (error: unknown) {
       console.error('Error deleting document:', error);
-      message.error('Failed to delete document');
+      message.error(error instanceof Error ? error.message : 'Failed to delete document');
     }
   };
 
   const handleConfirmDelete = async () => {
     try {
       if (deleteTarget) {
-        await handleDeleteDocument(deleteTarget);
+        scheduleDeleteWithUndo(deleteTarget);
       } else {
-        await runBulk('Deleted', selectedRowKeys.map((key) => deleteDocumentRequest(key as string)));
+        selectedRowKeys.forEach((key) => scheduleDeleteWithUndo(key as string));
+        setSelectedRowKeys([]);
       }
     } finally {
       setDeleteModalOpen(false);
@@ -621,7 +1536,7 @@ const AdminPage: React.FC = () => {
   };
 
   const postEnable = (fileName: string, enabled: boolean) => fetch(
-    `${BACKEND_URI}/k-manage/knowledge-base/${fileName}/enable`,
+    `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/enable`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -632,19 +1547,33 @@ const AdminPage: React.FC = () => {
   });
 
   const parseRequest = (fileName: string) => fetch(
-    `${BACKEND_URI}/k-manage/knowledge-base/${fileName}/parse`,
+    `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/parse`,
     {
       method: 'POST',
       headers: getAuthHeaders(),
+      body: JSON.stringify({ chunkSize, chunkOverlap }),
     },
-  ).then((res) => {
-    if (!res.ok) throw new Error('Start parse failed');
+  ).then(async (res) => {
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Start parse failed');
+    }
+    setStatusMap((prev) => ({
+      ...prev,
+      [fileName]: {
+        ...(prev[fileName] || {}),
+        status: 'queued',
+        progress: 0,
+        last_message: 'Queued',
+      },
+    }));
+    await fetchStatus(fileName);
   });
 
   const submitRename = async () => {
     try {
       const values = await renameForm.validateFields();
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${renameTarget}/rename`, {
+      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(renameTarget || '')}/rename`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ newName: values.newName }),
@@ -676,16 +1605,24 @@ const AdminPage: React.FC = () => {
           fileName: finalName,
           text: values.documentText,
           metadata: { author: values.author || 'Unknown' },
+          chunkSize,
+          chunkOverlap,
         }),
       });
 
       if (!response.ok) throw new Error('Failed to ingest document');
 
       message.success('Document uploaded successfully');
+      setWorkflowStep((prev) => Math.max(prev, 0));
       uploadTextForm.resetFields();
       setUploadModalOpen(false);
       await fetchFiles();
       await fetchStats();
+      if (autoParseAfterUpload) {
+        await parseRequest(finalName);
+        await fetchStatus(finalName);
+        setWorkflowStep((prev) => Math.max(prev, 1));
+      }
     } catch (error: unknown) {
       console.error('Upload text error:', error);
       message.error(error instanceof Error ? error.message : 'Failed to upload document');
@@ -716,6 +1653,10 @@ const AdminPage: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('pdf', renamedFile);
+      formData.append('autoParse', String(autoParseAfterUpload));
+      formData.append('rerankerStrategy', rerankerStrategy);
+      formData.append('chunkSize', String(chunkSize));
+      formData.append('chunkOverlap', String(chunkOverlap));
 
       const res = await fetch(`${BACKEND_URI}/k-manage/ingest-pdf`, {
         method: 'POST',
@@ -739,13 +1680,21 @@ const AdminPage: React.FC = () => {
           status: data.status || 'queued',
           progress: data.progress || 0,
           message: data.message || 'Queued',
-          fileName: desiredName,
+          fileName: finalName,
         });
+        upsertQueuedFileRecord(finalName);
         message.success('Upload started — tracking progress');
+        setWorkflowStep((prev) => Math.max(prev, 0));
       } else {
         message.success('PDF uploaded successfully');
         await fetchFiles();
         await fetchStats();
+        setWorkflowStep((prev) => Math.max(prev, 0));
+        if (autoParseAfterUpload) {
+          await parseRequest(finalName);
+          await fetchStatus(finalName);
+          setWorkflowStep((prev) => Math.max(prev, 1));
+        }
       }
 
       setPdfFile(null);
@@ -756,6 +1705,139 @@ const AdminPage: React.FC = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleDropUpload = async (filesToUpload: File[]) => {
+    const maxSizeBytes = 15 * 1024 * 1024;
+    const pdfFiles = filesToUpload.filter((file) => file.name.toLowerCase().endsWith('.pdf'));
+
+    if (!pdfFiles.length) {
+      message.error('Only PDF files can be dropped here');
+      return false;
+    }
+
+    const oversizedFiles = pdfFiles.filter((file) => file.size > maxSizeBytes);
+    const validPdfFiles = pdfFiles.filter((file) => file.size <= maxSizeBytes);
+
+    if (oversizedFiles.length) {
+      message.warning(`${oversizedFiles.length} file(s) skipped (max 15MB each)`);
+    }
+
+    if (!validPdfFiles.length) {
+      return false;
+    }
+
+    setUploading(true);
+    const token = localStorage.getItem('adminToken');
+    const targetFolder = folderFilter || folderPrefix;
+    let queuedCount = 0;
+    let uploadedCount = 0;
+    let conflictCount = 0;
+    let failedCount = 0;
+
+    try {
+      for (const file of validPdfFiles) {
+        const finalName = targetFolder ? `${targetFolder}/${file.name}` : file.name;
+        const renamedFile = new File([file], finalName, { type: file.type });
+        try {
+          const formData = new FormData();
+          formData.append('pdf', renamedFile);
+          formData.append('autoParse', String(autoParseAfterUpload));
+          formData.append('rerankerStrategy', rerankerStrategy);
+          formData.append('chunkSize', String(chunkSize));
+          formData.append('chunkOverlap', String(chunkOverlap));
+          const res = await fetch(`${BACKEND_URI}/k-manage/ingest-pdf`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+
+          if (res.status === 409) {
+            conflictCount += 1;
+            continue;
+          }
+
+          if (!res.ok) throw new Error('Failed to upload PDF');
+
+          const data = await res.json();
+          if (data.jobId) {
+            queuedCount += 1;
+            upsertIngestJob(data.jobId, {
+              status: data.status || 'queued',
+              progress: data.progress || 0,
+              message: data.message || 'Queued',
+              fileName: finalName,
+            });
+            upsertQueuedFileRecord(finalName);
+          } else {
+            uploadedCount += 1;
+            if (autoParseAfterUpload) {
+              await parseRequest(finalName);
+              await fetchStatus(finalName);
+              setWorkflowStep((prev) => Math.max(prev, 1));
+            }
+          }
+        } catch (error) {
+          failedCount += 1;
+          console.error('Drop upload error:', error);
+        }
+      }
+
+      if (queuedCount || uploadedCount) {
+        await Promise.all([fetchFiles(), fetchStats()]);
+        setWorkflowStep((prev) => Math.max(prev, 0));
+      }
+
+      if (validPdfFiles.length === 1 && uploadedCount === 1 && !queuedCount) {
+        message.success('PDF uploaded successfully');
+      } else if (queuedCount || uploadedCount) {
+        message.success(`Uploaded ${uploadedCount}, queued ${queuedCount}`);
+      }
+
+      if (conflictCount) {
+        message.warning(`${conflictCount} file(s) skipped (already exists)`);
+      }
+      if (failedCount) {
+        message.error(`${failedCount} file(s) failed to upload`);
+      }
+    } finally {
+      setUploading(false);
+    }
+
+    return false;
+  };
+
+  const handleTableDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    tableDragDepth.current += 1;
+    setIsTableDragActive(true);
+  };
+
+  const handleTableDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleTableDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    tableDragDepth.current = Math.max(0, tableDragDepth.current - 1);
+    if (tableDragDepth.current === 0) {
+      setIsTableDragActive(false);
+    }
+  };
+
+  const handleTableDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    tableDragDepth.current = 0;
+    setIsTableDragActive(false);
+
+    const droppedFiles = Array.from(event.dataTransfer.files || []);
+    if (!droppedFiles.length) return;
+    await handleDropUpload(droppedFiles);
   };
 
   const handleCreateFolder = async () => {
@@ -953,17 +2035,41 @@ const AdminPage: React.FC = () => {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ 
-          query: userMessage,
+          message: userMessage,
           rerankerStrategy, // Pass selected reranking strategy
+          knowledgeSource: selectedKnowledgeSource,
+          systemPrompt: globalChatSettings.systemPrompt,
+          similarityThreshold: globalChatSettings.similarityThreshold,
+          vectorWeight: globalChatSettings.vectorWeight,
+          fullTextWeight: Number((1 - globalChatSettings.vectorWeight).toFixed(2)),
+          topN: globalChatSettings.topN,
+          multiTurnOptimization: globalChatSettings.multiTurnOptimization,
         }),
       });
 
       if (!response.ok) throw new Error('Failed to get response');
       const data = await response.json();
 
-      // Backend returns structured response with shortAnswer, sections, etc.
+      // Backend returns structured response with shortAnswer, sections, tables, reasoning
       let content = data.shortAnswer || '';
       
+      // Append tables as markdown if available
+      interface Table {
+        id: string;
+        title: string;
+        headers: string[];
+        rows: string[][];
+      }
+      if (data.tables && data.tables.length > 0) {
+        const tablesText = (data.tables as Table[]).map((t) => {
+          const headerRow = `| ${t.headers.join(' | ')} |`;
+          const separator = `| ${t.headers.map(() => '---').join(' | ')} |`;
+          const dataRows = t.rows.map((row) => `| ${row.join(' | ')} |`).join('\n');
+          return `\n\n${headerRow}\n${separator}\n${dataRows}`;
+        }).join('');
+        content += tablesText;
+      }
+
       // Append sections if available
       interface Section {
         title: string;
@@ -976,14 +2082,30 @@ const AdminPage: React.FC = () => {
         content += sectionsText;
       }
 
+      // Append reasoning (remaining content like summary paragraphs with source refs)
+      if (data.reasoning) {
+        content += `\n\n${data.reasoning}`;
+      }
+
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: content || 'No response',
         timestamp: Date.now(),
         citations: data.citations || [],
+        retrieval: data.retrieval,
       };
       setChatMessages((prev) => [...prev, assistantMessage]);
+      if (deployTargetFile) {
+        await logFileActivity(deployTargetFile, 'test', {
+          rerankerStrategy,
+          knowledgeSource: selectedKnowledgeSource,
+        });
+        if (detailsFile?.name === deployTargetFile) {
+          fetchFileActivities(deployTargetFile, true);
+        }
+      }
+      setWorkflowStep((prev) => Math.max(prev, 2));
     } catch (error: unknown) {
       console.error('Chat error:', error);
       message.error(error instanceof Error ? error.message : 'Failed to get response');
@@ -995,32 +2117,336 @@ const AdminPage: React.FC = () => {
   const datasetContent = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Stats Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-        <Card style={{ background: colourToken.primary, border: `1px solid #3a3d4a`, borderRadius: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
+        <Card className="dashboard-stat-card" style={{ background: colourToken.primary, border: '1px solid #3a3d4a', borderRadius: '12px' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: colourToken.pink, marginBottom: '8px' }}>
-              {stats?.total_files || 0}
+            <FileTextOutlined style={{ fontSize: '22px', color: colourToken.pink, marginBottom: '6px' }} />
+            <div style={{ fontSize: '26px', fontWeight: 'bold', color: colourToken.pink, marginBottom: '4px' }}>
+              {totalFilesCount}
             </div>
-            <Text style={{ color: colourToken.gray }}>Total Files</Text>
+            <Text style={{ color: colourToken.gray, fontSize: '12px' }}>Total Files</Text>
           </div>
         </Card>
-        <Card style={{ background: colourToken.primary, border: `1px solid #3a3d4a`, borderRadius: '12px' }}>
+        <Card className="dashboard-stat-card" style={{ background: colourToken.primary, border: '1px solid #3a3d4a', borderRadius: '12px' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: colourToken.pink, marginBottom: '8px' }}>
+            <CheckCircleOutlined style={{ fontSize: '22px', color: '#52c41a', marginBottom: '6px' }} />
+            <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#52c41a', marginBottom: '4px' }}>
+              {enabledCount}
+            </div>
+            <Text style={{ color: colourToken.gray, fontSize: '12px' }}>Active Files</Text>
+          </div>
+        </Card>
+        <Card className="dashboard-stat-card" style={{ background: colourToken.primary, border: '1px solid #3a3d4a', borderRadius: '12px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <WarningOutlined style={{ fontSize: '22px', color: '#faad14', marginBottom: '6px' }} />
+            <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#faad14', marginBottom: '4px' }}>
+              {needsParsingCount}
+            </div>
+            <Text style={{ color: colourToken.gray, fontSize: '12px' }}>Needs Parsing</Text>
+          </div>
+        </Card>
+        {failedCount > 0 && (
+          <Card className="dashboard-stat-card" style={{ background: colourToken.primary, border: '1px solid #ff4d4f33', borderRadius: '12px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <CloseCircleOutlined style={{ fontSize: '22px', color: '#ff4d4f', marginBottom: '6px' }} />
+              <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#ff4d4f', marginBottom: '4px' }}>
+                {failedCount}
+              </div>
+              <Text style={{ color: colourToken.gray, fontSize: '12px' }}>Failed</Text>
+            </div>
+          </Card>
+        )}
+        <Card className="dashboard-stat-card" style={{ background: colourToken.primary, border: '1px solid #3a3d4a', borderRadius: '12px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <DatabaseOutlined style={{ fontSize: '22px', color: '#1890ff', marginBottom: '6px' }} />
+            <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#1890ff', marginBottom: '4px' }}>
               {stats?.total_chunks || 0}
             </div>
-            <Text style={{ color: colourToken.gray }}>Total Chunks</Text>
-          </div>
-        </Card>
-        <Card style={{ background: colourToken.primary, border: `1px solid #3a3d4a`, borderRadius: '12px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 'bold', color: colourToken.pink, marginBottom: '8px' }}>
-              {stats?.total_pages || 0}
+            <Text style={{ color: colourToken.gray, fontSize: '12px' }}>Total Chunks</Text>
+            <div style={{ fontSize: '11px', color: '#ababab', marginTop: '2px' }}>
+              ~{avgChunksPerFile} avg/file
             </div>
-            <Text style={{ color: colourToken.gray }}>Total Pages</Text>
           </div>
         </Card>
+        {parsingCount > 0 && (
+          <Card className="dashboard-stat-card" style={{ background: colourToken.primary, border: '1px solid #1890ff33', borderRadius: '12px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <CloudUploadOutlined style={{ fontSize: '22px', color: '#1890ff', marginBottom: '6px' }} />
+              <div style={{ fontSize: '26px', fontWeight: 'bold', color: '#1890ff', marginBottom: '4px' }}>
+                {parsingCount}
+              </div>
+              <Text style={{ color: colourToken.gray, fontSize: '12px' }}>Processing</Text>
+            </div>
+          </Card>
+        )}
       </div>
+
+      <Card className="workflow-card" style={{ background: colourToken.primary, border: '1px solid #3a3d4a', borderRadius: '12px' }}>
+        <div className="workflow-header">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Title level={5} style={{ margin: 0, color: colourToken.white }}>Upload → Parse → Test → Deploy</Title>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+            <Space>
+              <Select
+                placeholder="Deploy target file"
+                style={{ minWidth: 280 }}
+                value={deployTargetFile || undefined}
+                onChange={(value) => setDeployTargetFile(value)}
+                options={files.map((file) => ({ label: file.name, value: file.name }))}
+                showSearch
+                optionFilterProp="label"
+              />
+              <Button
+                type="primary"
+                size="small"
+                disabled={!canModifyKnowledgeBase}
+                onClick={async () => {
+                  if (!canModifyKnowledgeBase) {
+                    message.warning('Viewer role cannot deploy files');
+                    return;
+                  }
+                  if (!deployTargetFile) {
+                    message.warning('Select a target file to deploy');
+                    return;
+                  }
+                  const targetRecord = files.find((file) => file.name === deployTargetFile);
+                  if (!targetRecord) {
+                    message.warning('Selected file no longer exists. Please choose another file.');
+                    setDeployTargetFile(null);
+                    return;
+                  }
+                  await toggleDeployState(targetRecord, true);
+                }}
+                style={{ background: colourToken.pink, borderColor: colourToken.pink }}
+              >
+                Deploy
+              </Button>
+            </Space>
+          </div>
+        </div>
+        {deployTargetFile && (() => {
+          const fileRecord = files.find((file) => file.name === deployTargetFile);
+          const rawStatus = (statusMap[deployTargetFile]?.status || '').toLowerCase();
+          let currentStatus = 'uploaded';
+          if (fileRecord && fileRecord.enabled === false) {
+            currentStatus = 'pending';
+          } else if (deployedFiles[deployTargetFile]) {
+            currentStatus = 'deployed';
+          } else if (workflowStep >= 2) {
+            currentStatus = 'tested';
+          } else if (rawStatus === 'completed' || Number(fileRecord?.chunk_number || 0) > 0) {
+            currentStatus = 'parsed';
+          }
+
+          return (
+            <Tag color="green" style={{ fontSize: '15px', padding: '4px 10px', width: 'fit-content', marginBottom: 10 }}>
+              {deployTargetFile.split('/').pop()} • {currentStatus}
+            </Tag>
+          );
+        })()}
+        <Steps
+          current={workflowStep}
+          items={[
+            { title: 'Upload' },
+            { title: 'Parse' },
+            { title: 'Test' },
+            { title: 'Deploy' },
+          ]}
+        />
+      </Card>
+
+      <Card className="power-features-card" style={{ background: colourToken.primary, border: '1px solid #3a3d4a', borderRadius: '12px' }}>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Space>
+              <Title level={5} style={{ margin: 0, color: colourToken.white }}>Configuration</Title>
+              <Tooltip
+                title={(
+                  <div style={{ maxWidth: 360 }}>
+                    <div><strong>Configuration Help</strong></div>
+                    <div>Auto Parse: parse immediately after upload.</div>
+                    <div>Reranker: retrieval strategy (`Embedding` faster, `Cross-Encoder` more precise).</div>
+                    <div>Chunk Size/Overlap: how documents are split for embeddings.</div>
+                    <div>Similarity: minimum match threshold for retrieval.</div>
+                    <div>Vector Weight: balance semantic vector vs full-text score.</div>
+                    <div>Top N: number of chunks used in context.</div>
+                    <div>Multi-turn optimization: improves follow-up continuity across messages.</div>
+                    <div>System Prompt: global instruction used for answers.</div>
+                  </div>
+                )}
+              >
+                <Button type="text" size="small" icon={<QuestionCircleOutlined />} />
+              </Tooltip>
+              {hasUnsavedConfig && <Tag color="gold">Unsaved changes</Tag>}
+            </Space>
+            <Space>
+              <Button size="small" onClick={resetConfigurationDefaults}>Reset to Defaults</Button>
+              <Button size="small" type="primary" onClick={saveAllConfiguration}>Save All</Button>
+            </Space>
+          </div>
+          <div className="power-features-grid">
+            <div>
+              <Text strong>Ingestion</Text>
+              <div className="power-feature-row">
+                <Tooltip title="If enabled, uploaded files are parsed immediately; otherwise they stay uploaded-only until manual parse.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Auto Parse</Text>
+                </Tooltip>
+                <Switch checked={autoParseAfterUpload} onChange={setAutoParseAfterUpload} />
+                <Tooltip title="Retrieval reranking strategy. Embedding-based is faster; Cross-Encoder is usually more accurate.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Reranker</Text>
+                </Tooltip>
+                <Select
+                  style={{ minWidth: 190 }}
+                  value={rerankerStrategy}
+                  onChange={handleRerankerStrategyChange}
+                  options={[
+                    { label: 'Embedding-Based', value: 'embedding-based' },
+                    { label: 'Cross-Encoder', value: 'cross-encoder' },
+                  ]}
+                />
+              </div>
+              <div className="power-feature-row" style={{ marginTop: 8 }}>
+                <Tooltip title="Approximate characters per chunk before embedding.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Chunk Size</Text>
+                </Tooltip>
+                <InputNumber
+                  min={100}
+                  max={4000}
+                  step={50}
+                  value={chunkSize}
+                  onChange={(value) => {
+                    const nextValue = Number(value);
+                    if (!Number.isFinite(nextValue)) return;
+                    const bounded = Math.max(100, Math.min(4000, Math.round(nextValue)));
+                    setChunkSize(bounded);
+                    setChunkOverlap((prev) => Math.min(prev, bounded - 1));
+                  }}
+                  disabled={!canModifyKnowledgeBase}
+                  style={{ width: 100 }}
+                />
+                <Tooltip title="Characters shared between neighboring chunks to preserve context continuity.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Overlap</Text>
+                </Tooltip>
+                <InputNumber
+                  min={0}
+                  max={Math.max(0, chunkSize - 1)}
+                  step={10}
+                  value={chunkOverlap}
+                  onChange={(value) => {
+                    const nextValue = Number(value);
+                    if (!Number.isFinite(nextValue)) return;
+                    const bounded = Math.max(0, Math.min(Math.max(0, chunkSize - 1), Math.round(nextValue)));
+                    setChunkOverlap(bounded);
+                  }}
+                  disabled={!canModifyKnowledgeBase}
+                  style={{ width: 90 }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Text strong>Retrieval (RAG)</Text>
+              <div className="power-feature-row">
+                <Tooltip title="Minimum similarity score to accept chunk candidates.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Similarity</Text>
+                </Tooltip>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={globalChatSettings.similarityThreshold}
+                  onChange={(value) => setGlobalChatSettings((prev) => ({ ...prev, similarityThreshold: Number(value) }))}
+                  style={{ width: 180 }}
+                />
+                <Tag color="blue">{globalChatSettings.similarityThreshold.toFixed(2)}</Tag>
+              </div>
+              <div className="power-feature-row" style={{ marginTop: 8 }}>
+                <Tooltip title="How much semantic embedding score contributes vs full-text signal.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Vector Weight</Text>
+                </Tooltip>
+                <Slider
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={globalChatSettings.vectorWeight}
+                  onChange={(value) => setGlobalChatSettings((prev) => ({ ...prev, vectorWeight: Number(value) }))}
+                  style={{ width: 160 }}
+                />
+                <Tag color="cyan">v {globalChatSettings.vectorWeight.toFixed(2)}</Tag>
+                <Tag color="purple">ft {(1 - globalChatSettings.vectorWeight).toFixed(2)}</Tag>
+                <Tooltip title="Number of retrieved chunks to keep for answer context.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Top N</Text>
+                </Tooltip>
+                <InputNumber
+                  min={1}
+                  max={20}
+                  step={1}
+                  value={globalChatSettings.topN}
+                  onChange={(value) => {
+                    const nextValue = Number(value);
+                    if (!Number.isFinite(nextValue)) return;
+                    setGlobalChatSettings((prev) => ({ ...prev, topN: Math.max(1, Math.min(20, Math.round(nextValue))) }));
+                  }}
+                  style={{ width: 78 }}
+                />
+              </div>
+              <div className="power-feature-row" style={{ marginTop: 8 }}>
+                <Tooltip title="When enabled, follow-up queries are optimized with prior conversation context.">
+                  <Text type="secondary" style={{ cursor: 'help' }}>Multi-turn optimization</Text>
+                </Tooltip>
+                <Switch
+                  checked={globalChatSettings.multiTurnOptimization}
+                  onChange={(checked) => setGlobalChatSettings((prev) => ({ ...prev, multiTurnOptimization: checked }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <Tooltip title="Global instruction guiding style and behavior of generated responses.">
+              <Text strong style={{ cursor: 'help' }}>System Prompt</Text>
+            </Tooltip>
+            <Input.TextArea
+              rows={4}
+              value={globalChatSettings.systemPrompt}
+              onChange={(e) => setGlobalChatSettings((prev) => ({ ...prev, systemPrompt: e.target.value }))}
+            />
+          </div>
+        </Space>
+      </Card>
+
+      <Card className="power-features-card" style={{ background: colourToken.primary, border: '1px solid #3a3d4a', borderRadius: '12px' }}>
+        <div className="power-features-grid">
+          <div>
+            <Text strong>Smart Chunk Suggestions</Text>
+            <div className="power-feature-row">
+              <Text type="secondary">Chunk Size</Text>
+              <Tag color="blue">{chunkSize}</Tag>
+              <Text type="secondary">Overlap</Text>
+              <Tag color="purple">{chunkOverlap}</Tag>
+              <Text type="secondary">Model</Text>
+              <Tag color="green">all-MiniLM-L6-v2</Tag>
+            </div>
+          </div>
+          <div>
+            <Text strong>Knowledge Collections</Text>
+            <div className="power-feature-row">
+              <Tag color="magenta">Culture/Kathakali</Tag>
+              <Tag color="magenta">Culture/Mudras</Tag>
+            </div>
+          </div>
+          <div>
+            <Text strong>Access Control</Text>
+            <div className="power-feature-row">
+              <Tag color="red">You are {currentKbRoleLabel}</Tag>
+              {currentKbRoleActions.map((action) => (
+                <Tag key={`action-${action}`}>{action}</Tag>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Main Content Card */}
       <Card style={{ 
@@ -1029,6 +2455,27 @@ const AdminPage: React.FC = () => {
         borderRadius: '12px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
       }}>
+        {(() => {
+          const filteredFiles = files
+            .filter((f) => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .filter((f) => (folderFilter ? f.name.startsWith(`${folderFilter}/`) : true))
+            .filter((f) => {
+              if (fileStatusFilter === 'enabled') return f.enabled;
+              if (fileStatusFilter === 'disabled') return !f.enabled;
+              return true;
+            })
+            .filter((f) => {
+              const status = statusMap[f.name]?.status;
+              if (parseStatusFilter === 'parsed') return status === 'completed';
+              if (parseStatusFilter === 'processing') return status === 'processing';
+              if (parseStatusFilter === 'failed') return status === 'failed';
+              if (parseStatusFilter === 'not_parsed') return !status || status === 'queued';
+              return true;
+            })
+            .filter((f) => !pendingDeleteNames.includes(f.name));
+
+          return (
+            <>
         {/* Header with Title and Actions */}
         <div style={{ 
           display: 'flex', 
@@ -1052,7 +2499,10 @@ const AdminPage: React.FC = () => {
               prefix={<SearchOutlined />}
               allowClear
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPagination((prev) => ({ ...prev, current: 1 }));
+              }}
               style={{
                 background: colourToken.darkGray,
                 borderColor: '#3a3d4a',
@@ -1076,8 +2526,9 @@ const AdminPage: React.FC = () => {
               <Popconfirm
                 title={`Delete folder "${folderFilter}"? This removes its files.`}
                 onConfirm={() => handleDeleteFolder(folderFilter)}
+                disabled={!canModifyKnowledgeBase}
               >
-                <Button danger size="small">
+                <Button danger size="small" disabled={!canModifyKnowledgeBase}>
                   Delete Folder
                 </Button>
               </Popconfirm>
@@ -1110,6 +2561,22 @@ const AdminPage: React.FC = () => {
                 Filter
               </Button>
             </Dropdown>
+            <Select
+              placeholder="Parse Status"
+              style={{ width: 160 }}
+              value={parseStatusFilter}
+              onChange={(val) => {
+                setParseStatusFilter(val);
+                setPagination((prev) => ({ ...prev, current: 1 }));
+              }}
+              options={[
+                { label: 'All Parse States', value: 'all' },
+                { label: 'Parsed', value: 'parsed' },
+                { label: 'Processing', value: 'processing' },
+                { label: 'Failed', value: 'failed' },
+                { label: 'Not Parsed', value: 'not_parsed' },
+              ]}
+            />
             {folderPrefix && (
               <Tag closable onClose={() => setFolderPrefix('')} color="magenta">
                 {folderPrefix}
@@ -1123,19 +2590,27 @@ const AdminPage: React.FC = () => {
               <Button 
                 type="primary"
                 icon={<PlusOutlined />}
+                disabled={!canModifyKnowledgeBase}
                 style={{ background: colourToken.pink, borderColor: colourToken.pink }}
               >
                 Add File
               </Button>
             </Dropdown>
+            <Button
+              onClick={() => {
+                setActiveTab('chat');
+                setWorkflowStep((prev) => Math.max(prev, 2));
+              }}
+            >
+              Test Now
+            </Button>
           </Space>
         </div>
-
         {/* Ingest job progress */}
-        {Object.keys(ingestJobs).length > 0 && (
+        {activeIngestJobs.length > 0 && (
           <Card size="small" style={{ marginBottom: '16px', background: '#2f303a', borderColor: '#3a3d4a' }}>
             <Space direction="vertical" style={{ width: '100%' }}>
-              {Object.entries(ingestJobs).map(([jobId, job]) => {
+              {activeIngestJobs.map(([jobId, job]) => {
                 let statusColor = 'blue';
                 if (job.status === 'completed') statusColor = 'green';
                 else if (job.status === 'failed') statusColor = 'red';
@@ -1157,57 +2632,52 @@ const AdminPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Bulk Actions Bar */}
         <Spin spinning={loading}>
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            marginBottom: '16px',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            paddingBottom: '12px',
-            borderBottom: `1px solid #3a3d4a`
-          }}>
-            <Button
-              icon={<PlayCircleOutlined />}
-              disabled={!selectedRowKeys.length}
-              loading={bulkLoading}
-              onClick={() => runBulk('Started parsing', selectedRowKeys.map((key) => parseRequest(key as string)))}
-              size="small"
-              style={{ background: selectedRowKeys.length ? colourToken.pink : undefined, borderColor: colourToken.pink }}
-            >
-              Parse
-            </Button>
-            <Button
-              disabled={!selectedRowKeys.length}
-              loading={bulkLoading}
-              onClick={() => runBulk('Enabled', selectedRowKeys.map((key) => postEnable(key as string, true)))}
-              size="small"
-            >
-              Enable
-            </Button>
-            <Button
-              disabled={!selectedRowKeys.length}
-              loading={bulkLoading}
-              onClick={() => runBulk('Disabled', selectedRowKeys.map((key) => postEnable(key as string, false)))}
-              size="small"
-            >
-              Disable
-            </Button>
-            <Button
-              icon={<DeleteOutlined />}
-              danger
-              disabled={!selectedRowKeys.length}
-              loading={bulkLoading}
-              size="small"
-              style={{ background: selectedRowKeys.length ? colourToken.pink : undefined, borderColor: colourToken.pink }}
-              onClick={() => {
-                setDeleteTarget(null);
-                setDeleteModalOpen(true);
-              }}
-            >
-              Delete
-            </Button>
+          {selectedRowKeys.length > 0 && (
+            <div className="sticky-bulk-toolbar">
+              <Button
+                icon={<PlayCircleOutlined />}
+                loading={bulkLoading}
+                onClick={() => runBulk('Started parsing', selectedRowKeys.map((key) => parseRequest(key as string)))}
+                size="small"
+                style={{ background: colourToken.pink, borderColor: colourToken.pink }}
+              >
+                Parse
+              </Button>
+              <Button
+                loading={bulkLoading}
+                onClick={() => runBulk('Enabled', selectedRowKeys.map((key) => postEnable(key as string, true)))}
+                size="small"
+              >
+                Enable
+              </Button>
+              <Button
+                loading={bulkLoading}
+                onClick={() => runBulk('Disabled', selectedRowKeys.map((key) => postEnable(key as string, false)))}
+                size="small"
+              >
+                Disable
+              </Button>
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                loading={bulkLoading}
+                size="small"
+                style={{ background: colourToken.pink, borderColor: colourToken.pink, color: '#fff' }}
+                onClick={() => {
+                  setDeleteTarget(null);
+                  setDeleteModalOpen(true);
+                }}
+              >
+                Delete
+              </Button>
+              <div className="bulk-selected-count">
+                <Text style={{ color: colourToken.pink, fontWeight: 'bold' }}>
+                  {selectedRowKeys.length} selected
+                </Text>
+              </div>
+            </div>
+          )}
             <Modal
               title={deleteTarget ? 'Delete file?' : 'Delete selected files?'}
               open={deleteModalOpen}
@@ -1227,56 +2697,70 @@ const AdminPage: React.FC = () => {
                   : `Are you sure you want to delete the selected ${selectedRowKeys.length} file(s)?`}
               </p>
             </Modal>
-            {selectedRowKeys.length > 0 && (
-              <div style={{ marginLeft: 'auto' }}>
-                <Text style={{ color: colourToken.pink, fontWeight: 'bold' }}>
-                  {selectedRowKeys.length} selected
-                </Text>
-              </div>
-            )}  
-          </div>
 
           {/* Files Table */}
-          <Table
-            columns={fileColumns.filter((col) => col.key !== 'chunk_number')}
-            dataSource={files
-              .filter((f) => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
-              .filter((f) => (folderFilter ? f.name.startsWith(`${folderFilter}/`) : true))
-              .filter((f) => {
-                if (fileStatusFilter === 'enabled') return f.enabled;
-                if (fileStatusFilter === 'disabled') return !f.enabled;
-                return true;
-              })
-            }
-            rowKey={(row) => row.name}
-            rowSelection={{
-              selectedRowKeys,
-              onChange: (keys) => setSelectedRowKeys(keys),
-            }}
-            pagination={{
-              current: pagination.current,
-              pageSize: pagination.pageSize,
-              total: files
-                .filter((f) => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                .filter((f) => (folderFilter ? f.name.startsWith(`${folderFilter}/`) : true))
-                .filter((f) => {
-                  if (fileStatusFilter === 'enabled') return f.enabled;
-                  if (fileStatusFilter === 'disabled') return !f.enabled;
-                  return true;
-                })
-                .length,
-              showSizeChanger: true,
-              pageSizeOptions: ['10', '20', '50', '100'],
-              onChange: (current, pageSize) => setPagination({ current, pageSize }),
-              showTotal: (total) => `Total ${total} files`,
-            }}
-            locale={{ emptyText: 'No documents uploaded yet' }}
-            scroll={{ x: true }}
-            style={{ 
-              color: colourToken.white,
-            }}
-          />
+          <div
+            className={`kb-table-drop-target ${isTableDragActive ? 'drag-active' : ''}`}
+            onDragEnter={handleTableDragEnter}
+            onDragOver={handleTableDragOver}
+            onDragLeave={handleTableDragLeave}
+            onDrop={handleTableDrop}
+          >
+            <Table
+              columns={fileColumns.filter((col) => col.key !== 'chunk_number')}
+              dataSource={filteredFiles}
+              rowKey={(row) => row.name}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys),
+              }}
+              pagination={{
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: filteredFiles.length,
+                showSizeChanger: true,
+                pageSizeOptions: ['10', '20', '50', '100'],
+                onChange: (current, pageSize) => setPagination({ current, pageSize }),
+                showTotal: (total) => `Total ${total} files`,
+              }}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={(
+                      <div>
+                        <div style={{ fontWeight: 600 }}>📂 No files yet</div>
+                        <div>Upload your first knowledge document</div>
+                      </div>
+                    )}
+                  >
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => setUploadModalOpen(true)}
+                      style={{ background: colourToken.pink, borderColor: colourToken.pink }}
+                    >
+                      Add File
+                    </Button>
+                  </Empty>
+                ),
+              }}
+              scroll={{ x: true }}
+              style={{ 
+                color: colourToken.white,
+              }}
+            />
+            {isTableDragActive && (
+              <div className="kb-table-drop-overlay">
+                <InboxOutlined />
+                <span>Drop PDF file to upload</span>
+              </div>
+            )}
+          </div>
         </Spin>
+            </>
+          );
+        })()}
       </Card>
     </div>
   );
@@ -1309,7 +2793,32 @@ const AdminPage: React.FC = () => {
           padding: '24px'
         }}
       >
-        <Title level={4} style={{ marginBottom: '16px', color: colourToken.white, flexShrink: 0 }}>Test RAG Responses</Title>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexShrink: 0 }}>
+          <Title level={4} style={{ margin: 0, color: colourToken.white }}>Test RAG Responses</Title>
+          <Space>
+            <Select
+              value={selectedKnowledgeSource}
+              options={knowledgeSourceOptions}
+              onChange={setSelectedKnowledgeSource}
+              style={{ minWidth: 260 }}
+              placeholder="Select knowledge source"
+            />
+            {chatMessages.length > 0 && (
+              <Button
+                icon={<DeleteOutlined />}
+                size="small"
+                danger
+                onClick={() => {
+                  setChatMessages([]);
+                  sessionStorage.removeItem('adminChatHistory');
+                }}
+                style={{ color: colourToken.white }}
+              >
+                Clear Chat
+              </Button>
+            )}
+          </Space>
+        </div>
         
         {/* Chat Messages */}
         <div className="chat-messages">
@@ -1318,7 +2827,20 @@ const AdminPage: React.FC = () => {
               <Text style={{ color: '#ababab' }}>No messages yet. Start typing below!</Text>
             </div>
           ) : (
-            chatMessages.map((msg) => (
+            chatMessages.map((msg) => {
+              const timestampExact = new Date(msg.timestamp).toLocaleString('en-SG', {
+                timeZone: 'Asia/Singapore',
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+              });
+              const timestampLabel = formatRelativeTime(msg.timestamp);
+
+              return (
               <div
                 key={msg.id}
                 className={msg.role === 'user' ? 'chat-row chat-row-user' : 'chat-row chat-row-assistant'}
@@ -1329,26 +2851,101 @@ const AdminPage: React.FC = () => {
                       className={msg.role === 'user' ? 'chat-text-user' : 'chat-text-assistant'}
                       style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word', margin: 0 }}
                     >
-                      {msg.content}
+                      {msg.role === 'assistant' ? (
+                        <FormattedText content={msg.content} />
+                      ) : (
+                        msg.content
+                      )}
                     </div>
                   </div>
+                  <Tooltip title={timestampExact}>
+                    <Text className={msg.role === 'user' ? 'chat-timestamp chat-timestamp-user' : 'chat-timestamp chat-timestamp-assistant'}>
+                      {timestampLabel}
+                    </Text>
+                  </Tooltip>
                   {/* Citations section for assistant messages - now at bottom */}
                   {msg.role === 'assistant' && msg.citations && msg.citations.length > 0 && (
                     <div className="chat-citations">
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                         <Text style={{ fontSize: '11px', color: '#ababab', fontWeight: 'bold' }}>Sources:</Text>
-                        {msg.citations.map((citation) => (
-                          <Tag key={citation.id} color="blue" style={{ fontSize: '10px', margin: 0 }}>
-                            [{citation.id}] {citation.source.split('/').pop()}
-                            {citation.page && ` P${citation.page}`}
-                          </Tag>
-                        ))}
+                        {msg.citations.map((citation) => {
+                          const fileName = citation.source;
+                          const displayName = fileName.split('/').pop();
+                          return (
+                            <Tag 
+                              key={citation.id} 
+                              color="blue" 
+                              style={{ fontSize: '10px', margin: 0, cursor: 'pointer' }}
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('adminToken');
+                                  const res = await fetch(
+                                    `${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/pdf`,
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  );
+                                  if (!res.ok) throw new Error('PDF not found');
+                                  const blob = await res.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = displayName || 'document.pdf';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                  window.URL.revokeObjectURL(url);
+                                } catch {
+                                  message.error('Failed to download source PDF');
+                                }
+                              }}
+                            >
+                              <DownloadOutlined style={{ marginRight: 4 }} />
+                              [{citation.id}] {displayName}
+                              {citation.page && ` P${citation.page}`}
+                            </Tag>
+                          );
+                        })}
                       </div>
+                    </div>
+                  )}
+                  {msg.role === 'assistant' && msg.retrieval && (
+                    <div className="chat-retrieval-debug">
+                      <div className="chat-retrieval-summary">
+                        <Text style={{ fontSize: '11px', color: '#ababab' }}>
+                          Source: {msg.retrieval.knowledgeSource} • Strategy: {msg.retrieval.strategy}
+                        </Text>
+                        <Text style={{ fontSize: '11px', color: '#ababab' }}>
+                          Retrieved: {msg.retrieval.totalRetrieved} • Used: {msg.retrieval.usedInContext} • Tokens: ~{msg.retrieval.contextTokens}
+                        </Text>
+                        <Tag color="cyan">
+                          Confidence: {msg.retrieval.confidenceAvg !== null ? `${(msg.retrieval.confidenceAvg * 100).toFixed(1)}%` : 'N/A'}
+                        </Tag>
+                      </div>
+                      {msg.retrieval.chunks?.length > 0 && (
+                        <div className="chat-retrieval-chunks">
+                          {msg.retrieval.chunks.slice(0, 3).map((chunk) => (
+                            <Card key={`retrieval-${msg.id}-${chunk.id}`} size="small" className="retrieval-chunk-card">
+                              <div className="retrieval-chunk-head">
+                                <Text strong style={{ color: '#e0e0e0' }}>{chunk.source}</Text>
+                                <Space>
+                                  {chunk.page && <Tag>Page {chunk.page}</Tag>}
+                                  {chunk.combinedScore !== null && (
+                                    <Tag color="blue">Score {(chunk.combinedScore * 100).toFixed(1)}%</Tag>
+                                  )}
+                                </Space>
+                              </div>
+                              <Text style={{ color: '#d0d0d0', fontSize: '12px' }}>
+                                {renderHighlightedText(chunk.excerpt, chunk.matchedTerms || [])}
+                              </Text>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
-            ))
+              );
+            })
           )}
           {chatLoading && (
             <div className="chat-spinner">
@@ -1404,6 +3001,195 @@ const AdminPage: React.FC = () => {
     ),
   };
 
+  const userManagementTab = {
+    key: 'users',
+    label: <span style={{ color: '#e0e0e0' }}><TeamOutlined style={{ color: '#e0e0e0' }} /> User Management</span>,
+    children: (
+      <Card
+        style={{
+          background: colourToken.primary,
+          border: '1px solid #3a3d4a',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: 12, flexWrap: 'wrap' }}>
+          <Title level={4} style={{ margin: 0, color: colourToken.white }}>Users & Roles</Title>
+          <Space>
+            <Input
+              placeholder="Search users..."
+              allowClear
+              prefix={<SearchOutlined />}
+              value={userSearchTerm}
+              onChange={(e) => setUserSearchTerm(e.target.value)}
+              style={{ width: 260 }}
+            />
+            <Button icon={<ReloadOutlined />} onClick={fetchManagedUsers} loading={usersLoading}>
+              Refresh
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setCreateUserModalOpen(true)}
+              style={{ background: colourToken.pink, borderColor: colourToken.pink }}
+            >
+              Add User
+            </Button>
+          </Space>
+        </div>
+
+        <Table
+          rowKey="id"
+          loading={usersLoading}
+          dataSource={filteredManagedUsers}
+          columns={[
+            {
+              title: 'Username',
+              dataIndex: 'username',
+              key: 'username',
+              render: (value: string) => <Text strong>{value}</Text>,
+            },
+            {
+              title: 'Email',
+              dataIndex: 'email',
+              key: 'email',
+            },
+            {
+              title: 'Role',
+              dataIndex: 'role',
+              key: 'role',
+              render: (value: ManagedUserRole, record: ManagedUser) => (
+                <Select
+                  value={value}
+                  style={{ width: 140 }}
+                  loading={!!roleUpdating[record.id]}
+                  onChange={(nextRole) => handleUpdateUserRole(record.id, nextRole as ManagedUserRole)}
+                  options={[
+                    { value: 'admin', label: 'Admin' },
+                    { value: 'editor', label: 'Editor' },
+                    { value: 'viewer', label: 'Viewer' },
+                  ]}
+                />
+              ),
+            },
+            {
+              title: 'Created',
+              dataIndex: 'created_at',
+              key: 'created_at',
+              render: (value: string) => (value ? new Date(value).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }) : '-'),
+            },
+            {
+              title: 'Updated',
+              dataIndex: 'updated_at',
+              key: 'updated_at',
+              render: (value: string) => (value ? new Date(value).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }) : '-'),
+            },
+            {
+              title: 'Actions',
+              key: 'actions',
+              render: (_: unknown, record: ManagedUser) => (
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setResetTargetUser(record);
+                    adminResetPasswordForm.resetFields();
+                  }}
+                >
+                  Reset Password
+                </Button>
+              ),
+            },
+          ]}
+          pagination={{ pageSize: 10, showSizeChanger: true }}
+        />
+
+        <Modal
+          title="Create User"
+          open={createUserModalOpen}
+          onCancel={() => {
+            setCreateUserModalOpen(false);
+            userForm.resetFields();
+          }}
+          onOk={handleCreateManagedUser}
+          okText="Create"
+          confirmLoading={userCreating}
+        >
+          <Form
+            form={userForm}
+            layout="vertical"
+            initialValues={{ role: 'viewer' }}
+          >
+            <Form.Item
+              label="Username"
+              name="username"
+              rules={[{ required: true, message: 'Please enter username' }]}
+            >
+              <Input placeholder="viewer01" />
+            </Form.Item>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[
+                { required: true, message: 'Please enter email' },
+                { type: 'email', message: 'Please enter a valid email' },
+              ]}
+            >
+              <Input placeholder="user@example.com" />
+            </Form.Item>
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[
+                { required: true, message: 'Please enter password' },
+                { min: 6, message: 'Password must be at least 6 characters' },
+              ]}
+            >
+              <Input.Password placeholder="At least 6 characters" />
+            </Form.Item>
+            <Form.Item
+              label="Role"
+              name="role"
+              rules={[{ required: true, message: 'Please choose role' }]}
+            >
+              <Select
+                options={[
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'editor', label: 'Editor' },
+                  { value: 'viewer', label: 'Viewer' },
+                ]}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Modal
+          title={resetTargetUser ? `Reset Password: ${resetTargetUser.username}` : 'Reset Password'}
+          open={!!resetTargetUser}
+          onCancel={() => {
+            setResetTargetUser(null);
+            adminResetPasswordForm.resetFields();
+          }}
+          onOk={handleAdminResetUserPassword}
+          okText="Reset"
+          confirmLoading={adminResetPasswordLoading}
+        >
+          <Form form={adminResetPasswordForm} layout="vertical">
+            <Form.Item
+              label="New Password"
+              name="newPassword"
+              rules={[
+                { required: true, message: 'Please enter new password' },
+                { min: 6, message: 'Password must be at least 6 characters' },
+              ]}
+            >
+              <Input.Password placeholder="At least 6 characters" />
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Card>
+    ),
+  };
+
   return (
     <ConfigProvider
       theme={{
@@ -1424,36 +3210,247 @@ const AdminPage: React.FC = () => {
       <Header
         style={{
           background: colourToken.primary,
-          padding: '0 24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          padding: 0,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Title level={3} style={{ margin: 0, color: colourToken.white }}>
-            Knowledge Base Manager
-          </Title>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Title level={3} style={{ margin: 0, color: colourToken.white }}>
+              Knowledge Base Manager
+            </Title>
+            <Tag color="blue">{currentKbUserRole}</Tag>
+          </div>
+          <Space>
+            <Button onClick={() => setChangePasswordModalOpen(true)}>
+              Change Password
+            </Button>
+            <Button
+              type="primary"
+              danger
+              icon={<LogoutOutlined />}
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </Space>
         </div>
-        <Button
-          type="primary"
-          danger
-          icon={<LogoutOutlined />}
-          onClick={handleLogout}
-        >
-          Logout
-        </Button>
       </Header>
 
       <Content style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', width: '100%', minHeight: 'calc(100vh - 64px)' }}>
         <Tabs
-          items={[knowledgeBaseTab, chatTab]}
+          items={currentKbUserRole === 'admin' ? [knowledgeBaseTab, chatTab, userManagementTab] : [knowledgeBaseTab, chatTab]}
           size="large"
           activeKey={activeTab}
           onChange={(k) => setActiveTab(k)}
           defaultActiveKey="kb"
         />
+
+        <Modal
+          title="Change My Password"
+          open={changePasswordModalOpen}
+          onCancel={() => {
+            setChangePasswordModalOpen(false);
+            changePasswordForm.resetFields();
+          }}
+          onOk={handleChangeOwnPassword}
+          okText="Update"
+          confirmLoading={changingOwnPassword}
+        >
+          <Form form={changePasswordForm} layout="vertical">
+            <Form.Item
+              label="Current Password"
+              name="currentPassword"
+              rules={[{ required: true, message: 'Please enter current password' }]}
+            >
+              <Input.Password />
+            </Form.Item>
+            <Form.Item
+              label="New Password"
+              name="newPassword"
+              rules={[
+                { required: true, message: 'Please enter new password' },
+                { min: 6, message: 'Password must be at least 6 characters' },
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+            <Form.Item
+              label="Confirm New Password"
+              name="confirmNewPassword"
+              dependencies={['newPassword']}
+              rules={[
+                { required: true, message: 'Please confirm new password' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('newPassword') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('Passwords do not match'));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Drawer
+          className="file-details-drawer"
+          title={detailsFile ? <span className="file-details-title">File Details: {detailsFile.name}</span> : 'File Details'}
+          placement="right"
+          width={460}
+          open={detailsDrawerOpen}
+          onClose={() => setDetailsDrawerOpen(false)}
+        >
+          {detailsFile ? (
+            <Space direction="vertical" style={{ width: '100%' }} size="middle">
+              <Card size="small">
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Text><strong>Name:</strong> <span className="file-details-file-name">{detailsFile.name}</span></Text>
+                  <Text><strong>Uploaded:</strong> {new Date(detailsFile.upload_date).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' })}</Text>
+                  <Text><strong>Chunks:</strong> {detailsFile.chunk_number}</Text>
+                  <Text><strong>Enabled:</strong> {detailsFile.enabled ? 'Yes' : 'No'}</Text>
+                  <Text><strong>Parse Status:</strong> {statusMap[detailsFile.name]?.status || 'Not parsed'}</Text>
+                </Space>
+              </Card>
+              <Card
+                size="small"
+                title="AI File Summary"
+                extra={(
+                  <Button
+                    size="small"
+                    loading={!!summaryLoading[detailsFile.name]}
+                    onClick={() => fetchFileSummary(detailsFile.name, true)}
+                  >
+                    Regenerate
+                  </Button>
+                )}
+              >
+                {summaryLoading[detailsFile.name] && !fileSummaries[detailsFile.name] ? (
+                  <Spin size="small" />
+                ) : (
+                  <Space direction="vertical" style={{ width: '100%' }} size="small">
+                    <Text>
+                      <strong>Executive Summary:</strong>{' '}
+                      {fileSummaries[detailsFile.name]?.summary?.executiveSummary || 'No summary available yet.'}
+                    </Text>
+
+                    <div>
+                      <Text strong>Key Concepts</Text>
+                      <div style={{ marginTop: 4 }}>
+                        {(fileSummaries[detailsFile.name]?.summary?.keyConcepts || []).map((item) => (
+                          <Tag key={`kc-${detailsFile.name}-${item}`} color="blue">{item}</Tag>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Text strong>Topics Covered</Text>
+                      <div style={{ marginTop: 4 }}>
+                        {(fileSummaries[detailsFile.name]?.summary?.topicsCovered || []).map((item) => (
+                          <Tag key={`tp-${detailsFile.name}-${item}`} color="purple">{item}</Tag>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Text strong>Suggested Tags</Text>
+                      <div style={{ marginTop: 4 }}>
+                        {(fileSummaries[detailsFile.name]?.summary?.suggestedTags || []).map((item) => (
+                          <Tag key={`tg-${detailsFile.name}-${item}`} color="magenta">{item}</Tag>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Text strong>Example Questions</Text>
+                      <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                        {(fileSummaries[detailsFile.name]?.summary?.exampleQuestions || []).map((item) => (
+                          <li key={`q-${detailsFile.name}-${item}`}>
+                            <Text>{item}</Text>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {fileSummaries[detailsFile.name] && (
+                      <Text type="secondary" style={{ fontSize: 12 }}>
+                        Sampling: {fileSummaries[detailsFile.name].samplingStrategy} • Sampled chunk IDs: {fileSummaries[detailsFile.name].sampledChunkIds.join(', ')}
+                      </Text>
+                    )}
+                  </Space>
+                )}
+              </Card>
+              <Card
+                size="small"
+                title="Activity History"
+                extra={(
+                  <Button
+                    size="small"
+                    loading={!!activityLoading[detailsFile.name]}
+                    onClick={() => fetchFileActivities(detailsFile.name, true)}
+                  >
+                    Refresh
+                  </Button>
+                )}
+              >
+                {activityLoading[detailsFile.name] && !fileActivities[detailsFile.name] ? (
+                  <Spin size="small" />
+                ) : (
+                  <Space direction="vertical" style={{ width: '100%' }} size="small">
+                    {(fileActivities[detailsFile.name] || []).length === 0 ? (
+                      <Text type="secondary">No activity history recorded yet.</Text>
+                    ) : (
+                      (fileActivities[detailsFile.name] || []).map((activity) => {
+                        const eventTime = new Date(activity.created_at).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' });
+                        const label = activity.action === 'reembed' ? 'reparse' : activity.action;
+                        return (
+                          <Card key={`activity-${activity.id}`} size="small" style={{ background: '#1f212a', borderColor: '#3a3d4a' }}>
+                            <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                              <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
+                                <Space wrap>
+                                  <Tag color="purple">{label}</Tag>
+                                  <Text type="secondary" style={{ fontSize: 12 }}>{eventTime}</Text>
+                                </Space>
+                              </Space>
+                              {activity.metadata && Object.keys(activity.metadata).length > 0 && (
+                                <Text style={{ fontSize: 12, color: '#c8ccd8' }}>
+                                  {Object.entries(activity.metadata)
+                                    .map(([key, value]) => `${key}: ${String(value)}`)
+                                    .join(' • ')}
+                                </Text>
+                              )}
+                            </Space>
+                          </Card>
+                        );
+                      })
+                    )}
+                  </Space>
+                )}
+              </Card>
+              <Space wrap>
+                <Button icon={<PlayCircleOutlined />} disabled={!canModifyKnowledgeBase} onClick={() => startParse(detailsFile.name)}>Parse</Button>
+                <Button icon={<FileTextOutlined />} onClick={() => handleViewChunks(detailsFile.name)}>View Chunks</Button>
+                <Button icon={<DownloadOutlined />} onClick={() => downloadFile(detailsFile.name)}>Download</Button>
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled={!canModifyKnowledgeBase}
+                  onClick={() => {
+                    setDeleteTarget(detailsFile.name);
+                    setDeleteModalOpen(true);
+                  }}
+                >
+                  Delete
+                </Button>
+              </Space>
+            </Space>
+          ) : (
+            <Text type="secondary">Select a file to view details.</Text>
+          )}
+        </Drawer>
 
         <Modal
           open={uploadModalOpen}
@@ -1492,6 +3489,9 @@ const AdminPage: React.FC = () => {
                     <Form.Item label="Author (optional)" name="author">
                       <Input placeholder="Author name" />
                     </Form.Item>
+                    <Form.Item label="Auto Parse After Upload">
+                      <Switch checked={autoParseAfterUpload} onChange={setAutoParseAfterUpload} />
+                    </Form.Item>
                     <Space>
                       <Button onClick={() => setUploadModalOpen(false)}>Cancel</Button>
                       <Button type="primary" htmlType="submit" loading={uploading}>
@@ -1510,10 +3510,11 @@ const AdminPage: React.FC = () => {
                       <Input placeholder="Defaults to selected file name" />
                     </Form.Item>
                     
-                    <Form.Item label="Reranking Strategy" name="rerankerStrategy">
+                    <Form.Item label="Reranking Strategy">
                       <Select 
                         value={rerankerStrategy}
                         onChange={handleRerankerStrategyChange}
+                        placeholder="Choose reranking strategy"
                         options={[
                           { label: 'Embedding-Based (Faster, uses existing embeddings)', value: 'embedding-based' },
                           { label: 'Cross-Encoder (More accurate, separate model)', value: 'cross-encoder' }
@@ -1525,6 +3526,7 @@ const AdminPage: React.FC = () => {
                       <Upload
                         accept=".pdf"
                         maxCount={1}
+                        fileList={pdfFile ? [{ uid: '-1', name: pdfFile.name, status: 'done' }] : []}
                         beforeUpload={(file) => {
                           const maxSizeBytes = 15 * 1024 * 1024;
                           if (file.size > maxSizeBytes) {
@@ -1546,6 +3548,9 @@ const AdminPage: React.FC = () => {
                           {pdfFile.name}
                         </Text>
                       )}
+                    </Form.Item>
+                    <Form.Item label="Auto Parse After Upload">
+                      <Switch checked={autoParseAfterUpload} onChange={setAutoParseAfterUpload} />
                     </Form.Item>
                     <Space>
                       <Button onClick={() => setUploadModalOpen(false)}>Cancel</Button>
@@ -1666,7 +3671,7 @@ const AdminPage: React.FC = () => {
                   />
                   <Button
                     size="small"
-                    disabled={selectedChunkIds.length === 0}
+                    disabled={!canModifyKnowledgeBase || selectedChunkIds.length === 0}
                     onClick={handleBulkEnable}
                     style={{ background: selectedChunkIds.length ? '#c81f58' : undefined, borderColor: '#c81f58', color: '#ffffff' }}
                   >
@@ -1674,7 +3679,7 @@ const AdminPage: React.FC = () => {
                   </Button>
                   <Button
                     size="small"
-                    disabled={selectedChunkIds.length === 0}
+                    disabled={!canModifyKnowledgeBase || selectedChunkIds.length === 0}
                     onClick={handleBulkDisable}
                     style={{ background: selectedChunkIds.length ? '#ff4d4f' : undefined, borderColor: '#ff4d4f', color: '#ffffff' }}
                   >
@@ -1683,13 +3688,13 @@ const AdminPage: React.FC = () => {
                   <Popconfirm
                     title={`Delete ${selectedChunkIds.length} chunks?`}
                     onConfirm={handleBulkDeleteChunks}
-                    disabled={selectedChunkIds.length === 0}
+                    disabled={!canModifyKnowledgeBase || selectedChunkIds.length === 0}
                   >
                     <Button
                       size="small"
                       danger
                       icon={<DeleteOutlined />}
-                      disabled={selectedChunkIds.length === 0}
+                      disabled={!canModifyKnowledgeBase || selectedChunkIds.length === 0}
                       style={{ color: '#ffffff' }}
                     >
                       Delete
@@ -1725,12 +3730,14 @@ const AdminPage: React.FC = () => {
                         <Switch
                           size="small"
                           checked={chunk.enabled !== false}
+                          disabled={!canModifyKnowledgeBase}
                           onChange={(checked) => handleToggleChunkEnable(chunk.id, checked)}
                         />
                         <Button
                           type="text"
                           size="small"
                           icon={<EditOutlined />}
+                          disabled={!canModifyKnowledgeBase}
                           onClick={() => handleEditChunk(chunk)}
                         />
                       </Space>
@@ -1772,6 +3779,7 @@ const AdminPage: React.FC = () => {
           open={editChunkModalOpen}
           onCancel={() => setEditChunkModalOpen(false)}
           onOk={handleSaveChunk}
+          okButtonProps={{ disabled: !canModifyKnowledgeBase }}
           title="Edit Chunk"
           width={700}
         >
@@ -1807,7 +3815,7 @@ const AdminPage: React.FC = () => {
               <Select mode="tags" placeholder="Add tags" />
             </Form.Item>
             <Form.Item label="Enabled" name="enabled" valuePropName="checked">
-              <Switch />
+              <Switch disabled={!canModifyKnowledgeBase} />
             </Form.Item>
           </Form>
         </Modal>

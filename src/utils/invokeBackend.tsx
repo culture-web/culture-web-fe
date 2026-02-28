@@ -289,6 +289,32 @@ export const sendChatQuery = async (
       formData.append('imageAnalysis', imageAnalysis);
     }
 
+    try {
+      const rawSettings = localStorage.getItem('globalChatSettings');
+      if (rawSettings) {
+        const parsed = JSON.parse(rawSettings);
+        if (typeof parsed?.systemPrompt === 'string' && parsed.systemPrompt.trim().length > 0) {
+          formData.append('systemPrompt', parsed.systemPrompt);
+        }
+        if (Number.isFinite(Number(parsed?.similarityThreshold))) {
+          formData.append('similarityThreshold', String(parsed.similarityThreshold));
+        }
+        if (Number.isFinite(Number(parsed?.vectorWeight))) {
+          const vectorWeight = Math.max(0, Math.min(1, Number(parsed.vectorWeight)));
+          formData.append('vectorWeight', String(vectorWeight));
+          formData.append('fullTextWeight', String(Number((1 - vectorWeight).toFixed(2))));
+        }
+        if (Number.isFinite(Number(parsed?.topN))) {
+          formData.append('topN', String(parsed.topN));
+        }
+        if (typeof parsed?.multiTurnOptimization === 'boolean') {
+          formData.append('multiTurnOptimization', String(parsed.multiTurnOptimization));
+        }
+      }
+    } catch (settingsError) {
+      console.warn('Failed to apply global chat settings:', settingsError);
+    }
+
     // Add Supabase JWT token if user is authenticated
     const headers: Record<string, string> = {};
     try {
@@ -316,11 +342,19 @@ export const sendChatQuery = async (
     }
 
     const data = await response.json();
-    
-    // Parse the new response format with nested structure
-    // The actual ChatbotResponse is in data.data.response (wrapped in success response)
-    const chatbotResponse = data.data?.response || data.response;
-    
+
+    // Parse multiple backend response shapes:
+    // 1) data.data.response (wrapped)
+    // 2) data.response (legacy wrapper)
+    // 3) data (direct structured payload from /kathakali/chat-mudras)
+    const directStructured = data
+      && typeof data === 'object'
+      && (data.shortAnswer !== undefined
+        || data.reasoning !== undefined
+        || Array.isArray(data.sections)
+        || Array.isArray(data.tables));
+    const chatbotResponse = data.data?.response || data.response || (directStructured ? data : null);
+
     if (chatbotResponse && chatbotResponse.shortAnswer !== undefined) {
       const result = {
         shortAnswer: chatbotResponse.shortAnswer || 'I apologize, but I couldn\'t generate a response at the moment.',

@@ -254,10 +254,21 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudra
       });
     }, [uploadedImages]);
 
-  // Clear chat history when component unmounts (navigation or tab close)
-  useEffect(() => () => {
-      sessionStorage.removeItem('chatHistory');
-    }, []);
+  // Save chat messages to sessionStorage whenever they change (for quiz generation)
+  useEffect(() => {
+    // Filter out the initial greeting message and convert to {role, content} format
+    const chatMessages = messages
+      .filter(msg => msg.id !== '1') // Skip initial AI greeting
+      .map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.type === 'user' ? msg.content : msg.response?.shortAnswer || '',
+      }))
+      .filter(msg => msg.content); // Remove empty messages
+
+    if (chatMessages.length > 0) {
+      sessionStorage.setItem('chatHistory', JSON.stringify(chatMessages));
+    }
+  }, [messages]);
 
   const handleImageUpload = async (file: File) => {
     const imageId = Date.now().toString();

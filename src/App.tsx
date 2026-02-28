@@ -8,6 +8,7 @@ import KathakaliPage from 'pages/CulturesKathakaliPage';
 import KootiyattamPage from 'pages/CulturesKootiyattamPage';
 import SignInPage from 'pages/SignInPage';
 import SignUpPage from 'pages/SignUpPage';
+import ResetPasswordPage from 'pages/ResetPasswordPage';
 import MudrasPage from 'pages/MudrasPage';
 import AdminPage from 'pages/AdminPage';
 import AdminLoginPage from 'pages/AdminLoginPage';
@@ -43,6 +44,7 @@ function App() {
                 />
                 <Route path="/sign-in" element={<SignInPage />} />
                 <Route path="/sign-up" element={<SignUpPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/learn" element={<MudrasPage />} />
               <Route path="/admin-login" element={<AdminLoginPage />} />
               <Route 
