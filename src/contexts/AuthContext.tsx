@@ -8,6 +8,8 @@ interface AuthContextType extends AuthState {
   signUp: (credentials: SignUpCredentials) => Promise<void>;
   signOut: () => Promise<void>;
   getUserToken: () => Promise<string | null>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  updateOwnPassword: (newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -216,13 +218,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const getUserToken = useCallback(async (): Promise<string | null> => getCurrentUserToken(), []);
 
+  const requestPasswordReset = useCallback(async (email: string): Promise<void> => {
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }, []);
+
+  const updateOwnPassword = useCallback(async (newPassword: string): Promise<void> => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      throw new Error(error.message);
+    }
+  }, []);
+
   const value: AuthContextType = useMemo(() => ({
     ...authState,
     signIn,
     signUp,
     signOut,
     getUserToken,
-  }), [authState, signIn, signUp, signOut, getUserToken]);
+    requestPasswordReset,
+    updateOwnPassword,
+  }), [authState, signIn, signUp, signOut, getUserToken, requestPasswordReset, updateOwnPassword]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Form, message, Typography, Flex } from 'antd';
+import { Form, message, Typography, Flex, Modal, Input } from 'antd';
 import { useAuth } from 'contexts/AuthContext';
 import { SignInCredentials } from 'types/interface';
 import Button from 'components/Common/Button';
@@ -9,9 +9,12 @@ import { useStyleToken } from 'themeStyles';
 const { Title, Text } = Typography;
 
 const SignInPage: React.FC = () => {
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, requestPasswordReset } = useAuth();
   const navigate = useNavigate();
   const styleToken = useStyleToken();
+  const [forgotModalOpen, setForgotModalOpen] = React.useState(false);
+  const [resetEmail, setResetEmail] = React.useState('');
+  const [resetSubmitting, setResetSubmitting] = React.useState(false);
 
   const handleSubmit = async (values: SignInCredentials) => {
     try {
@@ -30,6 +33,24 @@ const SignInPage: React.FC = () => {
       } else {
         message.error(errorMessage);
       }
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetEmail) {
+      message.error('Please enter your email');
+      return;
+    }
+    setResetSubmitting(true);
+    try {
+      await requestPasswordReset(resetEmail.trim());
+      message.success('Password reset email sent. Please check your inbox.');
+      setForgotModalOpen(false);
+      setResetEmail('');
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : 'Failed to send reset email');
+    } finally {
+      setResetSubmitting(false);
     }
   };
 
@@ -91,6 +112,12 @@ const SignInPage: React.FC = () => {
             Sign In
           </Button>
         </Form.Item>
+
+        <Form.Item style={{ marginBottom: 0 }}>
+          <Button type="default" width="100%" onClick={() => setForgotModalOpen(true)}>
+            Forgot Password?
+          </Button>
+        </Form.Item>
       </Form>
 
       <Text style={{ ...styleToken.subtitleTextStyle, marginTop: '1rem' }}>
@@ -99,6 +126,25 @@ const SignInPage: React.FC = () => {
           Sign up here
         </Link>
       </Text>
+
+      <Modal
+        title="Reset Password"
+        open={forgotModalOpen}
+        onCancel={() => {
+          setForgotModalOpen(false);
+          setResetEmail('');
+        }}
+        onOk={handleForgotPassword}
+        okText="Send Email"
+        confirmLoading={resetSubmitting}
+      >
+        <Input
+          placeholder="Enter your account email"
+          type="email"
+          value={resetEmail}
+          onChange={(e) => setResetEmail(e.target.value)}
+        />
+      </Modal>
     </Flex>
   );
 };

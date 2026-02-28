@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
-  Collapse, 
   Table, 
   Tag, 
   Space, 
@@ -12,14 +11,11 @@ import {
   InfoCircleOutlined, 
   ExclamationCircleOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined,
-  DownOutlined,
-  RightOutlined
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import FormattedText from 'components/Common/FormattedText';
 import { ChatbotResponse } from '../types';
 
-const { Panel } = Collapse;
 const { Text, Title } = Typography;
 
 interface ChatbotResponseDisplayProps {
@@ -68,16 +64,10 @@ const TableCellRenderer: React.FC<{ text: string }> = ({ text }) => (
   <FormattedText content={text || ''} />
 );
 
-const ExpandIcon: React.FC<{ isActive?: boolean }> = ({ isActive }) => (
-  isActive ? <DownOutlined /> : <RightOutlined />
-);
-
 const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({ 
   response, 
   style 
 }) => {
-  const [activeKeys, setActiveKeys] = useState<string[]>([]);
-
   const hasAdditionalContent = response.reasoning || 
     response.sections.length > 0 || 
     response.tables.length > 0;
@@ -94,34 +84,20 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
       {hasAdditionalContent && (
         <>
           <Divider style={{ margin: '12px 0' }} />
-          
-          <Collapse
-            ghost
-            size="small"
-            activeKey={activeKeys}
-            onChange={(keys) => setActiveKeys(Array.isArray(keys) ? keys : [keys])}
-            expandIcon={ExpandIcon}
+          <div
             style={{ 
-              background: 'transparent',
-              border: 'none'
+              border: '1px solid #c81f58',
+              borderRadius: '8px',
+              marginBottom: '8px',
+              padding: '12px'
             }}
           >
-            <Panel
-              header={
-                <Space>
-                  <Text strong style={{ color: '#c81f58', fontSize: '14px' }}>
-                    View detailed explanation
-                  </Text>
-                </Space>
-              }
-              key="details"
-              style={{ 
-                border: `1px solid #c81f58`,
-                borderRadius: '8px',
-                marginBottom: '8px'
-              }}
-            >
-              <div style={{ padding: '8px 0' }}>
+            <Space style={{ marginBottom: '8px' }}>
+              <Text strong style={{ color: '#c81f58', fontSize: '14px' }}>
+                Detailed explanation
+              </Text>
+            </Space>
+            <div style={{ padding: '8px 0' }}>
                 {/* Reasoning Section */}
                 {response.reasoning && (
                   <Card 
@@ -218,9 +194,8 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                     </Space>
                   </div>
                 )}
-              </div>
-            </Panel>
-          </Collapse>
+            </div>
+          </div>
         </>
       )}
     </div>
