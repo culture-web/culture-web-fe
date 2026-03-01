@@ -170,7 +170,7 @@ const QuizPage: React.FC = () => {
         <Button
           type="primary"
           onClick={() => generateQuiz(ORNAMENT)}
-          style={{ marginLeft: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
+          style={{ marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
         >
           Generate Quiz For Ornaments
         </Button>
