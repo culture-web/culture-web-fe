@@ -361,6 +361,8 @@ export const sendChatQuery = async (
         reasoning: chatbotResponse.reasoning || null,
         sections: chatbotResponse.sections || [],
         tables: chatbotResponse.tables || [],
+        citations: chatbotResponse.citations || [],
+        retrieval: chatbotResponse.retrieval || null,
         metadata: chatbotResponse.metadata || {
           hasStructuredContent: false,
           responseLength: 0,
@@ -377,6 +379,8 @@ export const sendChatQuery = async (
         reasoning: null,
         sections: [],
         tables: [],
+        citations: Array.isArray(data?.citations) ? data.citations : [],
+        retrieval: data?.retrieval || null,
         metadata: {
           hasStructuredContent: false,
           responseLength: typeof responseText === 'string' ? responseText.length : 0,
@@ -392,6 +396,8 @@ export const sendChatQuery = async (
       reasoning: null,
       sections: [],
       tables: [],
+      citations: [],
+      retrieval: null,
       metadata: {
         hasStructuredContent: false,
         responseLength: 0,
