@@ -1,5 +1,5 @@
 import { Typography, Flex, Button } from 'antd';
-import { LeftOutlined } from '@ant-design/icons';
+import { LeftOutlined, TrophyOutlined } from '@ant-design/icons';
 import { useStyleToken } from 'themeStyles';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -21,13 +21,13 @@ function OrnamentsPage() {
   const characterTitle = characterConfig.title;
   const { imageStyle, svgStyle } = characterConfig;
 
-
   const [hovered, setHovered] = useState<string | null>(null);
   const ornament = ornamentsData.find((o: Ornament) => o.name === hovered);
 
   return (
     <Flex vertical align="center">
       <Title style={styleToken.pageHeadingTextStyle}>{characterTitle}</Title>
+      
       <div style={{ position: 'relative', maxWidth: 1000, margin: '-100px auto', background: 'transparent' }}>
         <img
           src={characterImage}
@@ -86,6 +86,8 @@ function OrnamentsPage() {
           </div>
         )}
       </div>
+
+      {/* Back Button - Bottom Left */}
       <Button
         icon={<LeftOutlined />}
         onClick={() => navigate('/cultures/kathakali/ornaments')}
@@ -95,7 +97,31 @@ function OrnamentsPage() {
           left: 20,
           zIndex: 1000
         }}
-      />
+      >
+        Back
+      </Button>
+
+      {/* Test Yourself Button - Bottom Right */}
+      <Button
+        type="primary"
+        icon={<TrophyOutlined />}
+        onClick={() => navigate(`/cultures/kathakali/ornaments/${characterId}/game`)}
+        style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          zIndex: 1000,
+          background: '#52c41a',
+          borderColor: '#52c41a',
+          fontSize: '16px',
+          height: '40px',
+          paddingLeft: '20px',
+          paddingRight: '20px',
+          boxShadow: '0 4px 12px rgba(82, 196, 26, 0.4)'
+        }}
+      >
+        Test Yourself
+      </Button>
     </Flex>
   );
 }

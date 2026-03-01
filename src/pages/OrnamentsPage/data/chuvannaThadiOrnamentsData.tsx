@@ -27,6 +27,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: kuttichamaram,
+    labelPosition: { x: 450, y: 320 } 
   },
   {
     id: 'thoda1',
@@ -68,6 +69,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: chuttituni,
+    labelPosition: { x: 400, y: 500 } 
   },
   {
     id: 'chutti',
@@ -83,6 +85,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: thadichutti,
+    labelPosition: { x: 360, y: 560 } 
   },
     {
     id: 'chutti2',
@@ -153,6 +156,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: kuralaram,
+    labelPosition: { x: 400, y: 940 } 
   },
   
   {
@@ -167,6 +171,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 210, y: 1050 } 
   },
   {
     id: 'Uttariya2',
@@ -180,6 +185,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 600, y: 1050 } 
   },
   
   {
@@ -211,7 +217,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
   {
     id: 'Pattu Val1',
     name: 'Pattu Val',
-    pathD: 'M 363.2 706.0 L 332.2 817.0 L 311.2 910.0 L 294.2 966.0 L 283.2 1015.0 L 278.2 1099.0 L 277.2 1191.0 L 267.2 1220.0 L 251.2 1231.0 L 239.2 1275.0 L 317.2 1276.0 L 307.2 1247.0 L 298.2 1235.0 L 302.2 1221.0 L 295.2 1199.0 L 327.2 965.0 L 325.2 909.0 L 376.2 712.0 L 363.2 705.0 Z',
+    pathD: 'M 244.8 951.4 L 224.8 949.4 L 65.8 1004.4 L 10.8 1054.4 L 21.8 1020.4 L 59.8 962.4 L 86.8 928.4 L 220.8 879.4 L 246.8 950.4 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -221,11 +227,12 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 150, y: 940 } 
   },
   {
     id: 'Pattu Val2',
     name: 'Pattu Val',
-    pathD: 'M 497.2 719.0 L 496.2 922.0 L 491.2 1018.0 L 514.2 1203.0 L 505.2 1230.0 L 513.2 1250.0 L 501.2 1253.0 L 484.2 1274.0 L 484.2 1274.0 L 571.2 1276.0 L 571.2 1266.0 L 556.2 1245.0 L 544.2 1239.0 L 531.2 1198.0 L 530.2 1134.0 L 514.2 1006.0 L 515.2 926.0 L 515.2 716.0 L 500.2 722.0 Z',
+    pathD: 'M 722.8 885.4 L 756.8 995.4 L 828.8 1028.4 L 898.8 1100.4 L 932.8 1150.4 L 926.8 1127.4 L 895.8 1068.4 L 849.8 991.4 L 802.8 934.4 L 761.8 902.4 L 722.8 884.4 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -235,6 +242,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 800, y: 980 } 
   },
   
   {
@@ -250,6 +258,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: patiarannanam,
+    labelPosition: { x: 330, y: 1100 } 
   },
   
   {

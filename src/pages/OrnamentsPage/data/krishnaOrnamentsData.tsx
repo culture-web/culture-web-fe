@@ -135,6 +135,7 @@ const krishnaOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 600, y: 680 } 
   },
 
   {
@@ -204,6 +205,7 @@ const krishnaOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 80, y: 760 } 
   },
   {
     id: 'Pattu Val2',

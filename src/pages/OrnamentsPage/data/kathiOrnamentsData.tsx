@@ -102,6 +102,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: kathichutti,
+    labelPosition: { x: 365, y: 500 } 
   },
   {
     id: 'chutti2',
@@ -243,6 +244,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 300, y: 1000 } 
   },
   {
     id: 'Uttariya2',
@@ -256,6 +258,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: uttariya,
+    labelPosition: { x: 650, y: 980 } 
   },
   {
     id: 'Kastakatakam1',
@@ -314,7 +317,7 @@ const kathiOrnamentsData: Ornament[] = [
   {
     id: 'Pattu Val1',
     name: 'Pattu Val',
-    pathD: 'M 377.2 537.6 L 371.2 571.6 L 357.2 616.6 L 341.2 707.6 L 355.2 711.6 L 355.2 695.6 L 373.2 684.6 L 380.2 689.6 L 399.2 588.6 L 395.2 574.6 L 394.2 550.6 L 379.2 535.6 Z',
+    pathD: 'M 288.8 790.4 L 228.8 809.4 L 181.8 834.4 L 65.8 942.4 L 46.8 997.4 L 74.8 1012.4 L 92.8 1035.4 L 115.8 1001.4 L 334.8 828.4 L 288.8 791.4 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -324,11 +327,12 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 200, y: 880 } 
   },
   {
     id: 'Pattu Val2',
     name: 'Pattu Val',
-    pathD: 'M 491.2 534.8 L 475.2 549.8 L 466.2 584.8 L 472.2 595.8 L 471.2 616.8 L 458.2 623.8 L 455.2 635.8 L 441.2 630.8 L 403.2 637.8 L 394.2 657.8 L 417.2 694.8 L 420.2 754.8 L 437.2 790.8 L 461.2 817.8 L 476.2 799.8 L 490.2 754.8 L 503.2 684.8 L 515.2 684.8 L 522.2 677.8 L 534.2 647.8 L 508.2 619.8 L 492.2 615.8 L 490.2 533.8 Z',
+    pathD: 'M 548.8 769.4 L 557.8 822.4 L 601.8 844.4 L 774.8 965.4 L 882.8 1066.4 L 860.8 989.4 L 848.8 945.4 L 824.8 895.4 L 759.8 829.4 L 719.8 812.4 L 675.8 804.4 L 639.8 781.4 L 548.8 768.4 Z',
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
@@ -338,6 +342,7 @@ const kathiOrnamentsData: Ornament[] = [
       </ul>
     ),
     image: pattuval,
+    labelPosition: { x: 720, y: 860 } 
   },
   {
     id: 'Patiarannanam',

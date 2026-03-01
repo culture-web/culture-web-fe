@@ -6,11 +6,13 @@ import BACKEND_URI from 'configs/env.config';
 import { QuizCategory, QuizItem } from './quizTypes';
 import quizCharacter from './characterData';
 import quizExpression from './expressionData';
+import quizOrnament from './ornamentData';
 
 const { Text, Title } = Typography;
 
 const EXPRESSION = 'Expression';
 const CHARACTER = 'Character';
+const ORNAMENT = 'Ornament';
 
 const generateQuizFromDataset = (dataset: QuizCategory[]): QuizItem[] => {
   const quizItems = dataset.map((category) => {
@@ -39,12 +41,14 @@ const QuizPage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [loadingQuiz, setLoadingQuiz] = useState<boolean>(false);
 
-  const generateQuiz = (type: 'Expression' | 'Character') => {
+  const generateQuiz = (type: 'Expression' | 'Character' | 'Ornament') => {
     let dataset: QuizCategory[] = [];
     if (type === 'Character') {
       dataset = quizCharacter;
     } else if (type === 'Expression') {
       dataset = quizExpression;
+    } else if (type === 'Ornament') {
+      dataset = quizOrnament;
     }
 
     const generatedQuiz = generateQuizFromDataset(dataset);
@@ -162,6 +166,14 @@ const QuizPage: React.FC = () => {
         >
           Generate Quiz For Expressions
         </Button>
+        
+        <Button
+          type="primary"
+          onClick={() => generateQuiz(ORNAMENT)}
+          style={{ marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
+        >
+          Generate Quiz For Ornaments
+        </Button>
         <Button 
           type="primary" 
           style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a' }} 
@@ -174,8 +186,14 @@ const QuizPage: React.FC = () => {
 
       <div>
         {quizItems.map((item) => (
-          <Card key={item.id} style={{ marginBottom: 16, backgroundColor: colourToken.lightGray }}>
-            <p style={{ fontSize: '1rem', fontWeight: 'bold' }}>{item.question}</p>
+          <Card 
+            key={item.id} 
+            style={{ 
+              marginBottom: 16, 
+              backgroundColor: colourToken.lightGray
+            }}
+          >
+            <p style={{ fontSize: '2rem' }}>{item.question}</p>
             <div
               style={{
                 // Switch to column layout on mobile, row on desktop
@@ -204,7 +222,7 @@ const QuizPage: React.FC = () => {
                   style={{ display: 'flex', flexDirection: 'column' }}
                 >
                   {item.options.map((option) => (
-                    <Radio key={option} value={option} style={{ marginBottom: 8 }}>
+                    <Radio key={option} value={option} style={{ marginBottom: 8, fontSize: '1.5rem' }}>
                       {option}
                     </Radio>
                   ))}

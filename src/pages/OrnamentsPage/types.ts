@@ -6,4 +6,5 @@ export interface Ornament {
   tooltipPosition: { top: string; left: string };
   description: string | React.ReactNode;
   image: string;
+  labelPosition?: { x: number; y: number }; 
 }

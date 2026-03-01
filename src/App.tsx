@@ -15,6 +15,7 @@ import AdminLoginPage from 'pages/AdminLoginPage';
 import ProtectedRoute from 'components/Common/ProtectedRoute';
 import OrnamentsPage from 'pages/OrnamentsPage';
 import OrnamentsCharacterListPage from 'pages/OrnamentsCharacterListPage';
+import OrnamentGamePage from 'pages/OrnamentGame'; 
 import Navbar from 'components/Common/Navbar';
 import DropdownNavbar from 'components/Common/DropdownNavbar';
 import useIsMobile from 'utils/isMobile';
@@ -46,17 +47,19 @@ function App() {
                 <Route path="/sign-up" element={<SignUpPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/learn" element={<MudrasPage />} />
-              <Route path="/admin-login" element={<AdminLoginPage />} />
-              <Route 
-                path="/k-manage-portal" 
-                element={
-                  <ProtectedRoute>
-                    <AdminPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="/cultures/kathakali/ornaments" element={<OrnamentsCharacterListPage />}/>
-              <Route path="/cultures/kathakali/ornaments/:characterId" element={<OrnamentsPage />} />
+                <Route path="/admin-login" element={<AdminLoginPage />} />
+                <Route 
+                  path="/k-manage-portal" 
+                  element={
+                    <ProtectedRoute>
+                      <AdminPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/cultures/kathakali/ornaments" element={<OrnamentsCharacterListPage />}/>
+                <Route path="/cultures/kathakali/ornaments/:characterId" element={<OrnamentsPage />} />              
+                {/* UPDATED: Dynamic route for any character */}
+                <Route path="/cultures/kathakali/ornaments/:characterId/game" element={<OrnamentGamePage />} />
               </Routes>
             </Flex>
           </Flex>
