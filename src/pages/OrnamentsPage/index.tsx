@@ -14,7 +14,8 @@ function OrnamentsPage() {
   const styleToken = useStyleToken();
   const navigate = useNavigate();
 
-  const characterConfig = characterConfigs[characterId!] || characterConfigs['pacha'];
+
+  const characterConfig = characterConfigs[characterId!] || characterConfigs.pacha;
   const ornamentsData = characterConfig.data;
   const characterImage = characterConfig.image;
   const characterTitle = characterConfig.title;

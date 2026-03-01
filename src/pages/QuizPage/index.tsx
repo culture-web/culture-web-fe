@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Card, Image, Radio, message, Typography } from 'antd';
 import { useColourToken, useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
+import BACKEND_URI from 'configs/env.config';
 import { QuizCategory, QuizItem } from './quizTypes';
 import quizCharacter from './characterData';
 import quizExpression from './expressionData';
@@ -38,6 +39,7 @@ const QuizPage: React.FC = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string }>({});
   const [checked, setChecked] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
+  const [loadingQuiz, setLoadingQuiz] = useState<boolean>(false);
 
   const generateQuiz = (type: 'Expression' | 'Character' | 'Ornament') => {
     let dataset: QuizCategory[] = [];
@@ -54,6 +56,73 @@ const QuizPage: React.FC = () => {
     setSelectedAnswers({});
     setChecked(false);
     setScore(0);
+  };
+
+  // Generate quiz from chat learning history
+  const generateQuizFromLearning = async () => {
+    try {
+      setLoadingQuiz(true);
+      
+      // Get chat history from sessionStorage (cleared when tab closes)
+      const chatHistory = sessionStorage.getItem('chatHistory');
+      if (!chatHistory) {
+        message.error('No chat history found. Please chat with the AI first in the Learn tab.');
+        return;
+      }
+
+      const parsedHistory = JSON.parse(chatHistory);
+      if (!Array.isArray(parsedHistory) || parsedHistory.length === 0) {
+        message.error('Chat history is empty. Ask questions in the chat first.');
+        return;
+      }
+
+      // Send to backend to generate quiz
+      const response = await fetch(`${BACKEND_URI}/kathakali/generate-quiz-from-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatHistory: parsedHistory,
+          count: 5, // Generate 5 questions
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate quiz');
+      }
+
+      const data = await response.json();
+      
+      if (!data.questions || data.questions.length === 0) {
+        message.error('No quiz questions could be generated from your chat history.');
+        return;
+      }
+
+      // Transform LLM response to QuizItem format
+      const transformedQuiz: QuizItem[] = data.questions.map((q: { id: number; question: string; options: string[]; correctAnswer: string; explanation: string }) => ({
+        id: q.id,
+        question: q.question,
+        image: '', // No image for LLM-generated quiz
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+      }));
+
+      setQuizItems(transformedQuiz);
+      setSelectedAnswers({});
+      setChecked(false);
+      setScore(0);
+      
+      message.success(`Generated ${transformedQuiz.length} questions from your learning history!`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Error generating quiz from learning:', error);
+      message.error(err.message || 'Failed to generate quiz from chat history');
+    } finally {
+      setLoadingQuiz(false);
+    }
   };
 
   // Handle option change for each quiz item.
@@ -90,7 +159,11 @@ const QuizPage: React.FC = () => {
         >
           Generate Quiz For Characters
         </Button>
-        <Button type="primary" style={{ width: '250px' }} onClick={() => generateQuiz(EXPRESSION)}>
+        <Button 
+          type="primary" 
+          style={{ width: '250px', marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0 }} 
+          onClick={() => generateQuiz(EXPRESSION)}
+        >
           Generate Quiz For Expressions
         </Button>
         
@@ -100,6 +173,14 @@ const QuizPage: React.FC = () => {
           style={{ marginLeft: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
         >
           Generate Quiz For Ornaments
+        </Button>
+        <Button 
+          type="primary" 
+          style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a' }} 
+          onClick={generateQuizFromLearning}
+          loading={loadingQuiz}
+        >
+          Generate from Learning
         </Button>
       </div>
 
@@ -122,16 +203,19 @@ const QuizPage: React.FC = () => {
                 gap: 24,
               }}
             >
-              <Image
-                src={item.image}
-                // Use full width on mobile, fixed size on desktop
-                style={{
-                  width: isMobile ? '100%' : 300,
-                  height: isMobile ? 'auto' : 300,
-                  objectFit: 'cover',
-                }}
-              />
-              <div style={{ width: isMobile ? '100%' : 'auto' }}>
+              {/* Only show image if it exists */}
+              {item.image && (
+                <Image
+                  src={item.image}
+                  // Use full width on mobile, fixed size on desktop
+                  style={{
+                    width: isMobile ? '100%' : 300,
+                    height: isMobile ? 'auto' : 300,
+                    objectFit: 'cover',
+                  }}
+                />
+              )}
+              <div style={{ width: isMobile ? '100%' : 'auto', flex: 1 }}>
                 <Radio.Group
                   onChange={(e) => onOptionChange(item.id, e.target.value)}
                   value={selectedAnswers[item.id]}
@@ -145,13 +229,23 @@ const QuizPage: React.FC = () => {
                 </Radio.Group>
 
                 {checked && (
-                  <div style={{ marginTop: 8 }}>
+                  <div style={{ marginTop: 12, padding: 12, background: colourToken.primary, borderRadius: 8 }}>
                     {selectedAnswers[item.id] === item.correctAnswer ? (
-                      <Text style={{ color: 'green' }}>Correct!</Text>
+                      <Text style={{ color: 'green', fontWeight: 'bold' }}>✓ Correct!</Text>
                     ) : (
-                      <Text style={{ color: 'red' }}>
-                        Incorrect. Correct Answer: {item.correctAnswer}
-                      </Text>
+                      <div>
+                        <Text style={{ color: 'red', fontWeight: 'bold', display: 'block' }}>
+                          ✗ Incorrect. Correct Answer: {item.correctAnswer}
+                        </Text>
+                      </div>
+                    )}
+                    {/* Show explanation if available (from LLM-generated quiz) */}
+                    {item.explanation && (
+                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #3a3d4a' }}>
+                        <Text style={{ color: colourToken.gray, fontSize: '0.9rem' }}>
+                          <strong>Explanation:</strong> {item.explanation}
+                        </Text>
+                      </div>
                     )}
                   </div>
                 )}

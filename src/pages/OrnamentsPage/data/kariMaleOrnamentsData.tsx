@@ -77,7 +77,7 @@ const kariMaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -91,7 +91,7 @@ const kariMaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -189,7 +189,7 @@ const kariMaleOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,
@@ -204,7 +204,7 @@ const kariMaleOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,
@@ -216,7 +216,7 @@ const kariMaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '37%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's belt</li>
+        <li>Men&apos;s belt</li>
         <li>Decorated with gilt foil, plastic jewels and red wool felt</li>
         <li>Tied with white cotton cord</li>
       </ul>

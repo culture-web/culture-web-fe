@@ -6,7 +6,7 @@ import MessageBubble from '../MessageBubble';
 
 const { Text } = Typography;
 
-const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
+const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, onDeleteMessage }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,28 +38,37 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
   return (
     <div style={{ 
       flex: 1, 
-      padding: '20px', 
+      padding: '16px', 
       overflowY: 'auto',
       background: '#fafafa',
+      minHeight: 0,
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} />
-      ))}
-      
-      {isLoading && (
-        <div style={messageStyle}>
-          <Avatar 
-            icon={<RobotOutlined />} 
-            style={{ backgroundColor: '#c81f58', flexShrink: 0 }}
+      <div style={{ flex: 1 }}>
+        {messages.map((message) => (
+          <MessageBubble 
+            key={message.id} 
+            message={message} 
+            onDeleteMessage={onDeleteMessage}
           />
-          <div style={messageBubbleStyle}>
-            <Space>
-              <Spin indicator={<LoadingOutlined spin />} size="small" />
-              <Text>Analyzing and thinking...</Text>
-            </Space>
+        ))}
+        
+        {isLoading && (
+          <div style={messageStyle}>
+            <Avatar 
+              icon={<RobotOutlined />} 
+              style={{ backgroundColor: '#c81f58', flexShrink: 0 }}
+            />
+            <div style={messageBubbleStyle}>
+              <Space>
+                <Spin indicator={<LoadingOutlined spin />} size="small" />
+                <Text>Analyzing and thinking...</Text>
+              </Space>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       
       <div ref={messagesEndRef} />
     </div>

@@ -8,6 +8,12 @@ export default defineConfig({
     testMatch: '**/*.test.ts', // Define the file pattern for test files
     timeout: 60000, // Maximum test time (in milliseconds)
     retries: 2, // Retry failed tests twice
+    webServer: {
+      command: 'npm run dev',
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },    
     use: {
       headless: true, // Run tests in headless mode
       viewport: { width: 1280, height: 720 },

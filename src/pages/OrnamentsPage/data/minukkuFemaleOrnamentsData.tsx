@@ -36,7 +36,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '20%', left: '93%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's headband</li>
+        <li>Women&apos;s headband</li>
         <li>Chain of dangling ornaments</li>
         <li>Red wool with black cotton backing</li>
       </ul>
@@ -50,7 +50,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '20%', left: '93%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's earrings</li>
+        <li>Women&apos;s earrings</li>
         <li>Tied around head with red cotton cord</li>
         <li>Carved wood decorated with gilt foil, plastic silver</li>
       </ul>
@@ -64,7 +64,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '30%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's earrings</li>
+        <li>Women&apos;s earrings</li>
         <li>Tied around head with red cotton cord</li>
         <li>Carved wood decorated with gilt foil, plastic silver</li>
       </ul>
@@ -92,7 +92,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '22%', left: '95%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's Necklace</li>
+        <li>Women&apos;s Necklace</li>
         <li>Many strings of gold colored plastic beads</li>
         <li>Two red wool pompoms</li>
       </ul>
@@ -106,7 +106,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '30%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's breastplate</li>
+        <li>Women&apos;s breastplate</li>
         <li>Red wool felt decorated with gilt foil, wool multicolored tassels, green and red plastic jewels with gilt underneath</li>
         <li>Ties to body with red cotton cord and cotton twill</li>
       </ul>
@@ -120,7 +120,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '27%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's epaulettes</li>
+        <li>Women&apos;s epaulettes</li>
         <li>Carved wood, red wool, gilt foil, green & red plastic jewels, cotton cord</li>
       </ul>
     ),
@@ -133,7 +133,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '27%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's epaulettes</li>
+        <li>Women&apos;s epaulettes</li>
         <li>Carved wood, red wool, gilt foil, green & red plastic jewels, cotton cord</li>
       </ul>
     ),
@@ -146,7 +146,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's Upper Arm Band</li>
+        <li>Women&apos;s Upper Arm Band</li>
         <li>6 ogee domes</li>
         <li>These are slightly mismatched, as if carved by student/apprentice, or combined from two or more existing sets</li>
       </ul>
@@ -160,7 +160,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's Upper Arm Band</li>
+        <li>Women&apos;s Upper Arm Band</li>
         <li>6 ogee domes</li>
         <li>These are slightly mismatched, as if carved by student/apprentice, or combined from two or more existing sets</li>
       </ul>
@@ -174,7 +174,7 @@ const minukkuFemaleOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '37%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Women's belt</li>
+        <li>Women&apos;s belt</li>
         <li>Carved wood, 7 belt pieces, two strings of beads</li>
         <li>Red wool gilt foil, plastic gems, red cotton cord</li>
         <li>Not symmetrical, but balanced</li>

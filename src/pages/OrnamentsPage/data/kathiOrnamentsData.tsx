@@ -169,7 +169,7 @@ const kathiOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -179,11 +179,11 @@ const kathiOrnamentsData: Ornament[] = [
   {
     id: 'Paruttikkaimani2',
     name: 'Paruttikkaimani',
-    pathD: 'M 553.2 673.8 L 567.2 682.8 L 572.2 662.8 L 589.2 638.8 L 623.2 634.8 L 637.2 644.8 L 650.2 636.8 L 641.2 616.8 L 616.2 610.8 L 581.2 622.8 L 559.2 643.8 L 553.2 672.8 Z',
-    tooltipPosition: { top: '32%', left: '88%' },
+    pathD: 'M 587.2 673.8 L 638.2 677.8 L 650.2 644.8 L 636.2 636.8 L 641.2 617.8 L 625.2 616.8 L 614.2 618.8 L 610.2 639.8 L 595.2 652.8 L 588.2 672.8 Z',
+    tooltipPosition: { top: '40%', left: '93%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -225,7 +225,7 @@ const kathiOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '25%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's breastplate</li>
+        <li>Men&apos;s breastplate</li>
         <li>10 pieces carved wood</li>
         <li>Neck bound with stitched cotton tape</li>
       </ul>
@@ -323,7 +323,7 @@ const kathiOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,
@@ -338,7 +338,7 @@ const kathiOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,
@@ -351,7 +351,7 @@ const kathiOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '37%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's belt</li>
+        <li>Men&apos;s belt</li>
         <li>Decorated with gilt foil, plastic jewels and red wool felt</li>
         <li>Tied with white cotton cord</li>
       </ul>

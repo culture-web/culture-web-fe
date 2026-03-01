@@ -1,5 +1,3 @@
-import kireedam from 'assets/images/kathakali-ornaments/kireedam.png';
-import thoda from 'assets/images/kathakali-ornaments/thoda.png';
 import thadichutti from 'assets/images/kathakali-ornaments/thadichutti.png';
 import kazhuttaram from 'assets/images/kathakali-ornaments/kazhuttaram.png';
 import paruttikkaimani from 'assets/images/kathakali-ornaments/paruttikkaimani.png';
@@ -11,6 +9,7 @@ import patiarannanam from 'assets/images/kathakali-ornaments/patiarannanam.png';
 import ottanakku from 'assets/images/kathakali-ornaments/ottanakku.png';
 import chuttituni from 'assets/images/kathakali-ornaments/chuttituni.png';
 import kuttichamaram from 'assets/images/kathakali-ornaments/kuttichamaram.png';
+import thoda from 'assets/images/kathakali-ornaments/thoda.png';
 import type { Ornament } from './types';
 
 
@@ -123,7 +122,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -137,7 +136,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '32%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's Upper Arm Band</li>
+        <li>Men&apos;s Upper Arm Band</li>
         <li>Wooden beads and baubles with gilt foil</li>
         <li>Tied below tolputtu (epaulettes) at bicep with all three strings to outside of arm</li>
       </ul>
@@ -151,7 +150,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '25%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's breastplate</li>
+        <li>Men&apos;s breastplate</li>
         <li>10 pieces carved wood</li>
         <li>Neck bound with stitched cotton tape</li>
       </ul>
@@ -224,7 +223,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,
@@ -239,7 +238,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
       <ul style={{ margin: 0, paddingLeft: 16 }}>
         <li>Side streamers</li>
         <li>Red panne with gold pinstripe, gold brocaded ribbon trims, wool yarn fringe, straight grain cotton saffron binding, red cotton backing</li>
-        <li>Worn over Men's Kathakali Skirt</li>
+        <li>Worn over Men&apos;s Kathakali Skirt</li>
       </ul>
     ),
     image: pattuval,
@@ -253,7 +252,7 @@ const chuvannaThadiOrnamentsData: Ornament[] = [
     tooltipPosition: { top: '37%', left: '88%' },
     description: (
       <ul style={{ margin: 0, paddingLeft: 16 }}>
-        <li>Men's belt</li>
+        <li>Men&apos;s belt</li>
         <li>Decorated with gilt foil, plastic jewels and red wool felt</li>
         <li>Tied with white cotton cord</li>
       </ul>

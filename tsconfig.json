@@ -2,7 +2,15 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "*": ["src/*", "src/types/*"]
+      "*": ["src/*", "src/types/*"],
+      "assets/*": ["src/assets/*"],
+      "components/*": ["src/components/*"],
+      "configs/*": ["src/configs/*"],
+      "contexts/*": ["src/contexts/*"],
+      "pages/*": ["src/pages/*"],
+      "types/*": ["src/types/*"],
+      "utils/*": ["src/utils/*"],
+      "themeStyles": ["src/themeStyles"]
     },
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -12,12 +20,19 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": [
+      "src",
+      "tests", 
+      "vite.config.ts",
+      "playwright.config.ts",
+      ".eslintrc.cjs"
+    ]
 }

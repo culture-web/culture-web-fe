@@ -1,0 +1,29 @@
+{
+  "overrides": [
+    {
+      "files": [
+        "**/OrnamentsCharacterListPage/**",
+        "**/OrnamentsPage/data/**"
+      ],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "warn",
+        "react/no-unescaped-entities": "off"
+      }
+    },
+    {
+      "files": ["**/AdminPage/**"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-use-before-define": "off",
+        "no-restricted-syntax": "off",
+        "no-await-in-loop": "off",
+        "no-continue": "off",
+        "no-plusplus": "off",
+        "no-empty": "warn",
+        "no-nested-ternary": "warn",
+        "react/no-array-index-key": "warn",
+        "consistent-return": "warn"
+      }
+    }
+  ]
+}

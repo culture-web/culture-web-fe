@@ -60,6 +60,50 @@ const navigationBarDefaultLinkStyle = {
   textDecoration: 'none',
 };
 
+const authButtonStyle = {
+  fontSize: '1.2rem',
+  fontWeight: 'bold',
+  padding: '8px 16px',
+  borderRadius: '8px',
+  textDecoration: 'none',
+  transition: 'all 0.3s ease',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minWidth: '80px',
+  height: '40px',
+  border: '2px solid transparent',
+  cursor: 'pointer',
+};
+
+const signInButtonStyle = {
+  ...authButtonStyle,
+  color: colours.pinkLight,
+  borderColor: colours.pinkLight,
+  backgroundColor: 'transparent',
+};
+
+const signInButtonHoverStyle = {
+  ...signInButtonStyle,
+  backgroundColor: colours.pinkLight,
+  color: colours.white,
+  borderColor: colours.pinkLight,
+};
+
+const signUpButtonStyle = {
+  ...authButtonStyle,
+  color: colours.white,
+  backgroundColor: colours.pinkLight,
+  borderColor: colours.pinkLight,
+};
+
+const signUpButtonHoverStyle = {
+  ...signUpButtonStyle,
+  backgroundColor: colours.pink,
+  borderColor: colours.pink,
+  color: colours.white,
+};
+
 const pageHeadingTextStyle = {
   color: colours.white,
   fontSize: '3.5rem',
@@ -179,6 +223,10 @@ export const useStyleToken = () => {
       kathakalAIButtonStyle: navigationBarKathakalAIButtonStyle,
       activeLinkStyle: navigationBarActiveLinkStyle,
       defaultLinkStyle: navigationBarDefaultLinkStyle,
+      signInButtonStyle,
+      signInButtonHoverStyle,
+      signUpButtonStyle,
+      signUpButtonHoverStyle,
     },
     culture: {
       cultureSectionButtonTextStyle,
