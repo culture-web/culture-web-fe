@@ -17,12 +17,27 @@ export interface ChatbotResponseMetadata {
   processingTimestamp: string;
 }
 
+export interface Citation {
+  id: number;
+  source: string;
+  page?: number | null;
+  similarity?: number | null;
+  rerankerScore?: number | null;
+  combinedScore?: number | null;
+  keywordBoost?: number;
+  questionBoost?: number;
+  totalScore?: number | null;
+  originalSimilarity?: number | null;
+}
+
 export interface ChatbotResponse {
   shortAnswer: string;
   reasoning?: string | null;
   sections: ChatbotResponseSection[];
   tables: ChatbotResponseTable[];
   metadata: ChatbotResponseMetadata;
+  citations?: Citation[];
+  retrieval?: Record<string, unknown>;
 }
 
 export interface Message {
