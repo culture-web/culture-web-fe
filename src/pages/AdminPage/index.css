@@ -848,6 +848,25 @@
   border-radius: 2px;
 }
 
+.chat-text-assistant mark,
+.retrieval-chunk-card mark,
+.matched-term-mark {
+  background: #1677ff !important;
+  color: #ffffff !important;
+}
+
+.file-details-action-row {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.file-details-action-row .ant-btn {
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .dataset-layout {
     grid-template-columns: 1fr;

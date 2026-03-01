@@ -1,8 +1,9 @@
 /* eslint-disable no-use-before-define, react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import {
   Layout, Tabs, Button, message, Spin, Card, Popconfirm, Table,
-  Form, Input, Divider, Typography, Switch, Tooltip, Tag, Space, Dropdown, Modal, Upload, Select, Checkbox, ConfigProvider, theme, Progress, Drawer, Empty, Steps, Slider, InputNumber,
+  Form, Input, Divider, Typography, Switch, Tooltip, Tag, Space, Dropdown, Modal, Upload, Select, Checkbox, ConfigProvider, theme, Progress, Drawer, Empty, Steps, Slider, InputNumber, Pagination,
 } from 'antd';
 import {
   LogoutOutlined, DeleteOutlined, ReloadOutlined, UploadOutlined,
@@ -127,6 +128,52 @@ const getAuthHeaders = () => {
   };
 };
 
+const TERMINAL_INGEST_STATUSES = ['completed', 'failed'];
+const TERMINAL_PARSE_STATUSES = ['completed', 'failed'];
+const ACTIVE_PARSE_STATUSES = ['queued', 'running', 'processing', 'parsing', 'ocr', 'embedding', 'uploading'];
+const STATUS_FETCH_MIN_INTERVAL_MS = 1000;
+
+const isIngestJobActive = (status?: string) => {
+  const normalized = String(status || '').toLowerCase();
+  if (!normalized) return false;
+  return !TERMINAL_INGEST_STATUSES.includes(normalized);
+};
+
+const isParseStatusActive = (status?: string, progress?: number) => {
+  const normalized = String(status || '').toLowerCase();
+  if (TERMINAL_PARSE_STATUSES.includes(normalized)) return false;
+  if (ACTIVE_PARSE_STATUSES.includes(normalized)) return true;
+  const numericProgress = Number(progress || 0);
+  return Number.isFinite(numericProgress) && numericProgress > 0 && numericProgress < 100;
+};
+
+const parseOcrProgress = (lastMessage?: string) => {
+  const msg = String(lastMessage || '');
+  if (!msg) return null;
+
+  const pagePattern = /OCR\s+page\s+(\d+)\/(\d+)\s*:\s*(\d+)%/i;
+  const pageMatch = msg.match(pagePattern);
+  if (!pageMatch) return null;
+
+  const currentPage = Math.max(1, Number(pageMatch[1] || 1));
+  const totalPages = Math.max(1, Number(pageMatch[2] || 1));
+  const pagePercent = Math.max(0, Math.min(100, Number(pageMatch[3] || 0)));
+  const overallPercent = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round((((currentPage - 1) + (pagePercent / 100)) / totalPages) * 100),
+    ),
+  );
+
+  return {
+    currentPage,
+    totalPages,
+    pagePercent,
+    overallPercent,
+  };
+};
+
 const AdminPage: React.FC = () => {
   const colourToken = useColourToken();
   const [chatForm] = Form.useForm();
@@ -233,6 +280,7 @@ const AdminPage: React.FC = () => {
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const [fileActivities, setFileActivities] = useState<Record<string, FileActivityRecord[]>>({});
   const [activityLoading, setActivityLoading] = useState<Record<string, boolean>>({});
+  const [activityPageByFile, setActivityPageByFile] = useState<Record<string, number>>({});
   const [timeTick, setTimeTick] = useState<number>(Date.now());
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -246,6 +294,11 @@ const AdminPage: React.FC = () => {
   const [adminResetPasswordLoading, setAdminResetPasswordLoading] = useState(false);
   const pendingDeleteTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const tableDragDepth = useRef<number>(0);
+  const realtimeSocketRef = useRef<Socket | null>(null);
+  const statusInFlightRef = useRef<Record<string, Promise<void>>>({});
+  const statusLastFetchedAtRef = useRef<Record<string, number>>({});
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const [realtimeTransport, setRealtimeTransport] = useState('');
   const navigate = useNavigate();
   const currentKbUserRole = useMemo(() => {
     try {
@@ -459,28 +512,60 @@ const AdminPage: React.FC = () => {
 
   
 
-  async function fetchStatus(fileName: string, options?: { refreshOnTerminal?: boolean }) {
-    try {
-      const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/status`, {
-        headers: getAuthHeaders(),
-        cache: 'no-store',
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      let enteredTerminalState = false;
-      const nextStatus = (data?.status || '').toLowerCase();
-      setStatusMap((prev) => {
-        const prevStatus = (prev[fileName]?.status || '').toLowerCase();
-        enteredTerminalState = ['completed', 'failed'].includes(nextStatus)
-          && !['completed', 'failed'].includes(prevStatus);
-        return { ...prev, [fileName]: data };
-      });
-      if (options?.refreshOnTerminal !== false && enteredTerminalState) {
-        await Promise.all([fetchFiles(), fetchStats()]);
-      }
-    } catch (error) {
-      console.error('Error fetching status:', error);
+  async function fetchStatus(
+    fileName: string,
+    options?: { refreshOnTerminal?: boolean; bypassThrottle?: boolean },
+  ) {
+    const key = String(fileName || '');
+    if (!key) return;
+
+    const existing = statusInFlightRef.current[key];
+    if (existing) {
+      await existing;
+      return;
     }
+
+    const now = Date.now();
+    const lastFetched = statusLastFetchedAtRef.current[key] || 0;
+    if (!options?.bypassThrottle && now - lastFetched < STATUS_FETCH_MIN_INTERVAL_MS) {
+      return;
+    }
+
+    const request = (async () => {
+      try {
+        const res = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(key)}/status`, {
+          headers: getAuthHeaders(),
+          cache: 'no-store',
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        let enteredTerminalState = false;
+        const nextStatus = (data?.status || '').toLowerCase();
+        setStatusMap((prev) => {
+          const prevStatus = (prev[key]?.status || '').toLowerCase();
+          enteredTerminalState = ['completed', 'failed'].includes(nextStatus)
+            && !['completed', 'failed'].includes(prevStatus);
+          return {
+            ...prev,
+            [key]: {
+              ...(prev[key] || {}),
+              ...(data || {}),
+            },
+          };
+        });
+        if (options?.refreshOnTerminal !== false && enteredTerminalState) {
+          await Promise.all([fetchFiles(), fetchStats()]);
+        }
+      } catch (error) {
+        console.error('Error fetching status:', error);
+      } finally {
+        statusLastFetchedAtRef.current[key] = Date.now();
+        delete statusInFlightRef.current[key];
+      }
+    })();
+
+    statusInFlightRef.current[key] = request;
+    await request;
   }
 
   const fetchFiles = async () => {
@@ -493,7 +578,7 @@ const AdminPage: React.FC = () => {
       const data = await response.json();
       const nextFiles: FileRecord[] = data || [];
       const queuedIngestFiles = Object.values(ingestJobs)
-        .filter((job) => ['queued', 'running', 'processing'].includes((job.status || '').toLowerCase()) && !!job.fileName)
+        .filter((job) => isIngestJobActive(job.status) && !!job.fileName)
         .map((job) => job.fileName as string);
       setFiles((prev) => {
         const merged = [...nextFiles];
@@ -770,17 +855,25 @@ const AdminPage: React.FC = () => {
   }, [managedUsers, userSearchTerm]);
 
   const activeFileStatusNames = useMemo(
-    () => Object.entries(statusMap)
-      .filter(([, status]) => ['queued', 'running', 'processing'].includes((status?.status || '').toLowerCase()))
-      .map(([fileName]) => fileName),
+    () => Array.from(new Set(
+      Object.entries(statusMap)
+        .filter(([, status]) => isParseStatusActive(status?.status, status?.progress))
+        .map(([fileName]) => fileName),
+    )),
     [statusMap],
   );
 
   const activeIngestJobs = useMemo(
     () => Object.entries(ingestJobs)
-      .filter(([, job]) => ['queued', 'running', 'processing'].includes((job.status || '').toLowerCase())),
+      .filter(([, job]) => isIngestJobActive(job.status)),
     [ingestJobs],
   );
+
+  const activeIngestJobsRef = useRef(activeIngestJobs);
+
+  useEffect(() => {
+    activeIngestJobsRef.current = activeIngestJobs;
+  }, [activeIngestJobs]);
 
   const fetchFileSummary = async (fileName: string, force = false) => {
     if (!fileName) return;
@@ -968,6 +1061,7 @@ const AdminPage: React.FC = () => {
   const openDetailsPanel = (fileName: string) => {
     const target = files.find((file) => file.name === fileName) || null;
     setDetailsFile(target);
+    setActivityPageByFile((prev) => ({ ...prev, [fileName]: 1 }));
     setDeployTargetFile(fileName);
     setDetailsDrawerOpen(true);
     fetchFileSummary(fileName);
@@ -1038,18 +1132,18 @@ const AdminPage: React.FC = () => {
       key: 'name',
       render: (text: string, record: FileRecord) => {
         const status = statusMap[record.name];
-        const isParsed = status?.status === 'completed';
-        const isFailed = status?.status === 'failed';
-        const isParsing = status?.status === 'processing' || (status?.progress && status.progress > 0 && status.progress < 100);
+        const normalizedStatus = String(status?.status || '').toLowerCase();
+        const isParsing = isParseStatusActive(normalizedStatus, status?.progress);
+        const isFailed = normalizedStatus === 'failed';
+        const isParsed = !isParsing && !isFailed
+          && (normalizedStatus === 'completed' || Number(record.chunk_number || 0) > 0);
 
         let statusColor: 'default' | 'green' | 'blue' | 'red' | 'orange' = 'default';
-        let statusLabel = 'Pending';
-        if (record.enabled) {
-          if (isFailed) { statusColor = 'red'; statusLabel = 'Failed'; }
-          else if (isParsing) { statusColor = 'blue'; statusLabel = 'Parsing'; }
-          else if (isParsed) { statusColor = 'green'; statusLabel = 'Ready'; }
-          else { statusColor = 'orange'; statusLabel = 'Not Parsed'; }
-        }
+        let statusLabel = 'Not Parsed';
+        if (isFailed) { statusColor = 'red'; statusLabel = 'Failed'; }
+        else if (isParsing) { statusColor = 'blue'; statusLabel = 'Parsing'; }
+        else if (isParsed) { statusColor = 'green'; statusLabel = 'Ready'; }
+        else { statusColor = 'orange'; statusLabel = 'Not Parsed'; }
 
         return (
           <div className="file-name">
@@ -1086,18 +1180,22 @@ const AdminPage: React.FC = () => {
       dataIndex: 'enabled',
       key: 'enabled',
       render: (enabled: boolean, record: FileRecord) => {
-        const parsed = statusMap[record.name]?.status === 'completed';
+        const status = statusMap[record.name];
+        const normalizedStatus = String(status?.status || '').toLowerCase();
+        const parsed = !isParseStatusActive(normalizedStatus, status?.progress)
+          && (normalizedStatus === 'completed' || Number(record.chunk_number || 0) > 0);
+        const isDeployChecked = parsed ? enabled : false;
         let tooltipTitle = 'File must be parsed before deploying';
         if (parsed) {
-          if (enabled) tooltipTitle = 'Disable (set to pending)';
+          if (isDeployChecked) tooltipTitle = 'Disable (set to pending)';
           else tooltipTitle = 'Deploy file';
         }
         return (
           <Tooltip title={tooltipTitle}>
             <Switch
-              checked={enabled}
+              checked={isDeployChecked}
               disabled={!canModifyKnowledgeBase || !parsed}
-              onChange={(checked) => toggleDeployState(record, checked)}
+              onChange={(nextChecked) => toggleDeployState(record, nextChecked)}
             />
           </Tooltip>
         );
@@ -1113,23 +1211,38 @@ const AdminPage: React.FC = () => {
       key: 'parse',
       render: (_: unknown, record: FileRecord) => {
         const status = statusMap[record.name];
+        const normalizedStatus = String(status?.status || '').toLowerCase();
         const progress = status?.progress ?? 0;
-        const isParsed = status?.status === 'completed';
+        const ocrProgress = parseOcrProgress(status?.last_message);
+        const isFailed = normalizedStatus === 'failed';
+        const isParsing = isParseStatusActive(normalizedStatus, progress);
+        const isParsed = !isParsing && !isFailed
+          && (normalizedStatus === 'completed' || Number(record.chunk_number || 0) > 0);
         const startTime = status?.start_time ? new Date(status.start_time) : null;
         const endTime = status?.end_time ? new Date(status.end_time) : null;
         const durationMs = startTime ? ((endTime ? endTime.getTime() : Date.now()) - startTime.getTime()) : 0;
         const durationSec = Math.round(durationMs / 1000);
+        let parseActionTitle = 'Parse file';
+        if (isParsing) parseActionTitle = 'Parsing in progress';
+        else if (isParsed) parseActionTitle = 'Re-parse file';
         const tip = (
           <div>
             <div>Status: {status?.status || 'Not parsed'}</div>
             <div>Process Begin At: {startTime ? startTime.toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }) : '—'}</div>
             <div>Process Duration: {durationSec}s</div>
+            {ocrProgress && (
+              <div>
+                OCR Progress: {ocrProgress.overallPercent}% overall
+                {' '}
+                (page {ocrProgress.currentPage}/{ocrProgress.totalPages}, {ocrProgress.pagePercent}%)
+              </div>
+            )}
             <div>Progress Msg: {status?.last_message || '—'}</div>
           </div>
         );
         return (
           <Space>
-            {progress > 0 && progress < 100 && (
+            {isParsing && progress > 0 && progress < 100 && (
               <Tooltip title={tip}>
                 <div className="parse-progress-wrap">
                   <Progress
@@ -1138,6 +1251,11 @@ const AdminPage: React.FC = () => {
                     strokeColor={{ '0%': '#1890ff', '100%': '#52c41a' }}
                     style={{ marginBottom: 0 }}
                   />
+                  {ocrProgress && (
+                    <div style={{ fontSize: 11, color: '#91caff', marginTop: 2 }}>
+                      OCR {ocrProgress.overallPercent}% (p{ocrProgress.currentPage}/{ocrProgress.totalPages})
+                    </div>
+                  )}
                 </div>
               </Tooltip>
             )}
@@ -1146,17 +1264,17 @@ const AdminPage: React.FC = () => {
                 <Tag color="green"><CheckCircleOutlined /> Parsed</Tag>
               </Tooltip>
             )}
-            {status?.status === 'failed' && (
+            {isFailed && (
               <Tooltip title={tip}>
                 <Tag color="red"><CloseCircleOutlined /> Failed</Tag>
               </Tooltip>
             )}
-            <Tooltip title={isParsed ? 'Re-parse file' : 'Parse file'}>
+            <Tooltip title={parseActionTitle}>
               <Button
                 type="text"
                 icon={isParsed ? <ReloadOutlined /> : <PlayCircleOutlined />}
                 loading={!!parsingBusy[record.name]}
-                disabled={!canModifyKnowledgeBase}
+                disabled={!canModifyKnowledgeBase || isParsing || !!parsingBusy[record.name]}
                 onClick={() => startParse(record.name)}
               />
             </Tooltip>
@@ -1299,31 +1417,262 @@ const AdminPage: React.FC = () => {
   // Poll ingest job statuses
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // Poll statuses by fileName for active ingest jobs (avoid generators/no-regenerator)
-    if (!activeIngestJobs.length) return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const interval = setInterval(() => {
-      activeIngestJobs.forEach(([, job]) => {
+    if (!activeIngestJobsRef.current.length) return undefined;
+
+    const websocketHealthy = realtimeConnected && realtimeTransport === 'websocket';
+    if (websocketHealthy) return undefined;
+    const ingestPollingIntervalMs = 1500;
+
+    const pollIngestJobs = async () => {
+      let shouldRefreshFiles = false;
+      const jobsSnapshot = activeIngestJobsRef.current;
+
+      if (!jobsSnapshot.length) return;
+
+      await Promise.all(jobsSnapshot.map(async ([jobId, job]) => {
         try {
-          if (job && job.fileName) fetchStatus(job.fileName as string);
+          const res = await fetch(`${BACKEND_URI}/k-manage/jobs/${encodeURIComponent(jobId)}/status`, {
+            headers: getAuthHeaders(),
+            cache: 'no-store',
+          });
+          if (!res.ok) return;
+
+          const nextJob = await res.json();
+          const nextStatus = String(nextJob?.status || '').toLowerCase();
+          const nextFileName = String(nextJob?.fileName || job.fileName || '');
+
+          upsertIngestJob(jobId, {
+            ...nextJob,
+            fileName: nextFileName || undefined,
+          });
+
+          if (TERMINAL_INGEST_STATUSES.includes(nextStatus)) {
+            shouldRefreshFiles = true;
+            if (nextFileName) {
+              await fetchStatus(nextFileName, { refreshOnTerminal: false });
+            }
+          }
         } catch (err) {
           console.error('Job polling error:', err);
         }
+      }));
+
+      if (shouldRefreshFiles) {
+        await Promise.all([fetchFiles(), fetchStats()]);
+      }
+    };
+
+    pollIngestJobs().catch((err) => {
+      console.error('Initial job polling error:', err);
+    });
+    const interval = setInterval(() => {
+      pollIngestJobs().catch((err) => {
+        console.error('Scheduled job polling error:', err);
       });
-    }, 1200);
+    }, ingestPollingIntervalMs);
 
     return () => clearInterval(interval);
-  }, [activeIngestJobs]);
+  }, [activeIngestJobs.length, realtimeConnected, realtimeTransport]);
+
+  // Realtime websocket updates for ingest + parse status
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) return undefined;
+
+    // Construct socket URL with proper fallback for local dev
+    let realtimeBaseUrl = String(BACKEND_URI || '').replace(/\/api\/?$/, '');
+    
+    // If BACKEND_URI was relative (e.g., /api), use window.location.origin
+    if (!realtimeBaseUrl || realtimeBaseUrl === 'http://' || realtimeBaseUrl === 'https://') {
+      if (typeof window !== 'undefined' && window.location) {
+        realtimeBaseUrl = window.location.origin;
+        // For local dev on Vite dev server (port 5173 or 3000), backend is on :3001
+        // But if on port 80 (nginx/docker), use the proxy (same origin)
+        if (
+          window.location.hostname === 'localhost' &&
+          (window.location.port === '5173' || window.location.port === '3000')
+        ) {
+          realtimeBaseUrl = 'http://localhost:3001';
+        }
+      }
+    }
+
+    const socketUrl = `${realtimeBaseUrl}/k-manage-realtime`;
+    console.log('[Socket.IO] BACKEND_URI:', BACKEND_URI);
+    console.log('[Socket.IO] window.location.origin:', typeof window !== 'undefined' ? window.location.origin : 'N/A');
+    console.log('[Socket.IO] window.location.port:', typeof window !== 'undefined' ? window.location.port : 'N/A');
+    console.log('[Socket.IO] realtimeBaseUrl:', realtimeBaseUrl);
+    console.log('[Socket.IO] Attempting websocket-first connection to:', socketUrl);
+
+    let disposed = false;
+    let isConnected = false;
+    let allowPollingFallback = false;
+    let activeSocket: Socket | null = null;
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const onIngestStatus = (payload: Partial<IngestJob> & { jobId?: string }) => {
+      const jobId = String(payload?.jobId || '');
+      if (!jobId) return;
+
+      const nextFileName = String(payload?.fileName || '');
+      const nextStatus = String(payload?.status || '').toLowerCase();
+
+      upsertIngestJob(jobId, {
+        ...payload,
+        fileName: nextFileName || undefined,
+      });
+
+      if (nextFileName) {
+        upsertQueuedFileRecord(nextFileName);
+      }
+
+      if (TERMINAL_INGEST_STATUSES.includes(nextStatus) && nextFileName) {
+        fetchStatus(nextFileName).catch((err) => {
+          console.error('Failed to refresh parse status after ingest completion:', err);
+        });
+      }
+    };
+
+    const onParseStatus = (
+      payload: {
+        fileName?: string;
+        file_name?: string;
+        status?: string;
+        progress?: number;
+        last_message?: string;
+        start_time?: string;
+        end_time?: string;
+      },
+    ) => {
+      const fileName = String(payload?.fileName || payload?.file_name || '');
+      if (!fileName) return;
+
+      const normalized = String(payload?.status || '').toLowerCase();
+      const nextStatus =
+        normalized === 'running'
+          ? 'processing'
+          : normalized;
+
+      setStatusMap((prev) => ({
+        ...prev,
+        [fileName]: {
+          ...(prev[fileName] || {}),
+          status: nextStatus || prev[fileName]?.status || 'processing',
+          progress:
+            typeof payload?.progress === 'number'
+              ? payload.progress
+              : prev[fileName]?.progress || 0,
+          last_message:
+            String(payload?.last_message || '')
+            || prev[fileName]?.last_message
+            || '',
+          start_time: payload?.start_time || prev[fileName]?.start_time,
+          end_time: payload?.end_time || prev[fileName]?.end_time,
+        },
+      }));
+
+      if (TERMINAL_PARSE_STATUSES.includes(nextStatus)) {
+        Promise.all([fetchFiles(), fetchStats()]).catch((err) => {
+          console.error('Failed to refresh files/stats after parse completion:', err);
+        });
+      }
+    };
+
+    const connectRealtime = (transports: Array<'websocket' | 'polling'>, mode: string) => {
+      if (disposed) return null;
+
+      const socket = io(socketUrl, {
+        auth: { token: `Bearer ${token}` },
+        transports,
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 800,
+        reconnectionDelayMax: 5000,
+        timeout: 12000,
+      });
+
+      socket.on('connect', () => {
+        isConnected = true;
+        const transport = String(socket.io.engine.transport?.name || 'unknown');
+        setRealtimeConnected(true);
+        setRealtimeTransport(transport);
+        console.log(`[Socket.IO] Connected via ${transport} (${mode})`);
+      });
+
+      socket.io.engine.on('upgrade', (transport) => {
+        const transportName = String(transport?.name || 'unknown');
+        setRealtimeTransport(transportName);
+        console.log('[Socket.IO] Upgraded transport:', transportName);
+      });
+
+      socket.on('connect_error', (error) => {
+        setRealtimeConnected(false);
+        setRealtimeTransport('');
+        console.warn(`[Socket.IO] Connection error (${mode}):`, error?.message || error);
+
+        if (!allowPollingFallback || disposed || isConnected) return;
+        allowPollingFallback = false;
+        if (activeSocket) {
+          activeSocket.removeAllListeners();
+          activeSocket.disconnect();
+        }
+        console.warn('[Socket.IO] Falling back to websocket+polling after websocket-only timeout');
+        activeSocket = connectRealtime(['websocket', 'polling'], 'fallback');
+        if (activeSocket) realtimeSocketRef.current = activeSocket;
+      });
+
+      socket.on('disconnect', (reason) => {
+        setRealtimeConnected(false);
+        setRealtimeTransport('');
+        console.log('[Socket.IO] Disconnected, reason:', reason);
+      });
+
+      socket.on('ingest_job_status', onIngestStatus);
+      socket.on('parse_file_status', onParseStatus);
+
+      return socket;
+    };
+
+    activeSocket = connectRealtime(['websocket'], 'websocket-first');
+    if (activeSocket) realtimeSocketRef.current = activeSocket;
+
+    fallbackTimer = setTimeout(() => {
+      if (disposed || isConnected) return;
+      allowPollingFallback = true;
+      if (activeSocket) {
+        activeSocket.removeAllListeners();
+        activeSocket.disconnect();
+      }
+      activeSocket = connectRealtime(['websocket', 'polling'], 'fallback');
+      if (activeSocket) realtimeSocketRef.current = activeSocket;
+    }, 12000);
+
+    return () => {
+      disposed = true;
+      setRealtimeConnected(false);
+      setRealtimeTransport('');
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (activeSocket) {
+        activeSocket.removeAllListeners();
+        activeSocket.disconnect();
+      }
+      realtimeSocketRef.current = null;
+    };
+  }, []);
 
   // Poll statuses only for active queued/running/processing parse jobs
   useEffect(() => {
     if (!activeFileStatusNames.length) return undefined;
+    const websocketHealthy = realtimeConnected && realtimeTransport === 'websocket';
+    if (websocketHealthy) return undefined;
+    const pollingIntervalMs = 1000;
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const interval = setInterval(() => {
       activeFileStatusNames.forEach((fileName) => fetchStatus(fileName));
-    }, 3000);
+    }, pollingIntervalMs);
     return () => clearInterval(interval);
-  }, [activeFileStatusNames]);
+  }, [activeFileStatusNames, realtimeConnected, realtimeTransport]);
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, current: 1 }));
@@ -2444,10 +2793,16 @@ const AdminPage: React.FC = () => {
             })
             .filter((f) => {
               const status = statusMap[f.name]?.status;
-              if (parseStatusFilter === 'parsed') return status === 'completed';
-              if (parseStatusFilter === 'processing') return status === 'processing';
-              if (parseStatusFilter === 'failed') return status === 'failed';
-              if (parseStatusFilter === 'not_parsed') return !status || status === 'queued';
+              const normalized = String(status || '').toLowerCase();
+              const chunkCount = Number(f.chunk_number || 0);
+              const failed = normalized === 'failed';
+              const processing = isParseStatusActive(normalized, statusMap[f.name]?.progress);
+              const parsed = !processing && !failed && (normalized === 'completed' || chunkCount > 0);
+
+              if (parseStatusFilter === 'parsed') return parsed;
+              if (parseStatusFilter === 'processing') return processing;
+              if (parseStatusFilter === 'failed') return failed;
+              if (parseStatusFilter === 'not_parsed') return !parsed && !processing && !failed;
               return true;
             })
             .filter((f) => !pendingDeleteNames.includes(f.name));
@@ -3378,37 +3733,61 @@ const AdminPage: React.FC = () => {
                   <Spin size="small" />
                 ) : (
                   <Space direction="vertical" style={{ width: '100%' }} size="small">
-                    {(fileActivities[detailsFile.name] || []).length === 0 ? (
-                      <Text type="secondary">No activity history recorded yet.</Text>
-                    ) : (
-                      (fileActivities[detailsFile.name] || []).map((activity) => {
-                        const eventTime = new Date(activity.created_at).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' });
-                        const label = activity.action === 'reembed' ? 'reparse' : activity.action;
-                        return (
-                          <Card key={`activity-${activity.id}`} size="small" style={{ background: '#1f212a', borderColor: '#3a3d4a' }}>
-                            <Space direction="vertical" size={2} style={{ width: '100%' }}>
-                              <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
-                                <Space wrap>
-                                  <Tag color="purple">{label}</Tag>
-                                  <Text type="secondary" style={{ fontSize: 12 }}>{eventTime}</Text>
+                    {(() => {
+                      const activities = fileActivities[detailsFile.name] || [];
+                      const pageSize = 5;
+                      const currentPage = activityPageByFile[detailsFile.name] || 1;
+                      const pageStart = (currentPage - 1) * pageSize;
+                      const pagedActivities = activities.slice(pageStart, pageStart + pageSize);
+
+                      if (activities.length === 0) {
+                        return <Text type="secondary">No activity history recorded yet.</Text>;
+                      }
+
+                      return (
+                        <>
+                          {pagedActivities.map((activity) => {
+                            const eventTime = new Date(activity.created_at).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' });
+                            const label = activity.action === 'reembed' ? 'reparse' : activity.action;
+                            return (
+                              <Card key={`activity-${activity.id}`} size="small" style={{ background: '#1f212a', borderColor: '#3a3d4a' }}>
+                                <Space direction="vertical" size={2} style={{ width: '100%' }}>
+                                  <Space wrap style={{ justifyContent: 'space-between', width: '100%' }}>
+                                    <Space wrap>
+                                      <Tag color="purple">{label}</Tag>
+                                      <Text type="secondary" style={{ fontSize: 12 }}>{eventTime}</Text>
+                                    </Space>
+                                  </Space>
+                                  {activity.metadata && Object.keys(activity.metadata).length > 0 && (
+                                    <Text style={{ fontSize: 12, color: '#c8ccd8' }}>
+                                      {Object.entries(activity.metadata)
+                                        .map(([key, value]) => `${key}: ${String(value)}`)
+                                        .join(' • ')}
+                                    </Text>
+                                  )}
                                 </Space>
-                              </Space>
-                              {activity.metadata && Object.keys(activity.metadata).length > 0 && (
-                                <Text style={{ fontSize: 12, color: '#c8ccd8' }}>
-                                  {Object.entries(activity.metadata)
-                                    .map(([key, value]) => `${key}: ${String(value)}`)
-                                    .join(' • ')}
-                                </Text>
-                              )}
-                            </Space>
-                          </Card>
-                        );
-                      })
-                    )}
+                              </Card>
+                            );
+                          })}
+                          {activities.length > pageSize && (
+                            <Pagination
+                              size="small"
+                              current={currentPage}
+                              pageSize={pageSize}
+                              total={activities.length}
+                              showSizeChanger={false}
+                              onChange={(page) => {
+                                setActivityPageByFile((prev) => ({ ...prev, [detailsFile.name]: page }));
+                              }}
+                            />
+                          )}
+                        </>
+                      );
+                    })()}
                   </Space>
                 )}
               </Card>
-              <Space wrap>
+              <Space className="file-details-action-row">
                 <Button icon={<PlayCircleOutlined />} disabled={!canModifyKnowledgeBase} onClick={() => startParse(detailsFile.name)}>Parse</Button>
                 <Button icon={<FileTextOutlined />} onClick={() => handleViewChunks(detailsFile.name)}>View Chunks</Button>
                 <Button icon={<DownloadOutlined />} onClick={() => downloadFile(detailsFile.name)}>Download</Button>
@@ -3416,6 +3795,7 @@ const AdminPage: React.FC = () => {
                   danger
                   icon={<DeleteOutlined />}
                   disabled={!canModifyKnowledgeBase}
+                  style={{ color: colourToken.white }}
                   onClick={() => {
                     setDeleteTarget(detailsFile.name);
                     setDeleteModalOpen(true);

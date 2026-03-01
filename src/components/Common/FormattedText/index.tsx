@@ -152,17 +152,18 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
 
   const renderTable = (table: ParsedTable, key: string) => (
     <div key={key} style={{ overflowX: 'auto', margin: '10px 0' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '14px' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '14px', background: '#2b2d38', color: '#e0e0e0' }}>
         <thead>
           <tr>
             {table.headers.map((header) => (
               <th
                 key={`${key}-header-${header}`}
                 style={{
-                  border: '1px solid #d9d9d9',
+                  border: '1px solid #3a3d4a',
                   padding: '8px',
                   textAlign: 'left',
-                  background: '#f5f5f5',
+                  background: '#1c1e24',
+                  color: '#e0e0e0',
                   fontWeight: 600,
                 }}
               >
@@ -181,7 +182,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
                   return (
                     <td
                       key={`${key}-cell-${cellKey}`}
-                      style={{ border: '1px solid #e8e8e8', padding: '8px', verticalAlign: 'top' }}
+                      style={{ border: '1px solid #3a3d4a', padding: '8px', verticalAlign: 'top', background: '#2b2d38', color: '#e0e0e0' }}
                     >
                       {formatInlineText(row[colIndex] || '', `${key}-cell-text-${cellKey}`)}
                     </td>
