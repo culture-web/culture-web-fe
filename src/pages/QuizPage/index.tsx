@@ -216,7 +216,7 @@ const QuizPage: React.FC = () => {
         </Button>
         <Button 
           type="primary" 
-          style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a' }} 
+          style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a',marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
           onClick={generateQuizFromLearning}
           loading={loadingQuiz}
         >
@@ -224,7 +224,7 @@ const QuizPage: React.FC = () => {
         </Button>
         <Button 
           type="primary" 
-          style={{ width: '250px', background: '#1890ff', borderColor: '#1890ff' }} 
+          style={{ width: '250px', background: '#1890ff', borderColor: '#1890ff', marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
           onClick={generateAdaptiveQuiz}
           loading={loadingAdaptiveQuiz}
         >
