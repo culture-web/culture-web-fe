@@ -407,3 +407,16 @@ export const sendChatQuery = async (
     return errorResult;
   }
 };
+
+export const getUserProficiencyGaps = async (): Promise<any> => {
+  const token = await getCurrentUserToken();
+  const response = await fetch(`${BACKEND_URI}/proficiency/details`, {
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (!response.ok) throw new Error('Failed to fetch proficiency');
+  return response.json();
+};

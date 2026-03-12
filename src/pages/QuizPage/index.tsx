@@ -3,6 +3,8 @@ import { Button, Card, Image, Radio, message, Typography } from 'antd';
 import { useColourToken, useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
 import BACKEND_URI from 'configs/env.config';
+import { getUserProficiencyGaps } from 'utils/invokeBackend';
+import { getCurrentUserToken } from 'configs/supabase.config';
 import { QuizCategory, QuizItem } from './quizTypes';
 import quizCharacter from './characterData';
 import quizExpression from './expressionData';
@@ -39,7 +41,43 @@ const QuizPage: React.FC = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string }>({});
   const [checked, setChecked] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
+  const [loadingAdaptiveQuiz, setLoadingAdaptiveQuiz] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState<boolean>(false);
+
+  const generateAdaptiveQuiz = async () => {
+    try {
+      setLoadingAdaptiveQuiz(true);
+      
+      const proficiency = await getUserProficiencyGaps();
+      
+      const response = await fetch(`${BACKEND_URI}/kathakali/generate-adaptive-quiz`, {
+        headers: { 
+          'Authorization': `Bearer ${await getCurrentUserToken()}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      if (data.questions && data.questions.length > 0) {
+        setQuizItems(data.questions.map((q, idx) => ({
+          id: idx,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          image: ''
+        })));
+        message.success(`Generated ${data.questions.length} adaptive questions from your knowledge gaps! 🎯`);
+      } else {
+        message.info(data.message || 'No knowledge gaps found!');
+      }
+    } catch (error) {
+      console.error('Adaptive quiz error:', error);   // ← ADD THIS
+      message.error('Failed to generate adaptive quiz');
+    } finally {
+      setLoadingAdaptiveQuiz(false);
+    }
+  };
 
   const generateQuiz = (type: 'Expression' | 'Character' | 'Ornament') => {
     let dataset: QuizCategory[] = [];
@@ -176,11 +214,19 @@ const QuizPage: React.FC = () => {
         </Button>
         <Button 
           type="primary" 
-          style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a' }} 
+          style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a',marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
           onClick={generateQuizFromLearning}
           loading={loadingQuiz}
         >
           Generate from Learning
+        </Button>
+        <Button 
+          type="primary" 
+          style={{ width: '250px', background: '#1890ff', borderColor: '#1890ff', marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
+          onClick={generateAdaptiveQuiz}
+          loading={loadingAdaptiveQuiz}
+        >
+          Generate Adaptive Quiz
         </Button>
       </div>
 
