@@ -48,10 +48,8 @@ const QuizPage: React.FC = () => {
     try {
       setLoadingAdaptiveQuiz(true);
       
-      // Get user's knowledge gaps
       const proficiency = await getUserProficiencyGaps();
       
-      // Generate adaptive quiz
       const response = await fetch(`${BACKEND_URI}/kathakali/generate-adaptive-quiz`, {
         headers: { 
           'Authorization': `Bearer ${await getCurrentUserToken()}`,
