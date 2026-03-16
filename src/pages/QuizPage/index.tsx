@@ -5,6 +5,7 @@ import useIsMobile from 'utils/isMobile';
 import BACKEND_URI from 'configs/env.config';
 import { getUserProficiencyGaps } from 'utils/invokeBackend';
 import { getCurrentUserToken } from 'configs/supabase.config';
+import { useAuth } from 'contexts/AuthContext';
 import { QuizCategory, QuizItem } from './quizTypes';
 import quizCharacter from './characterData';
 import quizExpression from './expressionData';
@@ -43,6 +44,7 @@ const QuizPage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [loadingAdaptiveQuiz, setLoadingAdaptiveQuiz] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState<boolean>(false);
+  const { isAuthenticated } = useAuth();
 
   const generateAdaptiveQuiz = async () => {
     try {
@@ -90,7 +92,8 @@ const QuizPage: React.FC = () => {
     }
 
     const generatedQuiz = generateQuizFromDataset(dataset);
-    setQuizItems(generatedQuiz);
+    const limitedQuiz = type === 'Ornament' ? generatedQuiz.slice(0, 6) : generatedQuiz; 
+    setQuizItems(limitedQuiz);
     setSelectedAnswers({});
     setChecked(false);
     setScore(0);
@@ -212,22 +215,29 @@ const QuizPage: React.FC = () => {
         >
           Generate Quiz For Ornaments
         </Button>
-        <Button 
-          type="primary" 
-          style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a',marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
-          onClick={generateQuizFromLearning}
-          loading={loadingQuiz}
-        >
-          Generate from Learning
-        </Button>
-        <Button 
-          type="primary" 
-          style={{ width: '250px', background: '#1890ff', borderColor: '#1890ff', marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
-          onClick={generateAdaptiveQuiz}
-          loading={loadingAdaptiveQuiz}
-        >
-          Generate Adaptive Quiz
-        </Button>
+        {/* Show only for guests (not logged in) */}
+        {!isAuthenticated && (
+          <Button 
+            type="primary" 
+            style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a',marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
+            onClick={generateQuizFromLearning}
+            loading={loadingQuiz}
+          >
+            Generate from Learning
+          </Button>
+        )}
+        {/* Show only for logged-in users */}
+        {isAuthenticated && (
+          <Button 
+            type="primary" 
+            style={{ width: '250px', background: '#1890ff', borderColor: '#1890ff', marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
+            onClick={generateAdaptiveQuiz}
+            loading={loadingAdaptiveQuiz}
+          >
+            Generate Adaptive Quiz
+          </Button>
+        )}
+
       </div>
 
       <div>
