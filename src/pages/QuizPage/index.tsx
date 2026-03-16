@@ -92,7 +92,8 @@ const QuizPage: React.FC = () => {
     }
 
     const generatedQuiz = generateQuizFromDataset(dataset);
-    setQuizItems(generatedQuiz);
+    const limitedQuiz = type === 'Ornament' ? generatedQuiz.slice(0, 6) : generatedQuiz; 
+    setQuizItems(limitedQuiz);
     setSelectedAnswers({});
     setChecked(false);
     setScore(0);
