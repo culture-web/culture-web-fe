@@ -421,6 +421,21 @@ export const getUserProficiencyGaps = async (): Promise<any> => {
   return response.json();
 };
 
+export const seedUserProficiency = async (): Promise<void> => {
+  try {
+    const token = await getCurrentUserToken();
+    await fetch(`${BACKEND_URI}/kathakali/seed-proficiency`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to seed user proficiency:', error);
+  }
+};
+
 type AdaptiveQuizSource = 'adaptive' | 'learning' | 'static' | string;
 
 export interface AdaptiveQuizQuestionDTO {
@@ -495,22 +510,7 @@ export const generateAdaptiveQuizSession = async (params?: {
 
   const data = await response.json();
 
-  console.log("data from backend:", data);
-
-  // Normalize the backend response to match our interface
-  return {
-    quizId: data.quizId || null,
-    source: data.source || 'adaptive',
-    questions: (data.questions || []).map((q: AdaptiveQuizQuestionDTO, idx: number) => ({
-      backendQuestionId: q.id || q.question_id || null,
-      displayId: q.display_id || (idx + 1),
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.correct_answer || q.correctAnswer || '',
-      explanation: q.explanation,
-    })),
-    raw: data,
-  };
+  return data
 };
 
 export interface SubmitQuizResult {
@@ -535,8 +535,6 @@ export const submitQuizSession = async (params: {
   answers: Array<{ backendQuestionId: string; answer: string }>;
 }): Promise<SubmitQuizResult> => {
 
-  console.log("SUBMITTING")
-
   const token = await getCurrentUserToken();
 
   const headers: Record<string, string> = {
@@ -547,6 +545,8 @@ export const submitQuizSession = async (params: {
   const payload = {
     answers: params.answers,
   };
+
+  console.log(payload);
 
   const response = await fetch(`${BACKEND_URI}/kathakali/quiz/${params.quizId}/submit`, {
     method: 'POST',

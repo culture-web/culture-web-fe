@@ -195,11 +195,13 @@ const QuizPage: React.FC = () => {
       try {
         setSubmittingQuiz(true);
 
-        const answers = quizItems
-          .map((item) => ({
-            backendQuestionId: item.backendQuestionId,
-            answer: selectedAnswers[item.id]
-          }))
+        const mappedAnswers = quizItems.map((item) => ({
+          backendQuestionId: item.backendQuestionId,
+          answer: selectedAnswers[item.id]
+        }));
+        console.log('Mapped answers before filter:', mappedAnswers);
+
+        const answers = mappedAnswers
           .filter((a) => !!a.backendQuestionId && typeof a.answer === 'string' && a.answer.length > 0)
           .map((a) => ({
             backendQuestionId: a.backendQuestionId as string,
