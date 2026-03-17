@@ -3,8 +3,7 @@ import { Button, Card, Image, Radio, message, Typography } from 'antd';
 import { useColourToken, useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
 import BACKEND_URI from 'configs/env.config';
-import { getUserProficiencyGaps } from 'utils/invokeBackend';
-import { getCurrentUserToken } from 'configs/supabase.config';
+import { generateAdaptiveQuizSession, submitQuizSession } from 'utils/invokeBackend';
 import { QuizCategory, QuizItem } from './quizTypes';
 import quizCharacter from './characterData';
 import quizExpression from './expressionData';
@@ -43,36 +42,44 @@ const QuizPage: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [loadingAdaptiveQuiz, setLoadingAdaptiveQuiz] = useState(false);
   const [loadingQuiz, setLoadingQuiz] = useState<boolean>(false);
+  const [submittingQuiz, setSubmittingQuiz] = useState(false);
+  const [activeQuizSessionId, setActiveQuizSessionId] = useState<string | null>(null);
+  const [activeQuizSource, setActiveQuizSource] = useState<'adaptive' | 'static' | 'learning' | null>(null);
 
   const generateAdaptiveQuiz = async () => {
     try {
       setLoadingAdaptiveQuiz(true);
-      
-      const proficiency = await getUserProficiencyGaps();
-      
-      const response = await fetch(`${BACKEND_URI}/kathakali/generate-adaptive-quiz`, {
-        headers: { 
-          'Authorization': `Bearer ${await getCurrentUserToken()}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const data = await response.json();
-      if (data.questions && data.questions.length > 0) {
-        setQuizItems(data.questions.map((q, idx) => ({
-          id: idx,
-          question: q.question,
-          options: q.options,
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
-          image: ''
-        })));
-        message.success(`Generated ${data.questions.length} adaptive questions from your knowledge gaps! 🎯`);
+
+      const result = await generateAdaptiveQuizSession({ count: 5 });
+
+      console.log(result);
+
+      if (result.questions && result.questions.length > 0) {
+        setActiveQuizSessionId(result.quizId);
+        setActiveQuizSource('adaptive');
+        setQuizItems(
+          result.questions.map((q, idx) => ({
+            id: idx,
+            backendQuestionId: q.backendQuestionId || undefined,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+            image: ''
+          }))
+        );
+        setSelectedAnswers({});
+        setChecked(false);
+        setScore(0);
+        console.log('Adaptive quiz generated with', result.questions.length, 'questions');
+        message.success(`Generated ${result.questions.length} adaptive questions from your knowledge gaps! 🎯`);
       } else {
-        message.info(data.message || 'No knowledge gaps found!');
+        setActiveQuizSessionId(null);
+        setActiveQuizSource(null);
+        message.info('No knowledge gaps found!');
       }
     } catch (error) {
-      console.error('Adaptive quiz error:', error);   // ← ADD THIS
+      console.error('Adaptive quiz error:', error);
       message.error('Failed to generate adaptive quiz');
     } finally {
       setLoadingAdaptiveQuiz(false);
@@ -94,6 +101,8 @@ const QuizPage: React.FC = () => {
     setSelectedAnswers({});
     setChecked(false);
     setScore(0);
+    setActiveQuizSessionId(null);
+    setActiveQuizSource('static');
   };
 
   // Generate quiz from chat learning history
@@ -152,6 +161,8 @@ const QuizPage: React.FC = () => {
       setSelectedAnswers({});
       setChecked(false);
       setScore(0);
+      setActiveQuizSessionId(null);
+      setActiveQuizSource('learning');
       
       message.success(`Generated ${transformedQuiz.length} questions from your learning history!`);
     } catch (error: unknown) {
@@ -169,7 +180,10 @@ const QuizPage: React.FC = () => {
   };
 
   // Check the answers, update the cumulative score, and display a success message.
-  const checkAnswers = () => {
+  const checkAnswers = async () => {
+    console.log('checkAnswers called, activeQuizSource:', activeQuizSource, 'activeQuizSessionId:', activeQuizSessionId);
+
+    // Always grade on the frontend using the quiz payload (robust matching).
     let correctCount = 0;
     quizItems.forEach((item) => {
       if (selectedAnswers[item.id] === item.correctAnswer) {
@@ -179,6 +193,42 @@ const QuizPage: React.FC = () => {
     setScore((prev) => prev + correctCount);
     setChecked(true);
     message.success(`You got ${correctCount} out of ${quizItems.length} correct!`);
+
+    // For adaptive quizzes: submit best-effort for proficiency updates, but do NOT let
+    // backend response affect marking.
+    if (activeQuizSource === 'adaptive' && activeQuizSessionId) {
+      try {
+        setSubmittingQuiz(true);
+
+        const answers = quizItems
+          .map((item) => ({
+            backendQuestionId: item.backendQuestionId,
+            answer: selectedAnswers[item.id]
+          }))
+          .filter((a) => !!a.backendQuestionId && typeof a.answer === 'string' && a.answer.length > 0)
+          .map((a) => ({
+            backendQuestionId: a.backendQuestionId as string,
+            answer: a.answer
+          }));
+
+        console.log('Submitting quiz answers:', answers);
+
+        const submission = await submitQuizSession({
+          quizId: activeQuizSessionId,
+          answers,
+        });
+
+        console.log('Quiz submitted successfully');
+
+        if (submission.proficiencyUpdatesApplied.length > 0) {
+          message.success('Your understanding of certain concepts has improved!');
+        }
+      } catch (error) {
+        console.warn('Adaptive quiz submission failed (marking unaffected):', error);
+      } finally {
+        setSubmittingQuiz(false);
+      }
+    }
   };
 
   return (
@@ -307,6 +357,7 @@ const QuizPage: React.FC = () => {
           type="primary"
           onClick={checkAnswers}
           disabled={Object.keys(selectedAnswers).length < quizItems.length}
+          loading={submittingQuiz}
         >
           Check Answers
         </Button>

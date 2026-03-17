@@ -362,7 +362,7 @@ export const sendChatQuery = async (
         sections: chatbotResponse.sections || [],
         tables: chatbotResponse.tables || [],
         citations: chatbotResponse.citations || [],
-        retrieval: chatbotResponse.retrieval || null,
+        retrieval: chatbotResponse.retrieval || undefined,
         metadata: chatbotResponse.metadata || {
           hasStructuredContent: false,
           responseLength: 0,
@@ -380,7 +380,7 @@ export const sendChatQuery = async (
         sections: [],
         tables: [],
         citations: Array.isArray(data?.citations) ? data.citations : [],
-        retrieval: data?.retrieval || null,
+        retrieval: data?.retrieval || undefined,
         metadata: {
           hasStructuredContent: false,
           responseLength: typeof responseText === 'string' ? responseText.length : 0,
@@ -397,7 +397,7 @@ export const sendChatQuery = async (
       sections: [],
       tables: [],
       citations: [],
-      retrieval: null,
+      retrieval: undefined,
       metadata: {
         hasStructuredContent: false,
         responseLength: 0,
@@ -419,4 +419,147 @@ export const getUserProficiencyGaps = async (): Promise<any> => {
   
   if (!response.ok) throw new Error('Failed to fetch proficiency');
   return response.json();
+};
+
+type AdaptiveQuizSource = 'adaptive' | 'learning' | 'static' | string;
+
+export interface AdaptiveQuizQuestionDTO {
+  id?: string;
+  question_id?: string;
+  display_id?: number;
+  question: string;
+  options: string[];
+  correct_answer?: string;
+  correctAnswer?: string;
+  explanation?: string;
+  concept_id?: string;
+  target_level?: string;
+}
+
+export interface GenerateAdaptiveQuizResult {
+  quizId: string | null;
+  source: AdaptiveQuizSource;
+  questions: Array<{
+    backendQuestionId: string | null;
+    displayId: number | null;
+    question: string;
+    options: string[];
+    correctAnswer: string;
+    explanation?: string;
+  }>;
+  raw: unknown;
+}
+
+/**
+ * Generates an adaptive quiz and (on the backend) persists a quiz_session + quiz_question rows.
+ * Returns the quiz session UUID (if provided) and normalized questions containing backend UUIDs.
+ */
+export const generateAdaptiveQuizSession = async (params?: {
+  count?: number;
+}): Promise<GenerateAdaptiveQuizResult> => {
+  const token = await getCurrentUserToken();
+
+  let proficiency: any = null;
+  try {
+    proficiency = await getUserProficiencyGaps();
+  } catch {
+    // Non-fatal; backend may derive proficiency server-side.
+  }
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+
+  // Prefer POST with payload; fall back to GET for backwards compatibility.
+  let response = await fetch(`${BACKEND_URI}/kathakali/generate-adaptive-quiz`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      count: params?.count,
+      proficiency,
+    })
+  });
+
+
+  // TODO (Xu Cheng): Update Backend from GET to POST request
+  if (!response.ok) {
+    response = await fetch(`${BACKEND_URI}/kathakali/generate-adaptive-quiz`, {
+      headers,
+    });
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to generate adaptive quiz: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  console.log("data from backend:", data);
+
+  return data;
+};
+
+export interface SubmitQuizResult {
+  quizId: string;
+  total: number;
+  correct: number;
+  score: number;
+  results: any[];
+  proficiencyUpdatesApplied: Array<{
+    conceptId: string;
+    newLevel: string;
+    misconceptionFlag: boolean;
+  }>;
+}
+
+/**
+ * Submits answers for a persisted quiz session so the backend can deterministically grade
+ * using stored quiz_question rows and update user proficiency.
+ */
+export const submitQuizSession = async (params: {
+  quizId: string;
+  answers: Array<{ backendQuestionId: string; answer: string }>;
+}): Promise<SubmitQuizResult> => {
+
+  console.log("SUBMITTING")
+
+  const token = await getCurrentUserToken();
+
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+
+  const payload = {
+    answers: params.answers,
+  };
+
+  const response = await fetch(`${BACKEND_URI}/kathakali/quiz/${params.quizId}/submit`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let errText = `${response.status} ${response.statusText}`;
+    try {
+      const maybeJson = await response.json();
+      errText = maybeJson?.error || maybeJson?.message || errText;
+    } catch {
+      // ignore
+    }
+    throw new Error(`Failed to submit quiz: ${errText}`);
+  }
+
+  const data = await response.json();
+
+  return {
+    quizId: data.quizId,
+    total: data.total,
+    correct: data.correct,
+    score: data.score,
+    results: data.results || [],
+    proficiencyUpdatesApplied: data.proficiencyUpdatesApplied || [],
+  };
 };
