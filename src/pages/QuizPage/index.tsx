@@ -87,7 +87,7 @@ const QuizPage: React.FC = () => {
     }
   };
 
-  const generateQuiz = (type: 'Expression' | 'Character' | 'Ornament') => {
+  const generateQuiz = (type: 'Expression' | 'Character' | 'Ornament' | 'Core') => {
     let dataset: QuizCategory[] = [];
     if (type === 'Character') {
       dataset = quizCharacter;
@@ -95,6 +95,9 @@ const QuizPage: React.FC = () => {
       dataset = quizExpression;
     } else if (type === 'Ornament') {
       dataset = quizOrnament;
+    } else if (type === 'Core') {
+      // Combine both Character and Expression datasets
+      dataset = [...quizCharacter, ...quizExpression];
     }
 
     const generatedQuiz = generateQuizFromDataset(dataset);
@@ -240,17 +243,10 @@ const QuizPage: React.FC = () => {
       <div style={{ marginBottom: 16, textAlign: 'center' }}>
         <Button
           type="primary"
-          onClick={() => generateQuiz(CHARACTER)}
+          onClick={() => generateQuiz('Core')}
           style={{ marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
         >
-          Generate Quiz For Characters
-        </Button>
-        <Button 
-          type="primary" 
-          style={{ width: '250px', marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0 }} 
-          onClick={() => generateQuiz(EXPRESSION)}
-        >
-          Generate Quiz For Expressions
+          Kathakali Basics Quiz
         </Button>
         
         <Button
