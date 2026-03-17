@@ -5,6 +5,7 @@ import { useAuth } from 'contexts/AuthContext';
 import { SignUpCredentials } from 'types/interface';
 import Button from 'components/Common/Button';
 import { useStyleToken } from 'themeStyles';
+import { seedUserProficiency } from 'utils/invokeBackend';
 
 const { Title, Text } = Typography;
 
@@ -17,6 +18,10 @@ const SignUpPage: React.FC = () => {
     try {
       await signUp(values);
       message.success('Account created successfully! You are now signed in.');
+      
+      // Seed user proficiency asynchronously (non-blocking)
+      seedUserProficiency();
+      
       navigate('/');
     } catch (error) {
       let errorMessage = 'Failed to create account. Please try again.';
