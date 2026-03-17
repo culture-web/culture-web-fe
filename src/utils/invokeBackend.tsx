@@ -497,7 +497,20 @@ export const generateAdaptiveQuizSession = async (params?: {
 
   console.log("data from backend:", data);
 
-  return data;
+  // Normalize the backend response to match our interface
+  return {
+    quizId: data.quizId || null,
+    source: data.source || 'adaptive',
+    questions: (data.questions || []).map((q: AdaptiveQuizQuestionDTO, idx: number) => ({
+      backendQuestionId: q.id || q.question_id || null,
+      displayId: q.display_id || (idx + 1),
+      question: q.question,
+      options: q.options,
+      correctAnswer: q.correct_answer || q.correctAnswer || '',
+      explanation: q.explanation,
+    })),
+    raw: data,
+  };
 };
 
 export interface SubmitQuizResult {
@@ -544,8 +557,8 @@ export const submitQuizSession = async (params: {
   if (!response.ok) {
     let errText = `${response.status} ${response.statusText}`;
     try {
-      const maybeJson = await response.json();
-      errText = maybeJson?.error || maybeJson?.message || errText;
+      const errorResponse = await response.json();
+      errText = errorResponse?.error || errorResponse?.message || errText;
     } catch {
       // ignore
     }

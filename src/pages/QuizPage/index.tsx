@@ -52,8 +52,6 @@ const QuizPage: React.FC = () => {
 
       const result = await generateAdaptiveQuizSession({ count: 5 });
 
-      console.log(result);
-
       if (result.questions && result.questions.length > 0) {
         setActiveQuizSessionId(result.quizId);
         setActiveQuizSource('adaptive');
@@ -71,7 +69,6 @@ const QuizPage: React.FC = () => {
         setSelectedAnswers({});
         setChecked(false);
         setScore(0);
-        console.log('Adaptive quiz generated with', result.questions.length, 'questions');
         message.success(`Generated ${result.questions.length} adaptive questions from your knowledge gaps! 🎯`);
       } else {
         setActiveQuizSessionId(null);
@@ -181,8 +178,6 @@ const QuizPage: React.FC = () => {
 
   // Check the answers, update the cumulative score, and display a success message.
   const checkAnswers = async () => {
-    console.log('checkAnswers called, activeQuizSource:', activeQuizSource, 'activeQuizSessionId:', activeQuizSessionId);
-
     // Always grade on the frontend using the quiz payload (robust matching).
     let correctCount = 0;
     quizItems.forEach((item) => {
@@ -211,14 +206,10 @@ const QuizPage: React.FC = () => {
             answer: a.answer
           }));
 
-        console.log('Submitting quiz answers:', answers);
-
         const submission = await submitQuizSession({
           quizId: activeQuizSessionId,
           answers,
         });
-
-        console.log('Quiz submitted successfully');
 
         if (submission.proficiencyUpdatesApplied.length > 0) {
           message.success('Your understanding of certain concepts has improved!');
