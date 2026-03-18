@@ -4,16 +4,31 @@ import { Button, Image, Flex } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import logoKathakalAI from 'assets/images/logos/kathakalai-pink.png';
 import { useStyleToken } from 'themeStyles';
+import { useAuth } from 'contexts/AuthContext';
 
 function DropdownNavbar() {
   const [open, setOpen] = useState(false);
   const styleToken = useStyleToken();
   const navigate = useNavigate();
+  const { isAuthenticated, isKbAdmin } = useAuth();
 
   const handleNavigate = (path: string) => {
     navigate(path);
     setOpen(false);
   };
+
+  const localKbRole = (() => {
+    try {
+      const rawAdminUser = localStorage.getItem('adminUser');
+      if (!rawAdminUser) return '';
+      const parsed = JSON.parse(rawAdminUser) as { role?: string };
+      return String(parsed?.role || '').trim().toLowerCase();
+    } catch {
+      return '';
+    }
+  })();
+
+  const canAccessKbSettings = isAuthenticated && (isKbAdmin || localKbRole === 'admin');
 
   const activeLinkStyles = styleToken.navigationBar.activeLinkStyle;
   const defaultLinkStyles = styleToken.navigationBar.defaultLinkStyle;
@@ -92,6 +107,17 @@ function DropdownNavbar() {
           >
             Contact Us
           </NavLink>
+          {canAccessKbSettings && (
+            <NavLink
+              to="/k-manage-portal"
+              onClick={() => handleNavigate('/k-manage-portal')}
+              style={({ isActive }) =>
+                isActive ? activeLinkStyles : defaultLinkStyles
+              }
+            >
+              KB Settings
+            </NavLink>
+          )}
         </Flex>
       )}
     </Flex>

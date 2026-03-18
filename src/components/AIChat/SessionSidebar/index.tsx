@@ -10,6 +10,8 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
   currentSessionId,
   onSessionSelect,
   onNewSession,
+  onTemporarySession,
+  isTemporarySession = false,
   onDeleteSession,
   isLoading = false
 }) => {
@@ -64,6 +66,19 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
           loading={isLoading}
         >
           New Chat
+        </Button>
+        <Button
+          icon={<ClockCircleOutlined />}
+          onClick={onTemporarySession}
+          block
+          style={{
+            marginTop: '8px',
+            height: '34px',
+            borderColor: isTemporarySession ? '#c81f58' : '#d9d9d9',
+            color: isTemporarySession ? '#c81f58' : '#2b2d38',
+          }}
+        >
+          Temporary Chat
         </Button>
       </div>
 
@@ -145,7 +160,9 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
         background: '#fff'
       }}>
         <Text style={{ fontSize: '12px', color: '#8c8c8c' }}>
-          Sessions are saved automatically
+          {isTemporarySession
+            ? 'Temporary mode: messages are not saved'
+            : 'Sessions are saved automatically'}
         </Text>
       </div>
     </div>

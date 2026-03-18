@@ -266,6 +266,7 @@ export const sendChatQuery = async (
   imageAnalysis?: string,
   sessionId?: string,
   mudrasMode: boolean = false,
+  temporarySession: boolean = false,
 ): Promise<ChatbotResponse> => {
   try {
     // Always use FormData to be consistent with backend multer middleware
@@ -277,7 +278,7 @@ export const sendChatQuery = async (
     formData.append('message', query);
     formData.append('role', 'user');
     
-    if (sessionId) {
+    if (sessionId && !temporarySession) {
       formData.append('sessionId', sessionId);
     }
     
@@ -327,8 +328,12 @@ export const sendChatQuery = async (
       // Continue without token for anonymous chat
     }
 
-    // Use chat-mudras endpoint for Mudras RAG mode, otherwise use production chat
-    const urlEndpoint = mudrasMode ? `${BACKEND_URI}/kathakali/chat-mudras` : `${BACKEND_URI}/chat/messages`;
+    // Temporary chat should not persist messages to chat sessions
+    // - Mudras mode: use chat-mudras without sessionId persistence
+    // - Non-mudras mode: use kathakali/chat (no conversation persistence)
+    const urlEndpoint = temporarySession
+      ? (mudrasMode ? `${BACKEND_URI}/kathakali/chat-mudras` : `${BACKEND_URI}/kathakali/chat`)
+      : (mudrasMode ? `${BACKEND_URI}/kathakali/chat-mudras` : `${BACKEND_URI}/chat/messages`);
 
     const response = await fetch(urlEndpoint, {
       method: 'POST',

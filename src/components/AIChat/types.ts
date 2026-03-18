@@ -78,6 +78,8 @@ export interface SessionSidebarProps {
   currentSessionId?: string;
   onSessionSelect: (sessionId: string) => void;
   onNewSession: () => void;
+  onTemporarySession: () => void;
+  isTemporarySession?: boolean;
   onDeleteSession: (sessionId: string) => void;
   isLoading?: boolean;
 }

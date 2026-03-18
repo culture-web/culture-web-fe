@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import AboutUsPage from 'pages/AboutUsPage';
 import ContactUsPage from 'pages/ContactUsPage';
 import CulturesPage from 'pages/CulturesPage';
@@ -11,7 +11,6 @@ import SignUpPage from 'pages/SignUpPage';
 import ResetPasswordPage from 'pages/ResetPasswordPage';
 import MudrasPage from 'pages/MudrasPage';
 import AdminPage from 'pages/AdminPage';
-import AdminLoginPage from 'pages/AdminLoginPage';
 import ProtectedRoute from 'components/Common/ProtectedRoute';
 import OrnamentsPage from 'pages/OrnamentsPage';
 import OrnamentsCharacterListPage from 'pages/OrnamentsCharacterListPage';
@@ -47,7 +46,7 @@ function App() {
                 <Route path="/sign-up" element={<SignUpPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/learn" element={<MudrasPage />} />
-                <Route path="/admin-login" element={<AdminLoginPage />} />
+                <Route path="/admin-login" element={<Navigate to="/sign-in" replace />} />
                 <Route 
                   path="/k-manage-portal" 
                   element={
