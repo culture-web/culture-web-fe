@@ -198,7 +198,13 @@ const convertBackendMessageToFrontend = (backendMessage: BackendMessage): Messag
   };
 };
 
-const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudrasMode: boolean = false, isGuest: boolean = false) => {
+const useChatMessages = (
+  sessionId?: string,
+  onSessionUpdate?: () => void,
+  mudrasMode: boolean = false,
+  isGuest: boolean = false,
+  isTemporarySession: boolean = false,
+) => {
   const [messages, setMessages] = useState<Message[]>([getInitialMessage(mudrasMode, isGuest)]);
   const [inputValue, setInputValue] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -246,7 +252,7 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudra
     };
 
     loadSessionMessages();
-  }, [sessionId, mudrasMode, isGuest]);
+  }, [sessionId, mudrasMode, isGuest, isTemporarySession]);
 
   useEffect(() => () => {
       uploadedImages.forEach(image => {
@@ -358,7 +364,14 @@ const useChatMessages = (sessionId?: string, onSessionUpdate?: () => void, mudra
       }
 
       const firstImageFile = currentImages.length > 0 ? currentImages[0].file : undefined;
-      const chatResponse = await sendChatQuery(currentInput, firstImageFile, combinedAnalysis, sessionId, mudrasMode);
+      const chatResponse = await sendChatQuery(
+        currentInput,
+        firstImageFile,
+        combinedAnalysis,
+        sessionId,
+        mudrasMode,
+        isTemporarySession,
+      );
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),

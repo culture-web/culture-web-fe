@@ -9,7 +9,7 @@ import { useStyleToken } from 'themeStyles';
 const { Title, Text } = Typography;
 
 const SignInPage: React.FC = () => {
-  const { signIn, isLoading, requestPasswordReset } = useAuth();
+  const { signIn, isLoading, requestPasswordReset, refreshKbAccess } = useAuth();
   const navigate = useNavigate();
   const styleToken = useStyleToken();
   const [forgotModalOpen, setForgotModalOpen] = React.useState(false);
@@ -19,7 +19,29 @@ const SignInPage: React.FC = () => {
   const handleSubmit = async (values: SignInCredentials) => {
     try {
       await signIn(values);
+      let kbRole = '';
+      try {
+        const rawAdminUser = localStorage.getItem('adminUser');
+        const adminToken = localStorage.getItem('adminToken');
+        const parsedAdminUser = rawAdminUser ? JSON.parse(rawAdminUser) as { role?: string } : null;
+        kbRole = String(parsedAdminUser?.role || '').trim().toLowerCase();
+
+        if (!kbRole && adminToken) {
+          const retriedRole = await refreshKbAccess();
+          kbRole = String(retriedRole || '').trim().toLowerCase();
+        }
+      } catch {
+        const retriedRole = await refreshKbAccess();
+        kbRole = String(retriedRole || '').trim().toLowerCase();
+      }
+
       message.success('Successfully signed in!');
+
+      if (kbRole === 'admin') {
+        navigate('/k-manage-portal');
+        return;
+      }
+
       navigate('/');
     } catch (error) {
       let errorMessage = 'Failed to sign in. Please try again.';

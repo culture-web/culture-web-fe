@@ -9,11 +9,12 @@ import {
   LogoutOutlined, DeleteOutlined, ReloadOutlined, UploadOutlined,
   FileTextOutlined, MessageOutlined, PlayCircleOutlined,
   EditOutlined, DownloadOutlined, PlusOutlined, FolderAddOutlined, SearchOutlined, FilterOutlined,
-  CheckCircleOutlined, CloseCircleOutlined, WarningOutlined, DatabaseOutlined, InboxOutlined, CloudUploadOutlined, TeamOutlined, QuestionCircleOutlined,
+  CheckCircleOutlined, CloseCircleOutlined, WarningOutlined, DatabaseOutlined, InboxOutlined, CloudUploadOutlined, TeamOutlined, QuestionCircleOutlined, AuditOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useColourToken } from 'themeStyles';
 import BACKEND_URI from 'configs/env.config';
+import { supabase } from 'configs/supabase.config';
 import FormattedText from 'components/Common/FormattedText';
 import './index.css';
 
@@ -78,6 +79,7 @@ interface MenuItem {
 }
 
 type ManagedUserRole = 'admin' | 'editor' | 'viewer';
+type DeployTarget = 'mudras' | 'kathakali' | 'shared';
 
 const DEFAULT_CHUNK_SIZE = 1000;
 const DEFAULT_CHUNK_OVERLAP = 200;
@@ -90,6 +92,28 @@ interface ManagedUser {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface AuditTrailEntry {
+  id: number;
+  actor_user_id: string | null;
+  actor_email: string | null;
+  actor_role: string | null;
+  action: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  status: string;
+  details: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface AuditTrailResponse {
+  total: number;
+  limit: number;
+  offset: number;
+  retentionDays?: number;
+  prunedRows?: number;
+  entries: AuditTrailEntry[];
 }
 
 interface GlobalChatSettings {
@@ -180,7 +204,6 @@ const AdminPage: React.FC = () => {
   const [uploadTextForm] = Form.useForm();
   const [newFolderForm] = Form.useForm();
   const [userForm] = Form.useForm();
-  const [changePasswordForm] = Form.useForm();
   const [adminResetPasswordForm] = Form.useForm();
   const [stats, setStats] = useState<KBStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -265,6 +288,17 @@ const AdminPage: React.FC = () => {
       return null;
     }
   });
+  const [deployTargetType, setDeployTargetType] = useState<DeployTarget>(() => {
+    try {
+      const saved = localStorage.getItem('kbDeployTargetType');
+      if (saved === 'mudras' || saved === 'kathakali' || saved === 'shared') {
+        return saved;
+      }
+      return 'mudras';
+    } catch {
+      return 'mudras';
+    }
+  });
   const [deployedFiles, setDeployedFiles] = useState<Record<string, string>>(() => {
     try {
       const stored = localStorage.getItem('kbDeployedFiles');
@@ -288,10 +322,14 @@ const AdminPage: React.FC = () => {
   const [userCreating, setUserCreating] = useState(false);
   const [roleUpdating, setRoleUpdating] = useState<Record<string, boolean>>({});
   const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
-  const [changingOwnPassword, setChangingOwnPassword] = useState(false);
   const [resetTargetUser, setResetTargetUser] = useState<ManagedUser | null>(null);
   const [adminResetPasswordLoading, setAdminResetPasswordLoading] = useState(false);
+  const [auditEntries, setAuditEntries] = useState<AuditTrailEntry[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditSearchTerm, setAuditSearchTerm] = useState('');
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditRetentionDays, setAuditRetentionDays] = useState<number | null>(null);
+  const [auditPagination, setAuditPagination] = useState({ current: 1, pageSize: 20 });
   const pendingDeleteTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const tableDragDepth = useRef<number>(0);
   const realtimeSocketRef = useRef<Socket | null>(null);
@@ -348,8 +386,24 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     const saved = localStorage.getItem('rerankerStrategy');
     const savedAutoParse = localStorage.getItem('kbAutoParseAfterUpload');
+    const savedChunkSize = Number(localStorage.getItem('kbChunkSize'));
+    const savedChunkOverlap = Number(localStorage.getItem('kbChunkOverlap'));
     const nextAutoParse = savedAutoParse !== 'false';
     setAutoParseAfterUpload(nextAutoParse);
+
+    const normalizedChunkSize = Number.isFinite(savedChunkSize)
+      ? Math.max(100, Math.min(4000, Math.round(savedChunkSize)))
+      : DEFAULT_CHUNK_SIZE;
+    const normalizedChunkOverlap = Number.isFinite(savedChunkOverlap)
+      ? Math.max(0, Math.min(normalizedChunkSize - 1, Math.round(savedChunkOverlap)))
+      : DEFAULT_CHUNK_OVERLAP;
+    setChunkSize(normalizedChunkSize);
+    setChunkOverlap(normalizedChunkOverlap);
+    setSavedChunkSettings({
+      chunkSize: normalizedChunkSize,
+      chunkOverlap: normalizedChunkOverlap,
+    });
+
     if (saved === 'cross-encoder' || saved === 'embedding-based') {
       setRerankerStrategy(saved);
       setSavedIngestionSettings({
@@ -481,11 +535,20 @@ const AdminPage: React.FC = () => {
     localStorage.setItem('kbDeployTargetFile', deployTargetFile);
   }, [deployTargetFile]);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    localStorage.setItem('kbDeployTargetType', deployTargetType);
+  }, [deployTargetType]);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Supabase logout failed:', error);
+    }
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
     message.success('Logged out successfully');
-    navigate('/admin-login');
+    navigate('/sign-in');
   };
 
   const fetchStats = async () => {
@@ -655,7 +718,11 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const toggleEnable = async (fileName: string, enabled: boolean) => {
+  const toggleEnable = async (
+    fileName: string,
+    enabled: boolean,
+    deployTarget?: DeployTarget,
+  ) => {
     if (!canModifyKnowledgeBase) {
       message.warning('Viewer role cannot change file status');
       return;
@@ -664,7 +731,7 @@ const AdminPage: React.FC = () => {
       const response = await fetch(`${BACKEND_URI}/k-manage/knowledge-base/${encodeURIComponent(fileName)}/enable`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ enabled }),
+        body: JSON.stringify(enabled ? { enabled, deployTarget } : { enabled }),
       });
       if (!response.ok) throw new Error('Failed to update enabled state');
       message.success(`${enabled ? 'Enabled' : 'Disabled'} ${fileName}`);
@@ -690,13 +757,16 @@ const AdminPage: React.FC = () => {
       return;
     }
 
-    await toggleEnable(fileName, shouldDeploy);
+    await toggleEnable(fileName, shouldDeploy, shouldDeploy ? deployTargetType : undefined);
 
     if (shouldDeploy) {
       setDeployedFiles((prev) => ({ ...prev, [fileName]: new Date().toISOString() }));
-      await logFileActivity(fileName, 'deploy', { via: 'toggle' });
+      await logFileActivity(fileName, 'deploy', {
+        via: 'toggle',
+        deployTarget: deployTargetType,
+      });
       setWorkflowStep((prev) => Math.max(prev, 3));
-      message.success(`Deployed: ${fileName}`);
+      message.success(`Deployed to ${deployTargetType}: ${fileName}`);
       return;
     }
 
@@ -991,30 +1061,49 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const handleChangeOwnPassword = async () => {
+  const fetchAuditTrail = async (
+    options?: { page?: number; pageSize?: number; search?: string },
+  ) => {
+    const page = options?.page || auditPagination.current;
+    const pageSize = options?.pageSize || auditPagination.pageSize;
+    const search = typeof options?.search === 'string' ? options.search : auditSearchTerm;
+    const offset = (page - 1) * pageSize;
+
+    setAuditLoading(true);
     try {
-      const values = await changePasswordForm.validateFields();
-      setChangingOwnPassword(true);
-      const response = await fetch(`${BACKEND_URI}/auth/change-password`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          currentPassword: values.currentPassword,
-          newPassword: values.newPassword,
-        }),
+      const params = new URLSearchParams({
+        limit: String(pageSize),
+        offset: String(offset),
       });
+      if (search.trim()) {
+        params.set('search', search.trim());
+      }
+
+      const response = await fetch(
+        `${BACKEND_URI}/k-manage/audit-trail?${params.toString()}`,
+        {
+          headers: getAuthHeaders(),
+          cache: 'no-store',
+        },
+      );
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || 'Failed to change password');
+        throw new Error(errorData.error || 'Failed to load audit trail');
       }
-      message.success('Password changed successfully');
-      setChangePasswordModalOpen(false);
-      changePasswordForm.resetFields();
+
+      const data = (await response.json()) as AuditTrailResponse;
+      setAuditEntries(data.entries || []);
+      setAuditTotal(Number(data.total || 0));
+      setAuditRetentionDays(
+        typeof data.retentionDays === 'number' ? data.retentionDays : null,
+      );
+      setAuditPagination({ current: page, pageSize });
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'errorFields' in error) return;
-      message.error(error instanceof Error ? error.message : 'Failed to change password');
+      console.error('Audit trail fetch error:', error);
+      message.error(error instanceof Error ? error.message : 'Failed to load audit trail');
     } finally {
-      setChangingOwnPassword(false);
+      setAuditLoading(false);
     }
   };
 
@@ -1125,6 +1214,21 @@ const AdminPage: React.FC = () => {
     }, 5000);
   };
 
+  const getFileDeployTargets = (record: FileRecord): string[] => {
+    const candidateTargets = (record as unknown as { deploy_targets?: unknown }).deploy_targets;
+    if (Array.isArray(candidateTargets)) {
+      return candidateTargets
+        .map((target) => String(target || '').trim().toLowerCase())
+        .filter(Boolean);
+    }
+    const fallbackTarget = (record as unknown as { deploy_target?: unknown }).deploy_target;
+    if (typeof fallbackTarget === 'string' && fallbackTarget.trim()) {
+      if (fallbackTarget === 'mixed') return ['mudras', 'kathakali'];
+      return [fallbackTarget.trim().toLowerCase()];
+    }
+    return [];
+  };
+
   const fileColumns = [
     {
       title: 'Name',
@@ -1137,6 +1241,7 @@ const AdminPage: React.FC = () => {
         const isFailed = normalizedStatus === 'failed';
         const isParsed = !isParsing && !isFailed
           && (normalizedStatus === 'completed' || Number(record.chunk_number || 0) > 0);
+        const deployTargets = getFileDeployTargets(record);
 
         let statusColor: 'default' | 'green' | 'blue' | 'red' | 'orange' = 'default';
         let statusLabel = 'Not Parsed';
@@ -1158,7 +1263,13 @@ const AdminPage: React.FC = () => {
             >
               {text}
             </Button>
-            {deployedFiles[record.name] && <Tag color="purple">Deployed</Tag>}
+            {deployedFiles[record.name] && (
+              <Tag color="purple">
+                {deployTargets.length <= 1
+                  ? `Deployed to ${deployTargets[0] || 'target'}`
+                  : `Deployed to ${deployTargets.length} targets`}
+              </Tag>
+            )}
           </div>
         );
       },
@@ -1190,14 +1301,29 @@ const AdminPage: React.FC = () => {
           if (isDeployChecked) tooltipTitle = 'Disable (set to pending)';
           else tooltipTitle = 'Deploy file';
         }
+        const deployTargets = getFileDeployTargets(record);
         return (
-          <Tooltip title={tooltipTitle}>
-            <Switch
-              checked={isDeployChecked}
-              disabled={!canModifyKnowledgeBase || !parsed}
-              onChange={(nextChecked) => toggleDeployState(record, nextChecked)}
-            />
-          </Tooltip>
+          <Space direction="vertical" size={4}>
+            <Tooltip title={tooltipTitle}>
+              <Switch
+                checked={isDeployChecked}
+                disabled={!canModifyKnowledgeBase || !parsed}
+                onChange={(nextChecked) => toggleDeployState(record, nextChecked)}
+              />
+            </Tooltip>
+            {isDeployChecked && deployTargets.length > 0 && (
+              <Space size={4} wrap>
+                {deployTargets.map((target) => (
+                  <Tag
+                    key={`${record.name}-target-${target}`}
+                    color={target === 'mudras' ? 'magenta' : target === 'kathakali' ? 'blue' : 'purple'}
+                  >
+                    {target}
+                  </Tag>
+                ))}
+              </Space>
+            )}
+          </Space>
         );
       },
     },
@@ -1692,6 +1818,9 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     if (activeTab === 'users') {
       fetchManagedUsers();
+    }
+    if (activeTab === 'audit') {
+      fetchAuditTrail();
     }
     if (activeTab === 'chat') {
       setChatTested(true);
@@ -2345,6 +2474,16 @@ const AdminPage: React.FC = () => {
 
   const handleSendMessage = async (values: { chatInput: string }) => {
     const userMessage = values.chatInput;
+    const historyMessages = chatMessages
+      .filter((msg) =>
+        (msg.role === 'user' || msg.role === 'assistant')
+        && typeof msg.content === 'string'
+        && msg.content.trim().length > 0,
+      )
+      .map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
     
     // Add user message to chat
     const newUserMessage: ChatMessage = {
@@ -2371,6 +2510,7 @@ const AdminPage: React.FC = () => {
           fullTextWeight: Number((1 - globalChatSettings.vectorWeight).toFixed(2)),
           topN: globalChatSettings.topN,
           multiTurnOptimization: globalChatSettings.multiTurnOptimization,
+          historyMessages,
         }),
       });
 
@@ -2524,6 +2664,16 @@ const AdminPage: React.FC = () => {
                 showSearch
                 optionFilterProp="label"
               />
+              <Select
+                style={{ width: 150 }}
+                value={deployTargetType}
+                onChange={(value) => setDeployTargetType(value as DeployTarget)}
+                options={[
+                  { label: 'Mudras KB', value: 'mudras' },
+                  { label: 'Kathakali KB', value: 'kathakali' },
+                  { label: 'Shared KB', value: 'shared' },
+                ]}
+              />
               <Button
                 type="primary"
                 size="small"
@@ -2568,7 +2718,7 @@ const AdminPage: React.FC = () => {
 
           return (
             <Tag color="green" style={{ fontSize: '15px', padding: '4px 10px', width: 'fit-content', marginBottom: 10 }}>
-              {deployTargetFile.split('/').pop()} • {currentStatus}
+              {deployTargetFile.split('/').pop()} • {currentStatus} • {deployTargetType}
             </Tag>
           );
         })()}
@@ -2590,7 +2740,7 @@ const AdminPage: React.FC = () => {
               <Title level={5} style={{ margin: 0, color: colourToken.white }}>Configuration</Title>
               <Tooltip
                 title={(
-                  <div style={{ maxWidth: 360 }}>
+                  <div style={{ maxWidth: 520, fontSize: 12, lineHeight: '16px' }}>
                     <div><strong>Configuration Help</strong></div>
                     <div>Auto Parse: parse immediately after upload.</div>
                     <div>Reranker: retrieval strategy (`Embedding` faster, `Cross-Encoder` more precise).</div>
@@ -2615,23 +2765,27 @@ const AdminPage: React.FC = () => {
           <div className="power-features-grid">
             <div>
               <Text strong>Ingestion</Text>
-              <div className="power-feature-row">
-                <Tooltip title="If enabled, uploaded files are parsed immediately; otherwise they stay uploaded-only until manual parse.">
-                  <Text type="secondary" style={{ cursor: 'help' }}>Auto Parse</Text>
-                </Tooltip>
-                <Switch checked={autoParseAfterUpload} onChange={setAutoParseAfterUpload} />
-                <Tooltip title="Retrieval reranking strategy. Embedding-based is faster; Cross-Encoder is usually more accurate.">
-                  <Text type="secondary" style={{ cursor: 'help' }}>Reranker</Text>
-                </Tooltip>
-                <Select
-                  style={{ minWidth: 190 }}
-                  value={rerankerStrategy}
-                  onChange={handleRerankerStrategyChange}
-                  options={[
-                    { label: 'Embedding-Based', value: 'embedding-based' },
-                    { label: 'Cross-Encoder', value: 'cross-encoder' },
-                  ]}
-                />
+              <div className="power-feature-row power-feature-row-spaced">
+                <div className="power-feature-pair">
+                  <Tooltip title="If enabled, uploaded files are parsed immediately; otherwise they stay uploaded-only until manual parse.">
+                    <Text type="secondary" style={{ cursor: 'help' }}>Auto Parse</Text>
+                  </Tooltip>
+                  <Switch checked={autoParseAfterUpload} onChange={setAutoParseAfterUpload} />
+                </div>
+                <div className="power-feature-pair">
+                  <Tooltip title="Retrieval reranking strategy. Embedding-based is faster; Cross-Encoder is usually more accurate.">
+                    <Text type="secondary" style={{ cursor: 'help' }}>Reranker</Text>
+                  </Tooltip>
+                  <Select
+                    style={{ minWidth: 190 }}
+                    value={rerankerStrategy}
+                    onChange={handleRerankerStrategyChange}
+                    options={[
+                      { label: 'Embedding-Based', value: 'embedding-based' },
+                      { label: 'Cross-Encoder', value: 'cross-encoder' },
+                    ]}
+                  />
+                </div>
               </div>
               <div className="power-feature-row" style={{ marginTop: 8 }}>
                 <Tooltip title="Approximate characters per chunk before embedding.">
@@ -3178,7 +3332,7 @@ const AdminPage: React.FC = () => {
                 key={msg.id}
                 className={msg.role === 'user' ? 'chat-row chat-row-user' : 'chat-row chat-row-assistant'}
               >
-                <div style={{ maxWidth: '85%', width: '100%' }}>
+                <div className="chat-message-block">
                   <div className={msg.role === 'user' ? 'chat-bubble chat-bubble-user' : 'chat-bubble chat-bubble-assistant'}>
                     <div 
                       className={msg.role === 'user' ? 'chat-text-user' : 'chat-text-assistant'}
@@ -3523,6 +3677,119 @@ const AdminPage: React.FC = () => {
     ),
   };
 
+  const auditTrailTab = {
+    key: 'audit',
+    label: <span style={{ color: '#e0e0e0' }}><AuditOutlined style={{ color: '#e0e0e0' }} /> Audit Trail</span>,
+    children: (
+      <Card
+        style={{
+          background: colourToken.primary,
+          border: '1px solid #3a3d4a',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: 12, flexWrap: 'wrap' }}>
+          <Space direction="vertical" size={2}>
+            <Title level={4} style={{ margin: 0, color: colourToken.white }}>Audit Trail</Title>
+            <Text type="secondary" style={{ color: '#ababab' }}>
+              Retention: {auditRetentionDays ?? '-'} day(s)
+            </Text>
+          </Space>
+          <Space>
+            <Input
+              placeholder="Search action, resource, actor..."
+              allowClear
+              prefix={<SearchOutlined />}
+              value={auditSearchTerm}
+              onChange={(e) => setAuditSearchTerm(e.target.value)}
+              onPressEnter={() => fetchAuditTrail({ page: 1, search: auditSearchTerm })}
+              style={{ width: 320 }}
+            />
+            <Button onClick={() => fetchAuditTrail({ page: 1, search: auditSearchTerm })}>
+              Search
+            </Button>
+            <Button icon={<ReloadOutlined />} onClick={() => fetchAuditTrail()} loading={auditLoading}>
+              Refresh
+            </Button>
+          </Space>
+        </div>
+
+        <Table
+          rowKey="id"
+          loading={auditLoading}
+          dataSource={auditEntries}
+          columns={[
+            {
+              title: 'Time',
+              dataIndex: 'created_at',
+              key: 'created_at',
+              width: 190,
+              render: (value: string) => (value ? new Date(value).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }) : '-'),
+            },
+            {
+              title: 'Action',
+              dataIndex: 'action',
+              key: 'action',
+              render: (value: string) => <Tag color="blue">{value}</Tag>,
+            },
+            {
+              title: 'Actor',
+              key: 'actor',
+              render: (_: unknown, record: AuditTrailEntry) => (
+                <Space direction="vertical" size={0}>
+                  <Text>{record.actor_email || record.actor_user_id || '-'}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{record.actor_role || '-'}</Text>
+                </Space>
+              ),
+            },
+            {
+              title: 'Resource',
+              key: 'resource',
+              render: (_: unknown, record: AuditTrailEntry) => (
+                <Space direction="vertical" size={0}>
+                  <Text>{record.resource_type || '-'}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{record.resource_id || '-'}</Text>
+                </Space>
+              ),
+            },
+            {
+              title: 'Status',
+              dataIndex: 'status',
+              key: 'status',
+              width: 100,
+              render: (value: string) => (
+                <Tag color={String(value).toLowerCase() === 'success' ? 'green' : 'red'}>{value || '-'}</Tag>
+              ),
+            },
+            {
+              title: 'Details',
+              dataIndex: 'details',
+              key: 'details',
+              render: (value: Record<string, unknown> | null) => {
+                if (!value || typeof value !== 'object') return '-';
+                const preview = JSON.stringify(value);
+                const text = preview.length > 180 ? `${preview.slice(0, 180)}...` : preview;
+                return <Text style={{ fontSize: 12, color: '#ababab' }}>{text}</Text>;
+              },
+            },
+          ]}
+          pagination={{
+            current: auditPagination.current,
+            pageSize: auditPagination.pageSize,
+            total: auditTotal,
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50', '100'],
+            onChange: (current, pageSize) => {
+              fetchAuditTrail({ page: current, pageSize, search: auditSearchTerm });
+            },
+            showTotal: (total) => `Total ${total} records`,
+          }}
+        />
+      </Card>
+    ),
+  };
+
   return (
     <ConfigProvider
       theme={{
@@ -3555,9 +3822,6 @@ const AdminPage: React.FC = () => {
             <Tag color="blue">{currentKbUserRole}</Tag>
           </div>
           <Space>
-            <Button onClick={() => setChangePasswordModalOpen(true)}>
-              Change Password
-            </Button>
             <Button
               type="primary"
               danger
@@ -3572,62 +3836,12 @@ const AdminPage: React.FC = () => {
 
       <Content style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', width: '100%', minHeight: 'calc(100vh - 64px)' }}>
         <Tabs
-          items={currentKbUserRole === 'admin' ? [knowledgeBaseTab, chatTab, userManagementTab] : [knowledgeBaseTab, chatTab]}
+          items={currentKbUserRole === 'admin' ? [knowledgeBaseTab, chatTab, userManagementTab, auditTrailTab] : [knowledgeBaseTab, chatTab]}
           size="large"
           activeKey={activeTab}
           onChange={(k) => setActiveTab(k)}
           defaultActiveKey="kb"
         />
-
-        <Modal
-          title="Change My Password"
-          open={changePasswordModalOpen}
-          onCancel={() => {
-            setChangePasswordModalOpen(false);
-            changePasswordForm.resetFields();
-          }}
-          onOk={handleChangeOwnPassword}
-          okText="Update"
-          confirmLoading={changingOwnPassword}
-        >
-          <Form form={changePasswordForm} layout="vertical">
-            <Form.Item
-              label="Current Password"
-              name="currentPassword"
-              rules={[{ required: true, message: 'Please enter current password' }]}
-            >
-              <Input.Password />
-            </Form.Item>
-            <Form.Item
-              label="New Password"
-              name="newPassword"
-              rules={[
-                { required: true, message: 'Please enter new password' },
-                { min: 6, message: 'Password must be at least 6 characters' },
-              ]}
-            >
-              <Input.Password />
-            </Form.Item>
-            <Form.Item
-              label="Confirm New Password"
-              name="confirmNewPassword"
-              dependencies={['newPassword']}
-              rules={[
-                { required: true, message: 'Please confirm new password' },
-                ({ getFieldValue }) => ({
-                  validator(_, value) {
-                    if (!value || getFieldValue('newPassword') === value) {
-                      return Promise.resolve();
-                    }
-                    return Promise.reject(new Error('Passwords do not match'));
-                  },
-                }),
-              ]}
-            >
-              <Input.Password />
-            </Form.Item>
-          </Form>
-        </Modal>
 
         <Drawer
           className="file-details-drawer"

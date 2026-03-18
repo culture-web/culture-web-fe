@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'; // React Router's NavLink for navigation
 import { Button, Image, Flex, Dropdown, Avatar } from 'antd'; // Ant Design components
-import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons';
 import logoKathakalAI from 'assets/images/logos/kathakalai-pink.png';
 import { useStyleToken, useColourToken } from 'themeStyles';
 import { useAuth } from 'contexts/AuthContext';
@@ -9,7 +9,7 @@ function Navbar() {
   const styleToken = useStyleToken();
   const colourToken = useColourToken();
   const navigate = useNavigate();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated, signOut, isKbAdmin } = useAuth();
   
   // Debug logging to see authentication state
   console.log('Navbar render - Authentication state:', { 
@@ -25,6 +25,19 @@ function Navbar() {
     await signOut();
     navigate('/');
   };
+
+  const localKbRole = (() => {
+    try {
+      const rawAdminUser = localStorage.getItem('adminUser');
+      if (!rawAdminUser) return '';
+      const parsed = JSON.parse(rawAdminUser) as { role?: string };
+      return String(parsed?.role || '').trim().toLowerCase();
+    } catch {
+      return '';
+    }
+  })();
+
+  const canAccessKbSettings = isAuthenticated && (isKbAdmin || localKbRole === 'admin');
 
   const activeLinkStyles = styleToken.navigationBar.activeLinkStyle;
   const defaultLinkStyles = styleToken.navigationBar.defaultLinkStyle;
@@ -46,23 +59,26 @@ function Navbar() {
 
   return (
     <Flex style={styleToken.navigationBar.navigationBarStyle}>
-      <Button
-        type="text"
-        onClick={() => handleNavigate('/')}
-        style={styleToken.navigationBar.kathakalAIButtonStyle}
-        onMouseDown={(e) => e.preventDefault()} // Prevent the default behavior of focus/active states
-      >
-        <Image
-          src={logoKathakalAI}
-          alt="KathakalAI Logo"
-          style={{
-            height: '60px',
-            marginRight: '0.5rem', // Space between the logo and text
-          }}
-          preview={false} // Disables the preview popup on click
-        />
-        KathakalAI
-      </Button>
+      <Flex align="center" gap="small">
+        <Button
+          type="text"
+          onClick={() => handleNavigate('/')}
+          style={styleToken.navigationBar.kathakalAIButtonStyle}
+          onMouseDown={(e) => e.preventDefault()} // Prevent the default behavior of focus/active states
+        >
+          <Image
+            src={logoKathakalAI}
+            alt="KathakalAI Logo"
+            style={{
+              height: '60px',
+              marginRight: '0.5rem', // Space between the logo and text
+            }}
+            preview={false} // Disables the preview popup on click
+          />
+          KathakalAI
+        </Button>
+
+      </Flex>
       <Flex align="center" gap="large">
         <NavLink
           to="/"
@@ -114,25 +130,44 @@ function Navbar() {
           Contact Us
         </NavLink>
         {isAuthenticated ? (
-          <Dropdown
-            menu={{ items: userMenuItems }}
-            placement="bottomRight"
-            trigger={['click']}
-          >
-            <Button
-              type="text"
-              style={{
-                ...defaultLinkStyles,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem',
-              }}
+          <>
+            {canAccessKbSettings && (
+              <Button
+                type="text"
+                icon={<SettingOutlined />}
+                onClick={() => handleNavigate('/k-manage-portal')}
+                style={{
+                  ...defaultLinkStyles,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.5rem',
+                }}
+              >
+                KB Settings
+              </Button>
+            )}
+
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              trigger={['click']}
             >
-              <Avatar size="small" icon={<UserOutlined />} />
-              {user?.name || 'User'}
-            </Button>
-          </Dropdown>
+              <Button
+                type="text"
+                style={{
+                  ...defaultLinkStyles,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem',
+                }}
+              >
+                <Avatar size="small" icon={<UserOutlined />} />
+                {user?.name || 'User'}
+              </Button>
+            </Dropdown>
+          </>
         ) : (
           <Flex align="center" gap="small" style={{ marginLeft: '1rem' }}>
             <Button

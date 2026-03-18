@@ -13,6 +13,7 @@ import SessionSidebar from './SessionSidebar';
 const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionChange, isGuest = false }) => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | undefined>(currentSessionId);
+  const [isTemporarySession, setIsTemporarySession] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const location = useLocation();
   const [mudrasMode, setMudrasMode] = useState(false);
@@ -49,7 +50,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     removeImage,
     handleSendMessage,
     refreshMessages,
-  } = useChatMessages(activeSessionId, loadSessions, mudrasMode, isGuest);
+  } = useChatMessages(activeSessionId, loadSessions, mudrasMode, isGuest, isTemporarySession);
   
   const isMobile = useIsMobile();
 
@@ -67,6 +68,7 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
       const newSession = await createNewSession();
       setSessions(prev => [newSession, ...prev]);
       setActiveSessionId(newSession.id);
+      setIsTemporarySession(false);
       onSessionChange?.(newSession.id);
       message.success('New chat session created');
     } catch (error) {
@@ -80,7 +82,15 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
   // Handle session selection
   const handleSessionSelect = (sessionId: string) => {
     setActiveSessionId(sessionId);
+    setIsTemporarySession(false);
     onSessionChange?.(sessionId);
+  };
+
+  const handleTemporarySession = () => {
+    setActiveSessionId(undefined);
+    setIsTemporarySession(true);
+    onSessionChange?.('');
+    message.info('Temporary chat started (not saved)');
   };
 
   // Handle session deletion
@@ -95,9 +105,11 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
         if (remainingSessions.length > 0) {
           const newActiveSession = remainingSessions[0];
           setActiveSessionId(newActiveSession.id);
+          setIsTemporarySession(false);
           onSessionChange?.(newActiveSession.id);
         } else {
           setActiveSessionId(undefined);
+          setIsTemporarySession(false);
           onSessionChange?.('');
         }
       }
@@ -182,6 +194,8 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
           currentSessionId={activeSessionId}
           onSessionSelect={handleSessionSelect}
           onNewSession={handleNewSession}
+          onTemporarySession={handleTemporarySession}
+          isTemporarySession={isTemporarySession}
           onDeleteSession={handleDeleteSession}
           isLoading={isCreatingSession}
         />

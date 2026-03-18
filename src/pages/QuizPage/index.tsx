@@ -11,6 +11,7 @@ import { QuizCategory, QuizItem } from './quizTypes';
 import quizCharacter from './characterData';
 import quizExpression from './expressionData';
 import quizOrnament from './ornamentData';
+import './index.css';
 
 const { Text, Title } = Typography;
 
@@ -233,18 +234,20 @@ const QuizPage: React.FC = () => {
   };
 
   return (
-    // Use a max-width and center the container. Adjust padding for mobile vs. desktop.
-    <div>
-      <Title style={{ ...styleToken.pageHeadingTextStyle, textAlign: 'center' }}>
-        Quiz
-      </Title>
+    <div className="quiz-page-container">
+      <div className="quiz-page-header">
+        <Title style={{ ...styleToken.pageHeadingTextStyle, textAlign: 'center', marginBottom: 8 }}>
+          Quiz
+        </Title>
+        <Text style={{ color: colourToken.gray }}>Sharpen your learning with static, learning-based, and adaptive quizzes.</Text>
+      </div>
 
-      {/* Buttons row (center them, add spacing for mobile) */}
-      <div style={{ marginBottom: 16, textAlign: 'center' }}>
+      <Card className="quiz-actions-card" style={{ backgroundColor: colourToken.lightGray }}>
+        <div className="quiz-actions-grid">
         <Button
           type="primary"
           onClick={() => generateQuiz('Core')}
-          style={{ marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
+          className="quiz-action-button"
         >
           Kathakali Basics Quiz
         </Button>
@@ -252,81 +255,67 @@ const QuizPage: React.FC = () => {
         <Button
           type="primary"
           onClick={() => generateQuiz(ORNAMENT)}
-          style={{ marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0, width: '250px' }}
+          className="quiz-action-button"
         >
           Generate Quiz For Ornaments
         </Button>
-        {/* Show only for guests (not logged in) */}
-        {!isAuthenticated && (
-          <Button 
-            type="primary" 
-            style={{ width: '250px', background: '#52c41a', borderColor: '#52c41a',marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
-            onClick={generateQuizFromLearning}
-            loading={loadingQuiz}
-          >
-            Generate from Learning
-          </Button>
-        )}
+        <Button 
+          type="primary" 
+          className="quiz-action-button"
+          style={{ background: '#52c41a', borderColor: '#52c41a' }}
+          onClick={generateQuizFromLearning}
+          loading={loadingQuiz}
+        >
+          Generate from Learning
+        </Button>
         {/* Show only for logged-in users */}
         {isAuthenticated && (
           <Button 
             type="primary" 
-            style={{ width: '250px', background: '#1890ff', borderColor: '#1890ff', marginRight: isMobile ? 0 : 8, marginBottom: isMobile ? 8 : 0  }} 
+            className="quiz-action-button"
+            style={{ background: '#1890ff', borderColor: '#1890ff' }}
             onClick={generateAdaptiveQuiz}
             loading={loadingAdaptiveQuiz}
           >
             Generate Adaptive Quiz
           </Button>
         )}
+        </div>
+      </Card>
 
-      </div>
-
-      <div>
+      <div className="quiz-cards-wrap">
         {quizItems.map((item) => (
           <Card 
             key={item.id} 
-            style={{ 
-              marginBottom: 16, 
-              backgroundColor: colourToken.lightGray
-            }}
+            className="quiz-question-card"
+            style={{ backgroundColor: colourToken.lightGray }}
           >
-            <p style={{ fontSize: '2rem' }}>{item.question}</p>
+            <p className="quiz-question-text">{item.question}</p>
             <div
-              style={{
-                // Switch to column layout on mobile, row on desktop
-                display: 'flex',
-                flexDirection: isMobile ? 'column' : 'row',
-                alignItems: 'flex-start',
-                gap: 24,
-              }}
+              className={`quiz-question-layout ${isMobile ? 'quiz-question-layout-mobile' : ''}`}
             >
               {/* Only show image if it exists */}
               {item.image && (
                 <Image
                   src={item.image}
-                  // Use full width on mobile, fixed size on desktop
-                  style={{
-                    width: isMobile ? '100%' : 300,
-                    height: isMobile ? 'auto' : 300,
-                    objectFit: 'cover',
-                  }}
+                  className={`quiz-question-image ${isMobile ? 'quiz-question-image-mobile' : ''}`}
                 />
               )}
-              <div style={{ width: isMobile ? '100%' : 'auto', flex: 1 }}>
+              <div className="quiz-question-options-wrap">
                 <Radio.Group
                   onChange={(e) => onOptionChange(item.id, e.target.value)}
                   value={selectedAnswers[item.id]}
-                  style={{ display: 'flex', flexDirection: 'column' }}
+                  className="quiz-radio-group"
                 >
                   {item.options.map((option) => (
-                    <Radio key={option} value={option} style={{ marginBottom: 8, fontSize: '1.5rem' }}>
+                    <Radio key={option} value={option} className="quiz-radio-item">
                       {option}
                     </Radio>
                   ))}
                 </Radio.Group>
 
                 {checked && (
-                  <div style={{ marginTop: 12, padding: 12, background: colourToken.primary, borderRadius: 8 }}>
+                  <div className="quiz-answer-feedback">
                     {selectedAnswers[item.id] === item.correctAnswer ? (
                       <Text style={{ color: 'green', fontWeight: 'bold' }}>✓ Correct!</Text>
                     ) : (
@@ -338,7 +327,7 @@ const QuizPage: React.FC = () => {
                     )}
                     {/* Show explanation if available (from LLM-generated quiz) */}
                     {item.explanation && (
-                      <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #3a3d4a' }}>
+                      <div className="quiz-answer-explanation">
                         <Text style={{ color: colourToken.gray, fontSize: '0.9rem' }}>
                           <strong>Explanation:</strong> {item.explanation}
                         </Text>
@@ -354,18 +343,21 @@ const QuizPage: React.FC = () => {
 
       {/* Check Answers button (only shows if quiz items exist and not yet checked) */}
       {quizItems.length > 0 && !checked && (
-        <Button
-          type="primary"
-          onClick={checkAnswers}
-          disabled={Object.keys(selectedAnswers).length < quizItems.length}
-          loading={submittingQuiz}
-        >
-          Check Answers
-        </Button>
+        <div className="quiz-submit-wrap">
+          <Button
+            type="primary"
+            onClick={checkAnswers}
+            disabled={Object.keys(selectedAnswers).length < quizItems.length}
+            loading={submittingQuiz}
+            size="large"
+          >
+            Check Answers
+          </Button>
+        </div>
       )}
 
       {/* Score display */}
-      {quizItems.length > 0 &&<div style={{ marginTop: 24 }}>
+      {quizItems.length > 0 &&<div className="quiz-score-wrap">
         <h3>Total Score: {score}</h3>
       </div>}
     </div>

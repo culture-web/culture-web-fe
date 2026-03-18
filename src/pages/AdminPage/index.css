@@ -496,6 +496,20 @@
   align-items: flex-start;
 }
 
+.chat-message-block {
+  display: inline-flex;
+  flex-direction: column;
+  max-width: 85%;
+}
+
+.chat-row-user .chat-message-block {
+  align-items: flex-end;
+}
+
+.chat-row-assistant .chat-message-block {
+  align-items: flex-start;
+}
+
 .chat-messages::-webkit-scrollbar {
   width: 6px;
 }
@@ -567,8 +581,8 @@
   display: block;
   font-size: 11px;
   color: #9aa0ad;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 .chat-timestamp-user {
@@ -806,6 +820,17 @@
   gap: 6px;
   flex-wrap: wrap;
   margin-top: 6px;
+}
+
+.power-feature-row-spaced {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.power-feature-pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .chat-retrieval-debug {

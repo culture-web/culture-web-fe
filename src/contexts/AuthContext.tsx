@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { User, AuthState, SignInCredentials, SignUpCredentials } from 'types/interface';
 import { supabase, getCurrentUserToken } from 'configs/supabase.config';
+import BACKEND_URI from 'configs/env.config';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+type KbRole = 'admin' | 'editor' | 'viewer';
 
 interface AuthContextType extends AuthState {
   signIn: (credentials: SignInCredentials) => Promise<void>;
@@ -10,6 +13,9 @@ interface AuthContextType extends AuthState {
   getUserToken: () => Promise<string | null>;
   requestPasswordReset: (email: string) => Promise<void>;
   updateOwnPassword: (newPassword: string) => Promise<void>;
+  kbRole: KbRole | null;
+  isKbAdmin: boolean;
+  refreshKbAccess: () => Promise<KbRole | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,6 +39,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: true,
     session: null,
   });
+  const [kbRole, setKbRole] = useState<KbRole | null>(() => {
+    try {
+      const raw = localStorage.getItem('adminUser');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { role?: string };
+      const role = String(parsed?.role || '').toLowerCase();
+      if (role === 'admin' || role === 'editor' || role === 'viewer') return role;
+      return null;
+    } catch {
+      return null;
+    }
+  });
 
   // Helper function to transform Supabase user to our User interface
   const transformSupabaseUser = useCallback((supabaseUser: SupabaseUser): User => ({
@@ -43,6 +61,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     createdAt: supabaseUser.created_at,
     created_at: supabaseUser.created_at,
   }), []);
+
+  const syncKbAccess = useCallback(async (accessToken?: string): Promise<KbRole | null> => {
+    const token = accessToken || await getCurrentUserToken();
+    if (!token) {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      setKbRole(null);
+      return null;
+    }
+
+    try {
+      const response = await fetch(`${BACKEND_URI}/auth/supabase-kb-login`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        setKbRole(null);
+        return null;
+      }
+
+      const data = await response.json();
+      const nextRole = String(data?.user?.role || '').toLowerCase();
+      if (nextRole !== 'admin' && nextRole !== 'editor' && nextRole !== 'viewer') {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
+        setKbRole(null);
+        return null;
+      }
+
+      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('adminUser', JSON.stringify(data.user));
+      setKbRole(nextRole);
+      return nextRole;
+    } catch (error) {
+      console.error('Failed to sync KB access:', error);
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      setKbRole(null);
+      return null;
+    }
+  }, []);
 
   // Initialize auth state and listen for changes
   useEffect(() => {
@@ -64,6 +128,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (session?.user) {
           const transformedUser = transformSupabaseUser(session.user);
+          await syncKbAccess(session.access_token);
           setAuthState({
             user: transformedUser,
             isAuthenticated: true,
@@ -71,6 +136,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             session,
           });
         } else {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          setKbRole(null);
           setAuthState({
             user: null,
             isAuthenticated: false,
@@ -98,6 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (session?.user) {
           const transformedUser = transformSupabaseUser(session.user);
+          await syncKbAccess(session.access_token);
           setAuthState({
             user: transformedUser,
             isAuthenticated: true,
@@ -105,6 +174,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             session,
           });
         } else {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminUser');
+          setKbRole(null);
           setAuthState({
             user: null,
             isAuthenticated: false,
@@ -118,7 +190,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [transformSupabaseUser]);
+  }, [syncKbAccess, transformSupabaseUser]);
 
   const signIn = useCallback(async (credentials: SignInCredentials): Promise<void> => {
     try {
@@ -134,6 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (data?.user) {
+        await syncKbAccess(data.session?.access_token);
         const transformedUser = transformSupabaseUser(data.user);
         setAuthState({
           user: transformedUser,
@@ -146,7 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAuthState(prev => ({ ...prev, isLoading: false }));
       throw error;
     }
-  }, [transformSupabaseUser]);
+  }, [syncKbAccess, transformSupabaseUser]);
 
   const signUp = useCallback(async (credentials: SignUpCredentials): Promise<void> => {
     try {
@@ -198,6 +271,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // State will be updated by the auth listener
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      setKbRole(null);
       setAuthState({
         user: null,
         isAuthenticated: false,
@@ -207,6 +283,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Unexpected error during sign out:', error);
       // Force clear state even if sign out fails
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      setKbRole(null);
       setAuthState({
         user: null,
         isAuthenticated: false,
@@ -241,7 +320,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getUserToken,
     requestPasswordReset,
     updateOwnPassword,
-  }), [authState, signIn, signUp, signOut, getUserToken, requestPasswordReset, updateOwnPassword]);
+    kbRole,
+    isKbAdmin: kbRole === 'admin',
+    refreshKbAccess: () => syncKbAccess(),
+  }), [authState, signIn, signUp, signOut, getUserToken, requestPasswordReset, updateOwnPassword, kbRole, syncKbAccess]);
 
   return (
     <AuthContext.Provider value={value}>
