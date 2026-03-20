@@ -923,8 +923,12 @@ const AdminPage: React.FC = () => {
     return s?.status === 'processing' || (s?.progress && s.progress > 0 && s.progress < 100);
   }).length;
   const totalFilesCount = Math.max(stats?.total_files || 0, files.length);
+  const totalChunksFromFiles = files.reduce(
+    (sum, file) => sum + Number(file.chunk_number || 0),
+    0,
+  );
   const avgChunksPerFile = files.length > 0
-    ? Math.round(files.reduce((sum, f) => sum + f.chunk_number, 0) / files.length)
+    ? Math.round(totalChunksFromFiles / files.length)
     : 0;
 
   const knowledgeSourceOptions = useMemo(() => {
@@ -2874,7 +2878,7 @@ const AdminPage: React.FC = () => {
               </div>
               <div className="power-feature-row" style={{ marginTop: 8 }}>
                 <Tooltip title="How much semantic embedding score contributes vs full-text signal.">
-                  <Text type="secondary" style={{ cursor: 'help' }}>Vector Weight</Text>
+                  <Text type="secondary" style={{ cursor: 'help' }}>Vector vs Full-Text Weight</Text>
                 </Tooltip>
                 <Slider
                   min={0}
