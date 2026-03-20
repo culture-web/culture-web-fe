@@ -368,6 +368,9 @@ export const sendChatQuery = async (
         tables: chatbotResponse.tables || [],
         citations: chatbotResponse.citations || [],
         retrieval: chatbotResponse.retrieval || undefined,
+        assetMatches: Array.isArray(chatbotResponse.assetMatches)
+          ? chatbotResponse.assetMatches
+          : [],
         metadata: chatbotResponse.metadata || {
           hasStructuredContent: false,
           responseLength: 0,
@@ -386,6 +389,7 @@ export const sendChatQuery = async (
         tables: [],
         citations: Array.isArray(data?.citations) ? data.citations : [],
         retrieval: data?.retrieval || undefined,
+        assetMatches: Array.isArray(data?.assetMatches) ? data.assetMatches : [],
         metadata: {
           hasStructuredContent: false,
           responseLength: typeof responseText === 'string' ? responseText.length : 0,
@@ -403,6 +407,7 @@ export const sendChatQuery = async (
       tables: [],
       citations: [],
       retrieval: undefined,
+      assetMatches: [],
       metadata: {
         hasStructuredContent: false,
         responseLength: 0,

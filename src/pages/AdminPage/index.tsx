@@ -16,6 +16,7 @@ import { useColourToken } from 'themeStyles';
 import BACKEND_URI from 'configs/env.config';
 import { supabase } from 'configs/supabase.config';
 import FormattedText from 'components/Common/FormattedText';
+import MudraAssetsPage from 'pages/MudraAssetsPage';
 import './index.css';
 
 const { Header, Content } = Layout;
@@ -156,6 +157,13 @@ const TERMINAL_INGEST_STATUSES = ['completed', 'failed'];
 const TERMINAL_PARSE_STATUSES = ['completed', 'failed'];
 const ACTIVE_PARSE_STATUSES = ['queued', 'running', 'processing', 'parsing', 'ocr', 'embedding', 'uploading'];
 const STATUS_FETCH_MIN_INTERVAL_MS = 1000;
+const NON_PARSABLE_KB_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg', '.ico'];
+
+const isParsableKbFileName = (fileName?: string) => {
+  const normalized = String(fileName || '').trim().toLowerCase();
+  if (!normalized) return false;
+  return !NON_PARSABLE_KB_EXTENSIONS.some((ext) => normalized.endsWith(ext));
+};
 
 const isIngestJobActive = (status?: string) => {
   const normalized = String(status || '').toLowerCase();
@@ -639,7 +647,7 @@ const AdminPage: React.FC = () => {
       });
       if (!response.ok) throw new Error('Failed to load files');
       const data = await response.json();
-      const nextFiles: FileRecord[] = data || [];
+      const nextFiles: FileRecord[] = (data || []).filter((file: FileRecord) => isParsableKbFileName(file?.name));
       const queuedIngestFiles = Object.values(ingestJobs)
         .filter((job) => isIngestJobActive(job.status) && !!job.fileName)
         .map((job) => job.fileName as string);
@@ -782,6 +790,10 @@ const AdminPage: React.FC = () => {
   const startParse = async (fileName: string) => {
     if (!canModifyKnowledgeBase) {
       message.warning('Viewer role cannot parse or re-parse files');
+      return;
+    }
+    if (!isParsableKbFileName(fileName)) {
+      message.warning('Image files are blocked from KB parsing');
       return;
     }
     setParsingBusy((prev) => ({ ...prev, [fileName]: true }));
@@ -1340,6 +1352,7 @@ const AdminPage: React.FC = () => {
         const normalizedStatus = String(status?.status || '').toLowerCase();
         const progress = status?.progress ?? 0;
         const ocrProgress = parseOcrProgress(status?.last_message);
+        const isParsable = isParsableKbFileName(record.name);
         const isFailed = normalizedStatus === 'failed';
         const isParsing = isParseStatusActive(normalizedStatus, progress);
         const isParsed = !isParsing && !isFailed
@@ -1351,6 +1364,7 @@ const AdminPage: React.FC = () => {
         let parseActionTitle = 'Parse file';
         if (isParsing) parseActionTitle = 'Parsing in progress';
         else if (isParsed) parseActionTitle = 'Re-parse file';
+        else if (!isParsable) parseActionTitle = 'Images are not parsable in KB';
         const tip = (
           <div>
             <div>Status: {status?.status || 'Not parsed'}</div>
@@ -1400,7 +1414,7 @@ const AdminPage: React.FC = () => {
                 type="text"
                 icon={isParsed ? <ReloadOutlined /> : <PlayCircleOutlined />}
                 loading={!!parsingBusy[record.name]}
-                disabled={!canModifyKnowledgeBase || isParsing || !!parsingBusy[record.name]}
+                disabled={!canModifyKnowledgeBase || !isParsable || isParsing || !!parsingBusy[record.name]}
                 onClick={() => startParse(record.name)}
               />
             </Tooltip>
@@ -2561,7 +2575,10 @@ const AdminPage: React.FC = () => {
         timestamp: Date.now(),
         citations: data.citations || [],
         retrieval: data.retrieval,
-      };
+        ...(Array.isArray(data.assetMatches)
+          ? { assetMatches: data.assetMatches }
+          : {}),
+      } as ChatMessage;
       setChatMessages((prev) => [...prev, assistantMessage]);
       if (deployTargetFile) {
         await logFileActivity(deployTargetFile, 'test', {
@@ -3351,16 +3368,68 @@ const AdminPage: React.FC = () => {
                     </Text>
                   </Tooltip>
                   {/* Citations section for assistant messages - now at bottom */}
+                  {msg.role === 'assistant' && Array.isArray((msg as any).assetMatches) && (msg as any).assetMatches.length > 0 && (
+                    <div className="chat-citations" style={{ marginBottom: 8 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-start' }}>
+                        {(msg as any).assetMatches
+                          .filter((asset: any) => asset?.imageUrl)
+                          .map((asset: any, index: number) => (
+                            <div
+                              key={`asset-${asset.id || asset.mudraKey || index}`}
+                              style={{ display: 'flex', flexDirection: 'column', gap: 4 }}
+                            >
+                              <img
+                                src={asset.imageUrl}
+                                alt={asset.mudraName || asset.mudraKey || 'Mudra'}
+                                style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #3a3d4a' }}
+                              />
+                              <Text style={{ fontSize: '11px', color: '#ababab' }}>
+                                {asset.mudraName || asset.mudraKey}
+                              </Text>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
                   {msg.role === 'assistant' && msg.citations && msg.citations.length > 0 && (
                     <div className="chat-citations">
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                         <Text style={{ fontSize: '11px', color: '#ababab', fontWeight: 'bold' }}>Sources:</Text>
-                        {msg.citations.map((citation) => {
+                        {(() => {
+                          const consolidatedCitations = (msg.citations || []).reduce<Array<{
+                            id: number;
+                            source: string;
+                            pages: number[];
+                          }>>((acc, citation) => {
+                            const source = String(citation?.source || '').trim();
+                            if (!source) return acc;
+                            const pageNumber = Number(citation?.page);
+                            const hasPage = Number.isFinite(pageNumber) && pageNumber > 0;
+                            const existing = acc.find((item) => item.source === source);
+                            if (!existing) {
+                              acc.push({
+                                id: acc.length + 1,
+                                source,
+                                pages: hasPage ? [pageNumber] : [],
+                              });
+                              return acc;
+                            }
+                            if (hasPage && !existing.pages.includes(pageNumber)) {
+                              existing.pages.push(pageNumber);
+                            }
+                            return acc;
+                          }, []).map((item) => ({
+                            ...item,
+                            pages: [...item.pages].sort((a, b) => a - b),
+                          }));
+
+                          return consolidatedCitations.map((citation) => {
                           const fileName = citation.source;
                           const displayName = fileName.split('/').pop();
                           return (
                             <Tag 
-                              key={citation.id} 
+                              key={`citation-${citation.source}`} 
                               color="blue" 
                               style={{ fontSize: '10px', margin: 0, cursor: 'pointer' }}
                               onClick={async () => {
@@ -3387,10 +3456,11 @@ const AdminPage: React.FC = () => {
                             >
                               <DownloadOutlined style={{ marginRight: 4 }} />
                               [{citation.id}] {displayName}
-                              {citation.page && ` P${citation.page}`}
+                              {citation.pages.length > 0 && ` P${citation.pages.join(',')}`}
                             </Tag>
                           );
-                        })}
+                          });
+                        })()}
                       </div>
                     </div>
                   )}
@@ -3486,6 +3556,12 @@ const AdminPage: React.FC = () => {
         </Form>
       </Card>
     ),
+  };
+
+  const mudraAssetsTab = {
+    key: 'mudra-assets',
+    label: <span style={{ color: '#e0e0e0' }}><DatabaseOutlined style={{ color: '#e0e0e0' }} /> Mudra Assets</span>,
+    children: <MudraAssetsPage embedded />,
   };
 
   const userManagementTab = {
@@ -3836,7 +3912,9 @@ const AdminPage: React.FC = () => {
 
       <Content style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', width: '100%', minHeight: 'calc(100vh - 64px)' }}>
         <Tabs
-          items={currentKbUserRole === 'admin' ? [knowledgeBaseTab, chatTab, userManagementTab, auditTrailTab] : [knowledgeBaseTab, chatTab]}
+          items={currentKbUserRole === 'admin'
+            ? [knowledgeBaseTab, mudraAssetsTab, chatTab, userManagementTab, auditTrailTab]
+            : [knowledgeBaseTab, chatTab]}
           size="large"
           activeKey={activeTab}
           onChange={(k) => setActiveTab(k)}
@@ -4002,7 +4080,13 @@ const AdminPage: React.FC = () => {
                 )}
               </Card>
               <Space className="file-details-action-row">
-                <Button icon={<PlayCircleOutlined />} disabled={!canModifyKnowledgeBase} onClick={() => startParse(detailsFile.name)}>Parse</Button>
+                <Button
+                  icon={<PlayCircleOutlined />}
+                  disabled={!canModifyKnowledgeBase || !isParsableKbFileName(detailsFile.name)}
+                  onClick={() => startParse(detailsFile.name)}
+                >
+                  Parse
+                </Button>
                 <Button icon={<FileTextOutlined />} onClick={() => handleViewChunks(detailsFile.name)}>View Chunks</Button>
                 <Button icon={<DownloadOutlined />} onClick={() => downloadFile(detailsFile.name)}>Download</Button>
                 <Button

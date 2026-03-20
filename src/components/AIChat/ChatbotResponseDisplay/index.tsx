@@ -7,7 +7,8 @@ import {
   Card,
   Divider,
   Button,
-  message
+  message,
+  Image,
 } from 'antd';
 import { 
   InfoCircleOutlined, 
@@ -65,8 +66,8 @@ const getTagColor = (type?: string) => {
   return 'blue';
 };
 
-const TableCellRenderer: React.FC<{ text: string }> = ({ text }) => (
-  <FormattedText content={text || ''} />
+const TableCellRenderer: React.FC<{ text: string; imageMap?: Record<string, string> }> = ({ text, imageMap }) => (
+  <FormattedText content={text || ''} imageMap={imageMap} />
 );
 
 const getReferenceName = (index: number): string => `Reference_${index}`;
@@ -140,9 +141,74 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
   response, 
   style 
 }) => {
+  const assetMatches = Array.isArray(response.assetMatches)
+    ? response.assetMatches.filter((asset) => Boolean(asset?.imageUrl))
+    : [];
+  const imageMap = assetMatches.reduce<Record<string, string>>((acc, asset) => {
+    const url = String(asset.imageUrl || '').trim();
+    if (!url) return acc;
+    const keys = [asset.mudraKey, asset.mudraName]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+    keys.forEach((key) => {
+      const normalized = key
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+      acc[key] = url;
+      acc[key.toLowerCase()] = url;
+      if (normalized) acc[normalized] = url;
+    });
+    return acc;
+  }, {});
+  const cleanedShortAnswer = String(response.shortAnswer || '')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
   const hasAdditionalContent = response.reasoning || 
     response.sections.length > 0 || 
     response.tables.length > 0;
+
+  const consolidatedCitations = (response.citations || []).reduce<Array<{
+    source: string;
+    pages: number[];
+    relevance: number | null;
+  }>>((acc, citation) => {
+    const source = String(citation.source || '').trim();
+    if (!source) return acc;
+
+    const existing = acc.find((item) => item.source === source);
+    const nextPage = Number(citation.page);
+    const hasPage = Number.isFinite(nextPage) && nextPage > 0;
+    const nextRelevance = Number.isFinite(Number(citation.similarity))
+      ? Number(citation.similarity)
+      : null;
+
+    if (!existing) {
+      acc.push({
+        source,
+        pages: hasPage ? [nextPage] : [],
+        relevance: nextRelevance,
+      });
+      return acc;
+    }
+
+    if (hasPage && !existing.pages.includes(nextPage)) {
+      existing.pages.push(nextPage);
+    }
+    if (nextRelevance !== null) {
+      existing.relevance =
+        existing.relevance === null
+          ? nextRelevance
+          : Math.max(existing.relevance, nextRelevance);
+    }
+
+    return acc;
+  }, []).map((item) => ({
+    ...item,
+    pages: [...item.pages].sort((a, b) => a - b),
+  }));
   
   const hasCitations = response.citations && response.citations.length > 0;
 
@@ -150,9 +216,37 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
     <div style={style}>
       {/* Main Short Answer */}
       <FormattedText 
-        content={response.shortAnswer} 
+        content={cleanedShortAnswer || response.shortAnswer} 
+        imageMap={imageMap}
         style={{ marginBottom: (hasAdditionalContent || hasCitations) ? '16px' : '0' }}
       />
+
+      {assetMatches.length > 0 && (
+        <Card
+          size="small"
+          style={{ marginBottom: (hasAdditionalContent || hasCitations) ? '16px' : '0' }}
+          title="Mudra Image"
+        >
+          <Space size="middle" wrap>
+            {assetMatches.map((asset, index) => (
+              <div
+                key={`asset-${asset.id || asset.mudraKey || index}`}
+                style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 140 }}
+              >
+                <Image
+                  src={asset.imageUrl || ''}
+                  alt={asset.mudraName || asset.mudraKey}
+                  width={140}
+                  height={140}
+                  style={{ objectFit: 'cover', borderRadius: 8 }}
+                />
+                <Text strong>{asset.mudraName || asset.mudraKey}</Text>
+                {asset.mudraKey && <Text type="secondary">{asset.mudraKey}</Text>}
+              </div>
+            ))}
+          </Space>
+        </Card>
+      )}
 
       {/* Additional Content */}
       {(hasAdditionalContent || hasCitations) && (
@@ -189,7 +283,7 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                         <Title level={5} style={{ margin: '0 0 8px 0', color: '#c81f58' }}>
                           Reasoning
                         </Title>
-                        <FormattedText content={response.reasoning} />
+                        <FormattedText content={response.reasoning} imageMap={imageMap} />
                       </Card>
                     )}
 
@@ -215,7 +309,7 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                             </Tag>
                           )}
                         </Space>
-                        <FormattedText content={section.content} />
+                        <FormattedText content={section.content} imageMap={imageMap} />
                       </Card>
                     ))}
 
@@ -245,7 +339,7 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                             title: header,
                             dataIndex: header,
                             key: `col-${header}-${table.caption || 'table'}`,
-                            render: (text: string) => <TableCellRenderer text={text} />
+                            render: (text: string) => <TableCellRenderer text={text} imageMap={imageMap} />
                           }))}
                           pagination={false}
                           style={{ 
@@ -274,15 +368,15 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                       <Text strong style={{ color: '#1677ff', fontSize: '14px' }}>
                         Sources & References
                       </Text>
-                      <Tag color="blue">{response.citations.length}</Tag>
+                      <Tag color="blue">{consolidatedCitations.length}</Tag>
                     </Space>
                     <div style={{ marginTop: '12px' }}>
-                      {response.citations.map((citation, idx) => (
+                      {consolidatedCitations.map((citation, idx) => (
                         <div
-                          key={`citation-${citation.id}-${citation.source}-${citation.page || 'na'}`}
+                          key={`citation-${citation.source}`}
                           style={{
                             padding: '10px',
-                            marginBottom: idx < response.citations!.length - 1 ? '10px' : '0',
+                            marginBottom: idx < consolidatedCitations.length - 1 ? '10px' : '0',
                             background: '#fff',
                             border: '1px solid #d9e8ff',
                             borderRadius: '6px',
@@ -293,19 +387,19 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
                         >
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '13px', fontWeight: 600, color: '#1677ff' }}>
-                              {getReferenceName(citation.id)}
+                              {getReferenceName(idx + 1)}
                             </div>
                             <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
                               {extractFilename(citation.source)}
-                              {citation.page && (
+                              {citation.pages.length > 0 && (
                                 <span style={{ marginLeft: '8px', color: '#999' }}>
-                                  (Page {citation.page})
+                                  (Pages {citation.pages.join(', ')})
                                 </span>
                               )}
                             </div>
-                            {citation.similarity && (
+                            {citation.relevance !== null && (
                               <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
-                                Relevance: {(citation.similarity * 100).toFixed(1)}%
+                                Relevance: {(citation.relevance * 100).toFixed(1)}%
                               </div>
                             )}
                           </div>

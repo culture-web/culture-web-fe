@@ -6,6 +6,7 @@ const { Text, Title } = Typography;
 interface FormattedTextProps {
   content: string;
   style?: React.CSSProperties;
+  imageMap?: Record<string, string>;
 }
 
 interface FormatPattern {
@@ -26,7 +27,23 @@ interface ParsedTable {
   rows: string[][];
 }
 
-const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
+const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap }) => {
+  const normalizeImageKey = (value: string): string => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  const resolveImageSource = (rawSource: string): string => {
+    const source = String(rawSource || '').trim();
+    if (!source) return '';
+    if (/^(https?:\/\/|\/)/i.test(source)) return source;
+    const direct = imageMap?.[source] || imageMap?.[source.toLowerCase()];
+    if (direct) return direct;
+    const normalized = normalizeImageKey(source);
+    return imageMap?.[normalized] || source;
+  };
+
   const isTableRow = (line: string): boolean => {
     const trimmed = line.trim();
     return trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.includes('|');
@@ -65,29 +82,50 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
 
     // Enhanced patterns for better markdown support
     const patterns: FormatPattern[] = [
-      { 
+      {
+        regex: /!\[[^\]]*\]\([^)]+\)/g,
+        render: (_innerText: string, key: string | number) => {
+          const imageMatch = _innerText.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+          if (!imageMatch) return <span key={key}>{_innerText}</span>;
+          const altText = String(imageMatch[1] || '').trim();
+          const sourceText = String(imageMatch[2] || '').trim();
+          const resolvedSource = resolveImageSource(sourceText);
+          if (!resolvedSource) {
+            return <span key={key}>{`![${altText}](${sourceText})`}</span>;
+          }
+          return (
+            <img
+              key={key}
+              src={resolvedSource}
+              alt={altText || sourceText || 'image'}
+              style={{ maxWidth: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, margin: '6px 0' }}
+            />
+          );
+        },
+      },
+      {
         regex: /\*\*(.*?)\*\*/g, 
-        render: (innerText: string, key: string | number) => <Text key={key} strong>{innerText}</Text> 
+        render: (innerText: string, key: string | number) => <Text key={key} strong style={{ color: 'inherit' }}>{innerText}</Text> 
       },
       { 
         regex: /__(.*?)__/g, 
-        render: (innerText: string, key: string | number) => <Text key={key} underline>{innerText}</Text> 
+        render: (innerText: string, key: string | number) => <Text key={key} underline style={{ color: 'inherit' }}>{innerText}</Text> 
       },
       { 
         regex: /`(.*?)`/g, 
-        render: (innerText: string, key: string | number) => <Text key={key} code>{innerText}</Text> 
+        render: (innerText: string, key: string | number) => <Text key={key} code style={{ color: 'inherit' }}>{innerText}</Text> 
       },
       { 
         regex: /~~(.*?)~~/g, 
-        render: (innerText: string, key: string | number) => <Text key={key} delete>{innerText}</Text> 
+        render: (innerText: string, key: string | number) => <Text key={key} delete style={{ color: 'inherit' }}>{innerText}</Text> 
       },
       {
         regex: /\*(.*?)\*/g,
-        render: (innerText: string, key: string | number) => <Text key={key} italic>{innerText}</Text>
+        render: (innerText: string, key: string | number) => <Text key={key} italic style={{ color: 'inherit' }}>{innerText}</Text>
       },
       {
         regex: /_(.*?)_/g,
-        render: (innerText: string, key: string | number) => <Text key={key} italic>{innerText}</Text>
+        render: (innerText: string, key: string | number) => <Text key={key} italic style={{ color: 'inherit' }}>{innerText}</Text>
       },
     ];
 
@@ -103,7 +141,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
           end: match.index + match[0].length,
           content: match[0],
           render,
-          innerText: match[1],
+          innerText: typeof match[1] === 'string' ? match[1] : match[0],
         });
         match = regexCopy.exec(text);
       }
@@ -152,7 +190,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
 
   const renderTable = (table: ParsedTable, key: string) => (
     <div key={key} style={{ overflowX: 'auto', margin: '10px 0' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '14px', background: '#2b2d38', color: '#e0e0e0' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '14px', background: '#2b2d38', color: '#ffffff' }}>
         <thead>
           <tr>
             {table.headers.map((header) => (
@@ -163,7 +201,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
                   padding: '8px',
                   textAlign: 'left',
                   background: '#1c1e24',
-                  color: '#e0e0e0',
+                  color: '#ffffff',
                   fontWeight: 600,
                 }}
               >
@@ -182,7 +220,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
                   return (
                     <td
                       key={`${key}-cell-${cellKey}`}
-                      style={{ border: '1px solid #3a3d4a', padding: '8px', verticalAlign: 'top', background: '#2b2d38', color: '#e0e0e0' }}
+                      style={{ border: '1px solid #3a3d4a', padding: '8px', verticalAlign: 'top', background: '#2b2d38', color: '#ffffff' }}
                     >
                       {formatInlineText(row[colIndex] || '', `${key}-cell-text-${cellKey}`)}
                     </td>
@@ -196,6 +234,22 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style }) => {
     </div>);
 
   const renderLine = (line: string, contentKey: string): React.ReactNode => {
+    const standaloneKeyMatch = line.trim().match(/^\[([a-z0-9_\-\s]+)\]$/i);
+    if (standaloneKeyMatch) {
+      const key = standaloneKeyMatch[1].trim();
+      const resolvedSource = resolveImageSource(key);
+      if (resolvedSource && resolvedSource !== key) {
+        return (
+          <img
+            key={`image-key-${contentKey}`}
+            src={resolvedSource}
+            alt={key}
+            style={{ maxWidth: 220, maxHeight: 220, objectFit: 'contain', borderRadius: 8, margin: '6px 0' }}
+          />
+        );
+      }
+    }
+
     // Check if line is a heading
     const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
     if (headingMatch) {

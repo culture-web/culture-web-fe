@@ -166,6 +166,9 @@ const convertBackendMessageToFrontend = (backendMessage: BackendMessage): Messag
         reasoning: parsedContent.reasoning || null,
         sections: parsedContent.sections || [],
         tables: parsedContent.tables || [],
+        assetMatches: Array.isArray(parsedContent.assetMatches)
+          ? parsedContent.assetMatches
+          : [],
         metadata: parsedContent.metadata || {
           hasStructuredContent: Boolean(parsedContent.reasoning || parsedContent.sections?.length || parsedContent.tables?.length),
           responseLength: (parsedContent.shortAnswer || '').length,
@@ -182,6 +185,7 @@ const convertBackendMessageToFrontend = (backendMessage: BackendMessage): Messag
       reasoning: null,
       sections: [],
       tables: [],
+      assetMatches: [],
       metadata: {
         hasStructuredContent: false,
         responseLength: (backendMessage.content || '').length,
