@@ -42,4 +42,8 @@ const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ onClick, isMobi
   );
 };
 
+FloatingChatButton.defaultProps = {
+  isMobile: false,
+};
+
 export default FloatingChatButton;

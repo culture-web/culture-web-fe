@@ -331,9 +331,12 @@ export const sendChatQuery = async (
     // Temporary chat should not persist messages to chat sessions
     // - Mudras mode: use chat-mudras without sessionId persistence
     // - Non-mudras mode: use kathakali/chat (no conversation persistence)
-    const urlEndpoint = temporarySession
-      ? (mudrasMode ? `${BACKEND_URI}/kathakali/chat-mudras` : `${BACKEND_URI}/kathakali/chat`)
-      : (mudrasMode ? `${BACKEND_URI}/kathakali/chat-mudras` : `${BACKEND_URI}/chat/messages`);
+    let urlEndpoint = `${BACKEND_URI}/chat/messages`;
+    if (mudrasMode) {
+      urlEndpoint = `${BACKEND_URI}/kathakali/chat-mudras`;
+    } else if (temporarySession) {
+      urlEndpoint = `${BACKEND_URI}/kathakali/chat`;
+    }
 
     const response = await fetch(urlEndpoint, {
       method: 'POST',
@@ -418,7 +421,7 @@ export const sendChatQuery = async (
   }
 };
 
-export const getUserProficiencyGaps = async (): Promise<any> => {
+export const getUserProficiencyGaps = async (): Promise<unknown> => {
   const token = await getCurrentUserToken();
   const response = await fetch(`${BACKEND_URI}/proficiency/details`, {
     headers: { 
@@ -484,7 +487,7 @@ export const generateAdaptiveQuizSession = async (params?: {
 }): Promise<GenerateAdaptiveQuizResult> => {
   const token = await getCurrentUserToken();
 
-  let proficiency: any = null;
+  let proficiency: unknown = null;
   try {
     proficiency = await getUserProficiencyGaps();
   } catch {
@@ -528,7 +531,7 @@ export interface SubmitQuizResult {
   total: number;
   correct: number;
   score: number;
-  results: any[];
+  results: Array<Record<string, unknown>>;
   proficiencyUpdatesApplied: Array<{
     conceptId: string;
     newLevel: string;

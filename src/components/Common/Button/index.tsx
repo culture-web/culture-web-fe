@@ -18,6 +18,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   children,
   disabled,
+  className,
   type = 'primary',
   htmlType = 'button',
   loading = false,
@@ -44,10 +45,24 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled}
       htmlType={htmlType}
       loading={loading}
+      className={className}
     >
       {children}
     </AntButton>
   );
+};
+
+Button.defaultProps = {
+  children: null,
+  onClick: undefined,
+  disabled: false,
+  className: undefined,
+  type: 'primary',
+  htmlType: 'button',
+  loading: false,
+  width: '100%',
+  height: '2.5rem',
+  fontSize: '1rem',
 };
 
 export default Button;

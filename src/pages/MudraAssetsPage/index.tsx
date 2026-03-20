@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Card,
@@ -83,7 +83,7 @@ function MudraAssetsPage({ embedded = false }: MudraAssetsPageProps) {
     };
   };
 
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     setAssetsLoading(true);
     try {
       const response = await fetch(
@@ -106,11 +106,11 @@ function MudraAssetsPage({ embedded = false }: MudraAssetsPageProps) {
     } finally {
       setAssetsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAssets();
-  }, []);
+  }, [fetchAssets]);
 
   const handleUpload = async () => {
     if (!canUpload) {
@@ -167,12 +167,13 @@ function MudraAssetsPage({ embedded = false }: MudraAssetsPageProps) {
     }
   };
 
-  const handleDeleteAsset = async (asset: MudraAsset) => {
+  const handleDeleteAsset = useCallback(async (asset: MudraAsset) => {
     if (!canUpload) {
       message.warning('Viewer role cannot delete assets');
       return;
     }
 
+    // eslint-disable-next-line no-alert
     const confirmed = window.confirm(
       `Delete asset "${asset.mudraName}" (${asset.mudraKey})? This cannot be undone.`,
     );
@@ -198,9 +199,9 @@ function MudraAssetsPage({ embedded = false }: MudraAssetsPageProps) {
       console.error('Delete failed:', error);
       message.error(error instanceof Error ? error.message : 'Delete failed');
     }
-  };
+  }, [canUpload, fetchAssets]);
 
-  const handleToggleAssetActive = async (asset: MudraAsset, checked: boolean) => {
+  const handleToggleAssetActive = useCallback(async (asset: MudraAsset, checked: boolean) => {
     if (!canUpload) {
       message.warning('Viewer role cannot update asset status');
       return;
@@ -237,7 +238,7 @@ function MudraAssetsPage({ embedded = false }: MudraAssetsPageProps) {
       console.error('Failed to update active status:', error);
       message.error(error instanceof Error ? error.message : 'Failed to update active status');
     }
-  };
+  }, [canUpload]);
 
   const tableColumns = useMemo<ColumnsType<MudraAsset>>(() => {
     const baseColumns: ColumnsType<MudraAsset> = [
@@ -301,7 +302,7 @@ function MudraAssetsPage({ embedded = false }: MudraAssetsPageProps) {
     }
 
     return baseColumns;
-  }, [assetsLoading, canUpload, uploading]);
+  }, [assetsLoading, canUpload, uploading, handleDeleteAsset, handleToggleAssetActive]);
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
@@ -439,5 +440,9 @@ function MudraAssetsPage({ embedded = false }: MudraAssetsPageProps) {
     </Space>
   );
 }
+
+MudraAssetsPage.defaultProps = {
+  embedded: false,
+};
 
 export default MudraAssetsPage;

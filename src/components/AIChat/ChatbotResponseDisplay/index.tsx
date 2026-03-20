@@ -66,9 +66,13 @@ const getTagColor = (type?: string) => {
   return 'blue';
 };
 
-const TableCellRenderer: React.FC<{ text: string; imageMap?: Record<string, string> }> = ({ text, imageMap }) => (
+const TableCellRenderer: React.FC<{ text: string; imageMap?: Record<string, string> }> = ({ text, imageMap = {} }) => (
   <FormattedText content={text || ''} imageMap={imageMap} />
 );
+
+TableCellRenderer.defaultProps = {
+  imageMap: undefined,
+};
 
 const getReferenceName = (index: number): string => `Reference_${index}`;
 
@@ -139,7 +143,7 @@ const handleDownloadSource = async (source: string) => {
 
 const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({ 
   response, 
-  style 
+  style = undefined 
 }) => {
   const assetMatches = Array.isArray(response.assetMatches)
     ? response.assetMatches.filter((asset) => Boolean(asset?.imageUrl))
@@ -440,6 +444,10 @@ const ChatbotResponseDisplay: React.FC<ChatbotResponseDisplayProps> = ({
       )}
     </div>
   );
+};
+
+ChatbotResponseDisplay.defaultProps = {
+  style: undefined,
 };
 
 export default ChatbotResponseDisplay;

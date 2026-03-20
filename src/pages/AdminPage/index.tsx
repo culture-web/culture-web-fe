@@ -79,6 +79,13 @@ interface MenuItem {
   label: string;
 }
 
+interface ChatAssetMatch {
+  id?: number | string;
+  mudraKey?: string;
+  mudraName?: string;
+  imageUrl?: string;
+}
+
 type ManagedUserRole = 'admin' | 'editor' | 'viewer';
 type DeployTarget = 'mudras' | 'kathakali' | 'shared';
 
@@ -204,6 +211,12 @@ const parseOcrProgress = (lastMessage?: string) => {
     pagePercent,
     overallPercent,
   };
+};
+
+const getDeployTargetTagColor = (target: string) => {
+  if (target === 'mudras') return 'magenta';
+  if (target === 'kathakali') return 'blue';
+  return 'purple';
 };
 
 const AdminPage: React.FC = () => {
@@ -1328,7 +1341,7 @@ const AdminPage: React.FC = () => {
                 {deployTargets.map((target) => (
                   <Tag
                     key={`${record.name}-target-${target}`}
-                    color={target === 'mudras' ? 'magenta' : target === 'kathakali' ? 'blue' : 'purple'}
+                    color={getDeployTargetTagColor(target)}
                   >
                     {target}
                   </Tag>
@@ -3343,6 +3356,12 @@ const AdminPage: React.FC = () => {
                 hour12: false,
               });
               const timestampLabel = formatRelativeTime(msg.timestamp);
+              const msgWithAssets = msg as typeof msg & {
+                assetMatches?: ChatAssetMatch[];
+              };
+              const assetMatches = Array.isArray(msgWithAssets.assetMatches)
+                ? msgWithAssets.assetMatches
+                : [];
 
               return (
               <div
@@ -3368,12 +3387,12 @@ const AdminPage: React.FC = () => {
                     </Text>
                   </Tooltip>
                   {/* Citations section for assistant messages - now at bottom */}
-                  {msg.role === 'assistant' && Array.isArray((msg as any).assetMatches) && (msg as any).assetMatches.length > 0 && (
+                  {msg.role === 'assistant' && assetMatches.length > 0 && (
                     <div className="chat-citations" style={{ marginBottom: 8 }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-start' }}>
-                        {(msg as any).assetMatches
-                          .filter((asset: any) => asset?.imageUrl)
-                          .map((asset: any, index: number) => (
+                        {assetMatches
+                          .filter((asset) => asset?.imageUrl)
+                          .map((asset, index: number) => (
                             <div
                               key={`asset-${asset.id || asset.mudraKey || index}`}
                               style={{ display: 'flex', flexDirection: 'column', gap: 4 }}

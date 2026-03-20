@@ -328,4 +328,9 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap 
   );
 };
 
+FormattedText.defaultProps = {
+  style: undefined,
+  imageMap: undefined,
+};
+
 export default FormattedText;
