@@ -46,4 +46,12 @@ const FormInput: React.FC<FormInputProps> = ({
   </Form.Item>
 );
 
+FormInput.defaultProps = {
+  label: undefined,
+  children: undefined,
+  required: true,
+  type: 'text',
+  rows: undefined,
+};
+
 export default FormInput;

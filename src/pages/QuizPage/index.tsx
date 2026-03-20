@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Card, Image, Radio, message, Typography } from 'antd';
+import {
+  BookOutlined,
+  InfoCircleOutlined,
+  LeftOutlined,
+  ReadOutlined,
+  RightOutlined,
+  ThunderboltOutlined,
+  TrophyOutlined,
+} from '@ant-design/icons';
 import { useColourToken, useStyleToken } from 'themeStyles';
 import useIsMobile from 'utils/isMobile';
 import BACKEND_URI from 'configs/env.config';
 import { generateAdaptiveQuizSession, submitQuizSession } from 'utils/invokeBackend';
-import { getUserProficiencyGaps } from 'utils/invokeBackend';
-import { getCurrentUserToken } from 'configs/supabase.config';
 import { useAuth } from 'contexts/AuthContext';
 import { QuizCategory, QuizItem } from './quizTypes';
 import quizCharacter from './characterData';
@@ -15,9 +22,25 @@ import './index.css';
 
 const { Text, Title } = Typography;
 
-const EXPRESSION = 'Expression';
-const CHARACTER = 'Character';
 const ORNAMENT = 'Ornament';
+
+type QuizMode = {
+  id: 'basics' | 'ornaments' | 'learning' | 'adaptive';
+  title: string;
+  description: string;
+  tag: string;
+  icon: React.ReactNode;
+  variant: 'pink' | 'rose' | 'green' | 'blue';
+  onStart: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+};
+
+type QuizTip = {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+};
 
 const generateQuizFromDataset = (dataset: QuizCategory[]): QuizItem[] => {
   const quizItems = dataset.map((category) => {
@@ -49,7 +72,36 @@ const QuizPage: React.FC = () => {
   const [submittingQuiz, setSubmittingQuiz] = useState(false);
   const [activeQuizSessionId, setActiveQuizSessionId] = useState<string | null>(null);
   const [activeQuizSource, setActiveQuizSource] = useState<'adaptive' | 'static' | 'learning' | null>(null);
+  const [activeTipIndex, setActiveTipIndex] = useState(0);
   const { isAuthenticated } = useAuth();
+  const hasActiveQuiz = quizItems.length > 0;
+
+  const rotatingTips: QuizTip[] = [
+    {
+      title: 'Knowledge Tip',
+      description: 'Adaptive quizzes: track your speed and accuracy to provide deeper insights into your learning curve.',
+      icon: <InfoCircleOutlined />,
+    },
+    {
+      title: 'Knowledge Tip',
+      description: 'Go to the Learn tab and start a learning session with the AI Assistant to generate smarter quiz questions.',
+      icon: <ReadOutlined />,
+    },
+  ];
+
+  useEffect(() => {
+    if (hasActiveQuiz) {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      setActiveTipIndex((prev) => (prev + 1) % rotatingTips.length);
+    }, 5000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [hasActiveQuiz, rotatingTips.length]);
 
   const generateAdaptiveQuiz = async () => {
     try {
@@ -233,55 +285,131 @@ const QuizPage: React.FC = () => {
     }
   };
 
+  const backToQuizModes = () => {
+    setQuizItems([]);
+    setSelectedAnswers({});
+    setChecked(false);
+    setScore(0);
+    setActiveQuizSessionId(null);
+    setActiveQuizSource(null);
+  };
+
+  const quizModes: QuizMode[] = [
+    {
+      id: 'basics',
+      title: 'Kathakali Basics',
+      description: 'Master the history, 101 mudras, and the foundational stories of the art form.',
+      tag: 'Static',
+      icon: <BookOutlined />,
+      variant: 'pink',
+      onStart: () => generateQuiz('Core'),
+    },
+    {
+      id: 'ornaments',
+      title: 'Ornaments & Attire',
+      description: 'Identify the elaborate Kireetam (headgear) and Vesham types of different characters.',
+      tag: 'Visual',
+      icon: <TrophyOutlined />,
+      variant: 'rose',
+      onStart: () => generateQuiz(ORNAMENT),
+    },
+    {
+      id: 'learning',
+      title: 'Generate from Learning',
+      description: "A customized challenge based on the learning session you've recently completed.",
+      tag: 'AI Powered',
+      icon: <ReadOutlined />,
+      variant: 'green',
+      onStart: generateQuizFromLearning,
+      loading: loadingQuiz,
+    },
+    {
+      id: 'adaptive',
+      title: 'Adaptive Quiz',
+      description: 'The ultimate test. Difficulty adjusts in real-time based on your performance.',
+      tag: 'AI Powered',
+      icon: <ThunderboltOutlined />,
+      variant: 'blue',
+      onStart: generateAdaptiveQuiz,
+      disabled: !isAuthenticated,
+      loading: loadingAdaptiveQuiz,
+    },
+  ];
+
   return (
     <div className="quiz-page-container">
-      <div className="quiz-page-header">
-        <Title style={{ ...styleToken.pageHeadingTextStyle, textAlign: 'center', marginBottom: 8 }}>
-          Quiz
-        </Title>
-        <Text style={{ color: colourToken.gray }}>Sharpen your learning with static, learning-based, and adaptive quizzes.</Text>
-      </div>
+      {!hasActiveQuiz && (
+        <>
+          <div className="quiz-page-header">
+            <div className="quiz-badge">
+              <span className="quiz-badge-icon"><BookOutlined /></span>
+              Learning Arena
+            </div>
+            <Title className="quiz-main-title" style={{ ...styleToken.pageHeadingTextStyle, textAlign: 'center', marginBottom: 8 }}>
+              Choose Your <span className="quiz-highlight-title">Quest</span>
+            </Title>
+            <Text className="quiz-main-subtitle" style={{ color: colourToken.gray }}>
+              From static foundational modules to AI-driven adaptive challenges, sharpen your mastery of India&apos;s most vibrant storytelling art.
+            </Text>
+          </div>
 
-      <Card className="quiz-actions-card" style={{ backgroundColor: colourToken.lightGray }}>
-        <div className="quiz-actions-grid">
-        <Button
-          type="primary"
-          onClick={() => generateQuiz('Core')}
-          className="quiz-action-button"
-        >
-          Kathakali Basics Quiz
-        </Button>
-        
-        <Button
-          type="primary"
-          onClick={() => generateQuiz(ORNAMENT)}
-          className="quiz-action-button"
-        >
-          Generate Quiz For Ornaments
-        </Button>
-        <Button 
-          type="primary" 
-          className="quiz-action-button"
-          style={{ background: '#52c41a', borderColor: '#52c41a' }}
-          onClick={generateQuizFromLearning}
-          loading={loadingQuiz}
-        >
-          Generate from Learning
-        </Button>
-        {/* Show only for logged-in users */}
-        {isAuthenticated && (
-          <Button 
-            type="primary" 
-            className="quiz-action-button"
-            style={{ background: '#1890ff', borderColor: '#1890ff' }}
-            onClick={generateAdaptiveQuiz}
-            loading={loadingAdaptiveQuiz}
-          >
-            Generate Adaptive Quiz
+          <div className="quiz-actions-grid">
+            {quizModes.map((mode) => (
+              <Card
+                key={mode.id}
+                className={`quiz-quest-card quiz-quest-${mode.variant} ${mode.disabled ? 'quiz-quest-disabled' : ''}`}
+                onClick={() => {
+                  if (!mode.disabled) {
+                    mode.onStart();
+                  }
+                }}
+              >
+                <div className="quiz-quest-tag">{mode.tag}</div>
+                <div className={`quiz-quest-icon quiz-quest-icon-${mode.variant}`}>{mode.icon}</div>
+                <h3 className="quiz-quest-title">{mode.title}</h3>
+                <p className="quiz-quest-description">{mode.description}</p>
+                <div className="quiz-quest-footer">
+                  <span className="quiz-quest-action-text">Start Quiz</span>
+                  <div className="quiz-quest-action-icon">
+                    {mode.loading ? <span className="quiz-inline-loader" /> : <RightOutlined />}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="quiz-tip-card">
+            <div className="quiz-tip-row" key={activeTipIndex}>
+              <div className="quiz-tip-left quiz-tip-content">
+                <div className="quiz-tip-icon">{rotatingTips[activeTipIndex].icon}</div>
+                <div>
+                  <div className="quiz-tip-title">{rotatingTips[activeTipIndex].title}</div>
+                  <Text style={{ color: colourToken.gray }}>{rotatingTips[activeTipIndex].description}</Text>
+                  <div className="quiz-tip-indicators" aria-label="Tip indicators">
+                    {rotatingTips.map((tip, index) => (
+                      <button
+                        type="button"
+                        key={tip.title}
+                        className={`quiz-tip-dot ${index === activeTipIndex ? 'quiz-tip-dot-active' : ''}`}
+                        aria-label={`Show ${tip.title}`}
+                        onClick={() => setActiveTipIndex(index)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </>
+      )}
+
+      {hasActiveQuiz && (
+        <div className="quiz-back-wrap">
+          <Button type="default" className="quiz-back-button" icon={<LeftOutlined />} onClick={backToQuizModes}>
+            Back to Quiz Modes
           </Button>
-        )}
         </div>
-      </Card>
+      )}
 
       <div className="quiz-cards-wrap">
         {quizItems.map((item) => (

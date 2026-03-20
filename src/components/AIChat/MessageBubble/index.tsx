@@ -18,8 +18,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onDeleteMessage 
   };
 
   const messageBubbleStyle = {
-    maxWidth: isUser ? '80%' : 'calc(100% - 60px)', // Better width calculation for assistant messages
-    minWidth: '100px',
+    maxWidth: isUser ? '50%' : 'calc(100% - 60px)', // User bubble max half window, assistant remains wider
+    width: isUser ? '50%' : 'auto',
+    minWidth: isUser ? '220px' : '100px',
     padding: '12px 16px',
     borderRadius: '18px',
     backgroundColor: isUser ? '#c81f58' : '#f5f5f5',

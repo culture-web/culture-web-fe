@@ -30,6 +30,15 @@ export interface Citation {
   originalSimilarity?: number | null;
 }
 
+export interface MudraAssetMatch {
+  id?: number;
+  mudraKey: string;
+  mudraName: string;
+  objectName?: string;
+  imageUrl?: string | null;
+  description?: string | null;
+}
+
 export interface ChatbotResponse {
   shortAnswer: string;
   reasoning?: string | null;
@@ -38,6 +47,7 @@ export interface ChatbotResponse {
   metadata: ChatbotResponseMetadata;
   citations?: Citation[];
   retrieval?: Record<string, unknown>;
+  assetMatches?: MudraAssetMatch[];
 }
 
 export interface Message {

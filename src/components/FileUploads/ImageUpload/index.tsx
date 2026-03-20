@@ -196,4 +196,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   );
 };
 
+ImageUpload.defaultProps = {
+  uploadFeedbackFunction: undefined,
+};
+
 export default ImageUpload;

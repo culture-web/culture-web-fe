@@ -78,4 +78,9 @@ const ChatHeader: React.FC<ChatHeaderPropsWithMode> = ({ onClose, mudrasMode = f
   );
 };
 
+ChatHeader.defaultProps = {
+  mudrasMode: false,
+  isGuest: false,
+};
+
 export default ChatHeader;

@@ -1,7 +1,7 @@
 import { Typography, Flex, Button, Card, Progress, Input, Space, Tag } from 'antd';
 import { LeftOutlined, CheckCircleFilled, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useStyleToken } from 'themeStyles';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useIsMobile from 'utils/isMobile';
 import type { Ornament } from '../OrnamentsPage/types';
@@ -21,7 +21,7 @@ function OrnamentGamePage() {
 
   const characterConfig = characterConfigs?.[characterId || 'pacha'];
 
-  const allOrnaments: Ornament[] = characterConfig?.data || [];
+  const allOrnaments: Ornament[] = useMemo(() => characterConfig?.data || [], [characterConfig]);
   const uniqueOrnaments: Ornament[] = Array.from(
     new Map(allOrnaments.map((o: Ornament) => [o.name, o])).values()
   );
@@ -90,8 +90,8 @@ function OrnamentGamePage() {
     const xCoords: number[] = [];
     const yCoords: number[] = [];
     for (let i = 0; i < Math.min(coords.length, 30); i += 2) {
-      if (!isNaN(coords[i])) xCoords.push(coords[i]);
-      if (!isNaN(coords[i + 1])) yCoords.push(coords[i + 1]);
+      if (!Number.isNaN(coords[i])) xCoords.push(coords[i]);
+      if (!Number.isNaN(coords[i + 1])) yCoords.push(coords[i + 1]);
     }
     if (xCoords.length === 0 || yCoords.length === 0) return { x: 0, y: 0 };
     return {
@@ -230,12 +230,12 @@ function OrnamentGamePage() {
       headStyle={{ background: '#f0f0f0', fontWeight: 600 }}
     >
       <Flex wrap="wrap" gap={8}>
-        {uniqueNames.map((name, index) => {
+        {uniqueNames.map((name) => {
           const quizNumber = nameToQuizNumber[name];
           const isUsed = feedback[quizNumber] === 'correct';
           return (
             <Tag
-              key={index}
+              key={name}
               color={isUsed ? 'success' : 'blue'}
               style={{
                 fontSize: 14,
@@ -273,12 +273,21 @@ function OrnamentGamePage() {
         {numberedUniqueOrnaments.map(({ quizNumber, name }) => {
           const isCorrect = feedback[quizNumber] === 'correct';
           const isWrong = feedback[quizNumber] === 'wrong';
+          let cardBackground = '#fafafa';
+          let cardBorderColor = '#d9d9d9';
+          if (isCorrect) {
+            cardBackground = '#f6ffed';
+            cardBorderColor = '#52c41a';
+          } else if (isWrong) {
+            cardBackground = '#fff2f0';
+            cardBorderColor = '#ff4d4f';
+          }
           return (
             <Card
               key={quizNumber}
               style={{
-                background: isCorrect ? '#f6ffed' : isWrong ? '#fff2f0' : '#fafafa',
-                borderColor: isCorrect ? '#52c41a' : isWrong ? '#ff4d4f' : '#d9d9d9',
+                background: cardBackground,
+                borderColor: cardBorderColor,
                 border: '2px solid',
                 transition: 'all 0.3s ease',
                 boxShadow: isCorrect ? '0 2px 8px rgba(82,196,26,0.3)' : 'none',
