@@ -85,21 +85,23 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap 
     // Find all ** positions
     const boldRegex = /\*\*/g;
     let match;
-    while ((match = boldRegex.exec(text)) !== null) {
+    match = boldRegex.exec(text);
+    while (match !== null) {
       const before = text.slice(lastIndex, match.index);
       if (before) parts.push(before);
 
       if (depth === 0) {
         // Opening **
         parts.push('**');
-        depth++;
+        depth += 1;
       } else {
         // Closing **
         parts.push('**');
-        depth--;
+        depth -= 1;
       }
 
       lastIndex = match.index + 2;
+      match = boldRegex.exec(text);
     }
 
     const remaining = text.slice(lastIndex);
