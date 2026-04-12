@@ -75,7 +75,51 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap 
   };
 
   // utility for inline markdown-style formatting used throughout component
+  const cleanNestedFormatting = (text: string): string => {
+    // Remove nested bold markers: replace **text** but skip if inside another **
+    let result = text;
+    let depth = 0;
+    const parts: string[] = [];
+    let lastIndex = 0;
+
+    // Find all ** positions
+    const boldRegex = /\*\*/g;
+    let match;
+    while ((match = boldRegex.exec(text)) !== null) {
+      const before = text.slice(lastIndex, match.index);
+      if (before) parts.push(before);
+
+      if (depth === 0) {
+        // Opening **
+        parts.push('**');
+        depth++;
+      } else {
+        // Closing **
+        parts.push('**');
+        depth--;
+      }
+
+      lastIndex = match.index + 2;
+    }
+
+    const remaining = text.slice(lastIndex);
+    if (remaining) parts.push(remaining);
+
+    result = parts.join('');
+
+    // If we have unbalanced **, remove the extra ones
+    const openCount = (result.match(/\*\*/g) || []).length;
+    if (openCount % 2 !== 0) {
+      // Remove the last unmatched **
+      result = result.replace(/\*\*$/, '');
+    }
+
+    return result;
+  };
+
   const formatInlineText = (text: string, keyPrefix: string): React.ReactNode[] => {
+    // Clean nested formatting first
+    const cleanedText = cleanNestedFormatting(text);
     const parts: React.ReactNode[] = [];
     let currentIndex = 0;
     let partKey = 0;
@@ -134,7 +178,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap 
     // Find all matches
     patterns.forEach(({ regex, render }) => {
       const regexCopy = new RegExp(regex.source, regex.flags);
-      let match = regexCopy.exec(text);
+      let match = regexCopy.exec(cleanedText);
       while (match !== null) {
         allMatches.push({
           start: match.index,
@@ -143,7 +187,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap 
           render,
           innerText: typeof match[1] === 'string' ? match[1] : match[0],
         });
-        match = regexCopy.exec(text);
+        match = regexCopy.exec(cleanedText);
       }
     });
 
@@ -164,7 +208,7 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap 
     validMatches.forEach((match) => {
       // Add text before the match
       if (match.start > currentIndex) {
-        const beforeText = text.slice(currentIndex, match.start);
+        const beforeText = cleanedText.slice(currentIndex, match.start);
         if (beforeText) {
           partKey += 1;
           parts.push(<span key={`${keyPrefix}-text-${partKey}`}>{beforeText}</span>);
@@ -177,15 +221,15 @@ const FormattedText: React.FC<FormattedTextProps> = ({ content, style, imageMap 
     });
 
     // Add remaining text
-    if (currentIndex < text.length) {
-      const remainingText = text.slice(currentIndex);
+    if (currentIndex < cleanedText.length) {
+      const remainingText = cleanedText.slice(currentIndex);
       if (remainingText) {
         partKey += 1;
         parts.push(<span key={`${keyPrefix}-text-${partKey}`}>{remainingText}</span>);
       }
     }
 
-    return parts.length > 0 ? parts : [<span key={`${keyPrefix}-default`}>{text}</span>];
+    return parts.length > 0 ? parts : [<span key={`${keyPrefix}-default`}>{cleanedText}</span>];
   };
 
   const renderTable = (table: ParsedTable, key: string) => (

@@ -52,19 +52,19 @@
 
 :global(.ant-table) {
   background: #2b2d38 !important;
-  color: #e0e0e0 !important;
+  color: white !important;
 }
 
 :global(.ant-table-thead > tr > th) {
   background: #1c1e24 !important;
-  color: #e0e0e0 !important;
+  color: white !important;
   border-color: #3a3d4a !important;
   font-weight: 600 !important;
 }
 
 :global(.ant-table-tbody > tr > td) {
   border-color: #3a3d4a !important;
-  color: #e0e0e0 !important;
+  color: white !important;
   border-bottom: 1px solid #44485a !important;
 }
 

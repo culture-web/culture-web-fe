@@ -1,14 +1,14 @@
-const backendUri = process.env.VITE_BACKEND_URI;
+const backendUri = import.meta.env.VITE_BACKEND_URI;
 
 if (!backendUri) {
-  process.exit(1);
+  throw new Error('VITE_BACKEND_URI environment variable is not set');
 }
 
 const BACKEND_URI = backendUri;
 
 // Supabase configuration
-export const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-export const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const hasPlaceholderSupabaseConfig =
   String(SUPABASE_URL || '').includes('placeholder.supabase.co')
   || String(SUPABASE_ANON_KEY || '').includes('placeholder-anon-key');
