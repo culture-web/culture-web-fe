@@ -217,7 +217,15 @@ function KathakaliPage() {
               Bhayanaka (Terrible) and Hasya (Comic).
             </Text>
             <Text style={contentStyle}>
-              This research is accepted for IEEE SPICES 2024, India.
+              To learn more about this research,{' '}
+              <a
+                href="https://ieeexplore.ieee.org/document/10779842"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                read this
+              </a>
+              .
             </Text>
             <Flex gap="large" style={{ margin: '0.5rem 0rem' }}>
               <Button onClick={() => setIsExpressionModalSingleOpen(true)}>
