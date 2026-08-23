@@ -96,10 +96,10 @@ function MudrasPage() {
 
         <section id="learning" style={{ marginTop: '2rem' }}>
           <Title style={headingStyle}>
-            Learn More with AI Assistant
+            Learn More with Our AI Assistant
           </Title>
           <Text style={contentStyle}>
-            Our AI-powered Learning Assistant provides detailed information about various mudras, their meanings, cultural significance, and their use in different classical dance traditions. Ask any questions about:
+            Our AI-powered Learning Assistant provides detailed information about various mudras, their meanings, cultural significance, and their use in different classical dance traditions. Ask questions about any of the following:
           </Text>
           <ul style={{ ...contentStyle, marginLeft: '2rem', marginTop: '0.5rem' }}>
             <li>Specific mudra names, meanings, and variations</li>
