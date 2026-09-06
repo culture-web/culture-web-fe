@@ -4,7 +4,8 @@
 
 Use KathakalAI's shared development Supabase `rzokzctxdqagnmhqhrqd`;
 production is separate: `cxtsnupbfqqosvzhwqyw`.
-Obtain dev configuration, copy `.env.example` to `.env` without overwriting
+Obtain dev keys and other env values from the current maintainer (or a previous
+maintainer if nobody is currently working on the project), then copy `.env.example` to `.env` without overwriting
 existing settings, then run `npm ci` and `npm run dev`.
 Configure/start the sibling backend for the same project and run its
 `npm run check:dev`. Never put privileged keys in frontend configuration.
