@@ -56,7 +56,11 @@ const generateQuizFromDataset = (dataset: QuizCategory[]): QuizItem[] => {
     quizItems[j] = temp;
   }
 
-  return quizItems;
+  // Ensure every item in the generated quiz session has a unique sequential ID
+  return quizItems.map((item, index) => ({
+    ...item,
+    id: index + 1,
+  }));
 };
 
 const QuizPage: React.FC = () => {
@@ -206,8 +210,8 @@ const QuizPage: React.FC = () => {
       }
 
       // Transform LLM response to QuizItem format
-      const transformedQuiz: QuizItem[] = data.questions.map((q: { id: number; question: string; options: string[]; correctAnswer: string; explanation: string }) => ({
-        id: q.id,
+      const transformedQuiz: QuizItem[] = data.questions.map((q: { id: number; question: string; options: string[]; correctAnswer: string; explanation: string }, index: number) => ({
+        id: index + 1,
         question: q.question,
         image: '', // No image for LLM-generated quiz
         options: q.options,
@@ -389,7 +393,7 @@ const QuizPage: React.FC = () => {
                     {rotatingTips.map((tip, index) => (
                       <button
                         type="button"
-                        key={tip.title}
+                        key={tip.description}
                         className={`quiz-tip-dot ${index === activeTipIndex ? 'quiz-tip-dot-active' : ''}`}
                         aria-label={`Show ${tip.title}`}
                         onClick={() => setActiveTipIndex(index)}

@@ -72,6 +72,9 @@ const quizExpression: QuizCategory[] = [
       { id: 101, question: startingQuestion, image: Adbhuta1, options: generateOptions(ADBHUTA, expressions), correctAnswer: ADBHUTA },
       { id: 102, question: startingQuestion, image: Adbhuta2, options: generateOptions(ADBHUTA, expressions), correctAnswer: ADBHUTA },
       { id: 103, question: startingQuestion, image: Adbhuta3, options: generateOptions(ADBHUTA, expressions), correctAnswer: ADBHUTA },
+      { id: 201, question: startingQuestion, image: Adbhuta1, options: generateOptions(ADBHUTA, expressions), correctAnswer: ADBHUTA },
+      { id: 202, question: startingQuestion, image: Adbhuta2, options: generateOptions(ADBHUTA, expressions), correctAnswer: ADBHUTA },
+      { id: 203, question: startingQuestion, image: Adbhuta3, options: generateOptions(ADBHUTA, expressions), correctAnswer: ADBHUTA },
     ],
   },
   {
@@ -81,6 +84,9 @@ const quizExpression: QuizCategory[] = [
       { id: 104, question: startingQuestion, image: Bhayanaka1, options: generateOptions(BHAYANAKA, expressions), correctAnswer: BHAYANAKA },
       { id: 105, question: startingQuestion, image: Bhayanaka2, options: generateOptions(BHAYANAKA, expressions), correctAnswer: BHAYANAKA },
       { id: 106, question: startingQuestion, image: Bhayanaka3, options: generateOptions(BHAYANAKA, expressions), correctAnswer: BHAYANAKA },
+      { id: 204, question: startingQuestion, image: Bhayanaka1, options: generateOptions(BHAYANAKA, expressions), correctAnswer: BHAYANAKA },
+      { id: 205, question: startingQuestion, image: Bhayanaka2, options: generateOptions(BHAYANAKA, expressions), correctAnswer: BHAYANAKA },
+      { id: 206, question: startingQuestion, image: Bhayanaka3, options: generateOptions(BHAYANAKA, expressions), correctAnswer: BHAYANAKA },
     ],
   },
   {
@@ -90,6 +96,9 @@ const quizExpression: QuizCategory[] = [
       { id: 107, question: startingQuestion, image: Bibatsa1, options: generateOptions(BIBATSA, expressions), correctAnswer: BIBATSA },
       { id: 108, question: startingQuestion, image: Bibatsa2, options: generateOptions(BIBATSA, expressions), correctAnswer: BIBATSA },
       { id: 109, question: startingQuestion, image: Bibatsa3, options: generateOptions(BIBATSA, expressions), correctAnswer: BIBATSA },
+      { id: 207, question: startingQuestion, image: Bibatsa1, options: generateOptions(BIBATSA, expressions), correctAnswer: BIBATSA },
+      { id: 208, question: startingQuestion, image: Bibatsa2, options: generateOptions(BIBATSA, expressions), correctAnswer: BIBATSA },
+      { id: 209, question: startingQuestion, image: Bibatsa3, options: generateOptions(BIBATSA, expressions), correctAnswer: BIBATSA },
     ],
   },
   {
@@ -99,6 +108,9 @@ const quizExpression: QuizCategory[] = [
       { id: 110, question: startingQuestion, image: Hasya1, options: generateOptions(HASYA, expressions), correctAnswer: HASYA },
       { id: 111, question: startingQuestion, image: Hasya2, options: generateOptions(HASYA, expressions), correctAnswer: HASYA },
       { id: 112, question: startingQuestion, image: Hasya3, options: generateOptions(HASYA, expressions), correctAnswer: HASYA },
+      { id: 210, question: startingQuestion, image: Hasya1, options: generateOptions(HASYA, expressions), correctAnswer: HASYA },
+      { id: 211, question: startingQuestion, image: Hasya2, options: generateOptions(HASYA, expressions), correctAnswer: HASYA },
+      { id: 212, question: startingQuestion, image: Hasya3, options: generateOptions(HASYA, expressions), correctAnswer: HASYA },
     ],
   },
   {
@@ -108,6 +120,9 @@ const quizExpression: QuizCategory[] = [
       { id: 113, question: startingQuestion, image: Karuna1, options: generateOptions(KARUNA, expressions), correctAnswer: KARUNA },
       { id: 114, question: startingQuestion, image: Karuna2, options: generateOptions(KARUNA, expressions), correctAnswer: KARUNA },
       { id: 115, question: startingQuestion, image: Karuna3, options: generateOptions(KARUNA, expressions), correctAnswer: KARUNA },
+      { id: 213, question: startingQuestion, image: Karuna1, options: generateOptions(KARUNA, expressions), correctAnswer: KARUNA },
+      { id: 214, question: startingQuestion, image: Karuna2, options: generateOptions(KARUNA, expressions), correctAnswer: KARUNA },
+      { id: 215, question: startingQuestion, image: Karuna3, options: generateOptions(KARUNA, expressions), correctAnswer: KARUNA },
     ],
   },
   {
@@ -117,6 +132,9 @@ const quizExpression: QuizCategory[] = [
       { id: 116, question: startingQuestion, image: Raudra1, options: generateOptions(RAUDRA, expressions), correctAnswer: RAUDRA },
       { id: 117, question: startingQuestion, image: Raudra2, options: generateOptions(RAUDRA, expressions), correctAnswer: RAUDRA },
       { id: 118, question: startingQuestion, image: Raudra3, options: generateOptions(RAUDRA, expressions), correctAnswer: RAUDRA },
+      { id: 216, question: startingQuestion, image: Raudra1, options: generateOptions(RAUDRA, expressions), correctAnswer: RAUDRA },
+      { id: 217, question: startingQuestion, image: Raudra2, options: generateOptions(RAUDRA, expressions), correctAnswer: RAUDRA },
+      { id: 218, question: startingQuestion, image: Raudra3, options: generateOptions(RAUDRA, expressions), correctAnswer: RAUDRA },
     ],
   },
   {
@@ -126,6 +144,9 @@ const quizExpression: QuizCategory[] = [
       { id: 119, question: startingQuestion, image: Shanta1, options: generateOptions(SHANTA, expressions), correctAnswer: SHANTA },
       { id: 120, question: startingQuestion, image: Shanta2, options: generateOptions(SHANTA, expressions), correctAnswer: SHANTA },
       { id: 121, question: startingQuestion, image: Shanta3, options: generateOptions(SHANTA, expressions), correctAnswer: SHANTA },
+      { id: 219, question: startingQuestion, image: Shanta1, options: generateOptions(SHANTA, expressions), correctAnswer: SHANTA },
+      { id: 220, question: startingQuestion, image: Shanta2, options: generateOptions(SHANTA, expressions), correctAnswer: SHANTA },
+      { id: 221, question: startingQuestion, image: Shanta3, options: generateOptions(SHANTA, expressions), correctAnswer: SHANTA },
     ],
   },
   {
@@ -135,6 +156,9 @@ const quizExpression: QuizCategory[] = [
       { id: 122, question: startingQuestion, image: Sringara1, options: generateOptions(SRINGARA, expressions), correctAnswer: SRINGARA },
       { id: 123, question: startingQuestion, image: Sringara2, options: generateOptions(SRINGARA, expressions), correctAnswer: SRINGARA },
       { id: 124, question: startingQuestion, image: Sringara3, options: generateOptions(SRINGARA, expressions), correctAnswer: SRINGARA },
+      { id: 222, question: startingQuestion, image: Sringara1, options: generateOptions(SRINGARA, expressions), correctAnswer: SRINGARA },
+      { id: 223, question: startingQuestion, image: Sringara2, options: generateOptions(SRINGARA, expressions), correctAnswer: SRINGARA },
+      { id: 224, question: startingQuestion, image: Sringara3, options: generateOptions(SRINGARA, expressions), correctAnswer: SRINGARA },
     ],
   },
   {
@@ -144,6 +168,9 @@ const quizExpression: QuizCategory[] = [
       { id: 125, question: startingQuestion, image: Vira1, options: generateOptions(VIRA, expressions), correctAnswer: VIRA },
       { id: 126, question: startingQuestion, image: Vira2, options: generateOptions(VIRA, expressions), correctAnswer: VIRA },
       { id: 127, question: startingQuestion, image: Vira3, options: generateOptions(VIRA, expressions), correctAnswer: VIRA },
+      { id: 225, question: startingQuestion, image: Vira1, options: generateOptions(VIRA, expressions), correctAnswer: VIRA },
+      { id: 226, question: startingQuestion, image: Vira2, options: generateOptions(VIRA, expressions), correctAnswer: VIRA },
+      { id: 227, question: startingQuestion, image: Vira3, options: generateOptions(VIRA, expressions), correctAnswer: VIRA },
     ],
   },
 ];
