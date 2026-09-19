@@ -3,8 +3,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './env.config';
 
 // Initialize Supabase client
 export const supabase = createClient(
-  SUPABASE_URL || '', 
-  SUPABASE_ANON_KEY || '',
+  SUPABASE_URL || 'https://rzokzctxdqagnmhqhrqd.supabase.co', 
+  SUPABASE_ANON_KEY || 'placeholder-anon-key',
   {
     auth: {
       autoRefreshToken: true,

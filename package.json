@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "format": "prettier --write ./src",
     "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
     "@ant-design/icons": "^5.4.0",

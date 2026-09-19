@@ -1,14 +1,14 @@
-const backendUri = import.meta.env.VITE_BACKEND_URI;
+const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:3001/api';
 
-if (!backendUri) {
-  throw new Error('VITE_BACKEND_URI environment variable is not set');
+if (!import.meta.env.VITE_BACKEND_URI) {
+  console.warn('VITE_BACKEND_URI environment variable is not set, defaulting to http://localhost:3001/api');
 }
 
 const BACKEND_URI = backendUri;
 
 // Supabase configuration
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://rzokzctxdqagnmhqhrqd.supabase.co';
+export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 const hasPlaceholderSupabaseConfig =
   String(SUPABASE_URL || '').includes('placeholder.supabase.co')
   || String(SUPABASE_ANON_KEY || '').includes('placeholder-anon-key');
