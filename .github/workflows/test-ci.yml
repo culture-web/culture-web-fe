@@ -11,21 +11,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 21.x
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '20.x'
           cache: 'npm'
       - run: npm ci
       - run: npm run build --if-present
       - run: npm run lint
       - name: Setup environment variables
         run: |
-          echo "VITE_BACKEND_URI=${{ secrets.VITE_BACKEND_URI }}" >> $GITHUB_ENV
-          echo "EMAIL_API_KEY=${{ secrets.EMAIL_API_KEY }}" >> $GITHUB_ENV
-          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> $GITHUB_ENV
-          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          echo "VITE_BACKEND_URI=${VITE_BACKEND_URI:-http://localhost:3001/api}" >> $GITHUB_ENV
+          echo "EMAIL_API_KEY=${EMAIL_API_KEY:-dummy_key}" >> $GITHUB_ENV
+          echo "VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-https://rzokzctxdqagnmhqhrqd.supabase.co}" >> $GITHUB_ENV
+          echo "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-dummy_anon_key}" >> $GITHUB_ENV
+        env:
+          VITE_BACKEND_URI: ${{ secrets.VITE_BACKEND_URI }}
+          EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
   e2e:
     name: Run Playwright E2E Tests
     runs-on: ubuntu-latest
@@ -34,17 +39,17 @@ jobs:
     steps:
       # Step 1: Checkout the repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js version (e.g., 18.x)
+      # Step 2: Set up Node.js version (e.g., 20.x)
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20.x'
 
       # Step 3: Cache `node_modules` to speed up installation
       - name: Cache node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}
@@ -56,15 +61,20 @@ jobs:
 
       # Step 5: Install Playwright browsers
       - name: Install Playwright browsers
-        run: npx playwright install chromium
+        run: npx playwright install --with-deps chromium
 
       # Step 6: Setup environment variables for tests
       - name: Setup environment variables
         run: |
-          echo "VITE_BACKEND_URI=${{ secrets.VITE_BACKEND_URI }}" >> $GITHUB_ENV
-          echo "VITE_EMAIL_API_KEY=${{ secrets.VITE_EMAIL_API_KEY }}" >> $GITHUB_ENV
-          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" >> $GITHUB_ENV
-          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          echo "VITE_BACKEND_URI=${VITE_BACKEND_URI:-http://localhost:3001/api}" >> $GITHUB_ENV
+          echo "VITE_EMAIL_API_KEY=${VITE_EMAIL_API_KEY:-dummy_key}" >> $GITHUB_ENV
+          echo "VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-https://rzokzctxdqagnmhqhrqd.supabase.co}" >> $GITHUB_ENV
+          echo "VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-dummy_anon_key}" >> $GITHUB_ENV
+        env:
+          VITE_BACKEND_URI: ${{ secrets.VITE_BACKEND_URI }}
+          VITE_EMAIL_API_KEY: ${{ secrets.VITE_EMAIL_API_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       # Step 5: Run Playwright tests
       - name: Run Playwright tests
