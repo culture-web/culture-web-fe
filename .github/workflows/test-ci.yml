@@ -31,6 +31,7 @@ jobs:
           EMAIL_API_KEY: ${{ secrets.EMAIL_API_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
   e2e:
     name: Run Playwright E2E Tests
     runs-on: ubuntu-latest
@@ -55,13 +56,14 @@ jobs:
           key: ${{ runner.os }}-node_modules-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node_modules-
+
       # Step 4: Install dependencies
       - name: Install dependencies
         run: npm install
 
       # Step 5: Install Playwright browsers
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npm run test:e2e:install
 
       # Step 6: Setup environment variables for tests
       - name: Setup environment variables
@@ -76,12 +78,12 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # Step 5: Run Playwright tests
+      # Step 7: Run Playwright tests
       - name: Run Playwright tests
         run: npm run test:e2e
         # If your tests need a server to be running, you can use `npm start &` to run it in the background
 
-      # Step 6: Upload Playwright report (optional)
+      # Step 8: Upload Playwright report (optional)
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: always()
@@ -89,7 +91,7 @@ jobs:
           name: playwright-report
           path: playwright-report
 
-      # Step 7: Upload Playwright test results (optional)
+      # Step 9: Upload Playwright test results (optional)
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: failure() # Only upload if tests fail
