@@ -69,6 +69,7 @@ const quizOrnament: QuizCategory[] = [
     title: KIREEDAM,
     items: [
       { id: 101, question: startingQuestion, image: kireedam, options: generateOptions(KIREEDAM, ornaments), correctAnswer: KIREEDAM },
+      { id: 301, question: startingQuestion, image: kireedam, options: generateOptions(KIREEDAM, ornaments), correctAnswer: KIREEDAM },
     ],
   },
   {
@@ -76,6 +77,7 @@ const quizOrnament: QuizCategory[] = [
     title: THODA,
     items: [
       { id: 102, question: startingQuestion, image: thoda, options: generateOptions(THODA, ornaments), correctAnswer: THODA },
+      { id: 302, question: startingQuestion, image: thoda, options: generateOptions(THODA, ornaments), correctAnswer: THODA },
     ],
   },
   {
@@ -83,6 +85,7 @@ const quizOrnament: QuizCategory[] = [
     title: CHEVIPPUVU,
     items: [
       { id: 103, question: startingQuestion, image: chevippuvu, options: generateOptions(CHEVIPPUVU, ornaments), correctAnswer: CHEVIPPUVU },
+      { id: 303, question: startingQuestion, image: chevippuvu, options: generateOptions(CHEVIPPUVU, ornaments), correctAnswer: CHEVIPPUVU },
     ],
   },
   {
@@ -90,6 +93,7 @@ const quizOrnament: QuizCategory[] = [
     title: CHUTTI,
     items: [
       { id: 104, question: startingQuestion, image: chutti, options: generateOptions(CHUTTI, ornaments), correctAnswer: CHUTTI },
+      { id: 304, question: startingQuestion, image: chutti, options: generateOptions(CHUTTI, ornaments), correctAnswer: CHUTTI },
     ],
   },
   {
@@ -97,6 +101,7 @@ const quizOrnament: QuizCategory[] = [
     title: KAZHUTHU_NADA,
     items: [
       { id: 105, question: startingQuestion, image: kazhuthunada, options: generateOptions(KAZHUTHU_NADA, ornaments), correctAnswer: KAZHUTHU_NADA },
+      { id: 305, question: startingQuestion, image: kazhuthunada, options: generateOptions(KAZHUTHU_NADA, ornaments), correctAnswer: KAZHUTHU_NADA },
     ],
   },
   {
@@ -104,6 +109,7 @@ const quizOrnament: QuizCategory[] = [
     title: KAZHUTTARAM,
     items: [
       { id: 106, question: startingQuestion, image: kazhuttaram, options: generateOptions(KAZHUTTARAM, ornaments), correctAnswer: KAZHUTTARAM },
+      { id: 306, question: startingQuestion, image: kazhuttaram, options: generateOptions(KAZHUTTARAM, ornaments), correctAnswer: KAZHUTTARAM },
     ],
   },
   {
@@ -111,6 +117,7 @@ const quizOrnament: QuizCategory[] = [
     title: PARUTTIKKAIMANI,
     items: [
       { id: 107, question: startingQuestion, image: paruttikkaimani, options: generateOptions(PARUTTIKKAIMANI, ornaments), correctAnswer: PARUTTIKKAIMANI },
+      { id: 307, question: startingQuestion, image: paruttikkaimani, options: generateOptions(PARUTTIKKAIMANI, ornaments), correctAnswer: PARUTTIKKAIMANI },
     ],
   },
   {
@@ -118,6 +125,7 @@ const quizOrnament: QuizCategory[] = [
     title: TOLPUTTU,
     items: [
       { id: 108, question: startingQuestion, image: tolputtu, options: generateOptions(TOLPUTTU, ornaments), correctAnswer: TOLPUTTU },
+      { id: 308, question: startingQuestion, image: tolputtu, options: generateOptions(TOLPUTTU, ornaments), correctAnswer: TOLPUTTU },
     ],
   },
   {
@@ -125,6 +133,7 @@ const quizOrnament: QuizCategory[] = [
     title: KURALARAM,
     items: [
       { id: 109, question: startingQuestion, image: kuralaram, options: generateOptions(KURALARAM, ornaments), correctAnswer: KURALARAM },
+      { id: 309, question: startingQuestion, image: kuralaram, options: generateOptions(KURALARAM, ornaments), correctAnswer: KURALARAM },
     ],
   },
   {
@@ -132,6 +141,7 @@ const quizOrnament: QuizCategory[] = [
     title: UTTARIYA,
     items: [
       { id: 110, question: startingQuestion, image: uttariya, options: generateOptions(UTTARIYA, ornaments), correctAnswer: UTTARIYA },
+      { id: 310, question: startingQuestion, image: uttariya, options: generateOptions(UTTARIYA, ornaments), correctAnswer: UTTARIYA },
     ],
   },
   {
@@ -139,6 +149,7 @@ const quizOrnament: QuizCategory[] = [
     title: KASTAKATAKAM,
     items: [
       { id: 111, question: startingQuestion, image: kastakatakam, options: generateOptions(KASTAKATAKAM, ornaments), correctAnswer: KASTAKATAKAM },
+      { id: 311, question: startingQuestion, image: kastakatakam, options: generateOptions(KASTAKATAKAM, ornaments), correctAnswer: KASTAKATAKAM },
     ],
   },
   {
@@ -146,6 +157,7 @@ const quizOrnament: QuizCategory[] = [
     title: KALASES,
     items: [
       { id: 112, question: startingQuestion, image: kalases, options: generateOptions(KALASES, ornaments), correctAnswer: KALASES },
+      { id: 312, question: startingQuestion, image: kalases, options: generateOptions(KALASES, ornaments), correctAnswer: KALASES },
     ],
   },
   {
@@ -153,6 +165,7 @@ const quizOrnament: QuizCategory[] = [
     title: PATTU_VAL,
     items: [
       { id: 113, question: startingQuestion, image: pattuval, options: generateOptions(PATTU_VAL, ornaments), correctAnswer: PATTU_VAL },
+      { id: 313, question: startingQuestion, image: pattuval, options: generateOptions(PATTU_VAL, ornaments), correctAnswer: PATTU_VAL },
     ],
   },
   {
@@ -160,6 +173,7 @@ const quizOrnament: QuizCategory[] = [
     title: PATIARANNANAM,
     items: [
       { id: 114, question: startingQuestion, image: patiarannanam, options: generateOptions(PATIARANNANAM, ornaments), correctAnswer: PATIARANNANAM },
+      { id: 314, question: startingQuestion, image: patiarannanam, options: generateOptions(PATIARANNANAM, ornaments), correctAnswer: PATIARANNANAM },
     ],
   },
   {
@@ -167,6 +181,7 @@ const quizOrnament: QuizCategory[] = [
     title: OTTANAKKU,
     items: [
       { id: 115, question: startingQuestion, image: ottanakku, options: generateOptions(OTTANAKKU, ornaments), correctAnswer: OTTANAKKU },
+      { id: 315, question: startingQuestion, image: ottanakku, options: generateOptions(OTTANAKKU, ornaments), correctAnswer: OTTANAKKU },
     ],
   },
   {
@@ -174,6 +189,7 @@ const quizOrnament: QuizCategory[] = [
     title: TANTAPPATIPPU,
     items: [
       { id: 116, question: startingQuestion, image: tantappatippu, options: generateOptions(TANTAPPATIPPU, ornaments), correctAnswer: TANTAPPATIPPU },
+      { id: 316, question: startingQuestion, image: tantappatippu, options: generateOptions(TANTAPPATIPPU, ornaments), correctAnswer: TANTAPPATIPPU },
     ],
   },
   {
@@ -181,6 +197,7 @@ const quizOrnament: QuizCategory[] = [
     title: CHUTTITUNI,
     items: [
       { id: 117, question: startingQuestion, image: chuttituni, options: generateOptions(CHUTTITUNI, ornaments), correctAnswer: CHUTTITUNI },
+      { id: 317, question: startingQuestion, image: chuttituni, options: generateOptions(CHUTTITUNI, ornaments), correctAnswer: CHUTTITUNI },
     ],
   },
   {
@@ -188,6 +205,7 @@ const quizOrnament: QuizCategory[] = [
     title: KECCHAMANI,
     items: [
       { id: 118, question: startingQuestion, image: kecchamani, options: generateOptions(KECCHAMANI, ornaments), correctAnswer: KECCHAMANI},
+      { id: 318, question: startingQuestion, image: kecchamani, options: generateOptions(KECCHAMANI, ornaments), correctAnswer: KECCHAMANI},
     ]
   }
 ];
