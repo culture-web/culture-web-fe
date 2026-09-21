@@ -86,6 +86,7 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
       <div style={{ flex: 1, overflow: 'auto' }}>
         <List
           dataSource={sessions}
+          rowKey={(session) => session.id}
           renderItem={(session) => (
             <List.Item
               style={{

@@ -29,8 +29,13 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
       console.log('Loading sessions...');
       const userSessions = await getUserSessions();
       console.log('Sessions loaded:', userSessions);
+      // Deduplicate sessions by ID (keep first occurrence)
+      const uniqueSessions = userSessions.filter(
+        (session, index, self) =>
+          index === self.findIndex((s) => s.id === session.id),
+      );
       // Sort sessions in descending order by creation time (latest first)
-      const sortedSessions = userSessions.sort((a, b) => 
+      const sortedSessions = uniqueSessions.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
       setSessions(sortedSessions);
@@ -66,7 +71,12 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
     setIsCreatingSession(true);
     try {
       const newSession = await createNewSession();
-      setSessions(prev => [newSession, ...prev]);
+      setSessions(prev => {
+        if (prev.some(s => s.id === newSession.id)) {
+          return prev;
+        }
+        return [newSession, ...prev];
+      });
       setActiveSessionId(newSession.id);
       setIsTemporarySession(false);
       onSessionChange?.(newSession.id);
