@@ -52,3 +52,4 @@ test.describe('Quiz Page', () => {
     await expect(page.getByText('Choose Your Quest')).toBeVisible();
   });
 });
+
