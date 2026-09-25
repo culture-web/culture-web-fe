@@ -19,9 +19,9 @@ export interface ChatSession {
 
 export const createNewSession = async (): Promise<ChatSession> => {
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   };
-  
+
   try {
     const token = await getCurrentUserToken();
     if (token) {
@@ -37,7 +37,9 @@ export const createNewSession = async (): Promise<ChatSession> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create session: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to create session: ${response.status} ${response.statusText}`,
+    );
   }
 
   const data = await response.json();
@@ -46,7 +48,7 @@ export const createNewSession = async (): Promise<ChatSession> => {
 
 export const getUserSessions = async (): Promise<ChatSession[]> => {
   const headers: Record<string, string> = {};
-  
+
   try {
     const token = await getCurrentUserToken();
     if (token) {
@@ -71,9 +73,11 @@ export const getUserSessions = async (): Promise<ChatSession[]> => {
   return data.data || data || [];
 };
 
-export const getSessionMessages = async (sessionId: string): Promise<BackendMessage[]> => {
+export const getSessionMessages = async (
+  sessionId: string,
+): Promise<BackendMessage[]> => {
   const headers: Record<string, string> = {};
-  
+
   try {
     const token = await getCurrentUserToken();
     if (token) {
@@ -90,18 +94,20 @@ export const getSessionMessages = async (sessionId: string): Promise<BackendMess
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch session messages: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch session messages: ${response.status} ${response.statusText}`,
+    );
   }
 
   const data = await response.json();
-  
+
   const messages = data.data || data.messages || data || [];
   return messages;
 };
 
 export const deleteSession = async (sessionId: string): Promise<void> => {
   const headers: Record<string, string> = {};
-  
+
   try {
     const token = await getCurrentUserToken();
     if (token) {
@@ -117,13 +123,15 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to delete session: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to delete session: ${response.status} ${response.statusText}`,
+    );
   }
 };
 
 export const deleteMessage = async (messageId: string): Promise<void> => {
   const headers: Record<string, string> = {};
-  
+
   try {
     const token = await getCurrentUserToken();
     if (token) {
@@ -139,7 +147,9 @@ export const deleteMessage = async (messageId: string): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to delete message: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to delete message: ${response.status} ${response.statusText}`,
+    );
   }
 };
 
@@ -186,7 +196,6 @@ const uploadCharacterData = async (
   }
 
   // Return empty
-  
 };
 
 const uploadImage = async (
@@ -271,21 +280,21 @@ export const sendChatQuery = async (
   try {
     // Always use FormData to be consistent with backend multer middleware
     const formData = new FormData();
-    
+
     // TODO: For mudras backward compatibility, to update to use the "message" field
     formData.append('query', query);
 
     formData.append('message', query);
     formData.append('role', 'user');
-    
+
     if (sessionId && !temporarySession) {
       formData.append('sessionId', sessionId);
     }
-    
+
     if (imageFile) {
       formData.append('image', imageFile);
     }
-    
+
     if (imageAnalysis) {
       formData.append('imageAnalysis', imageAnalysis);
     }
@@ -294,22 +303,37 @@ export const sendChatQuery = async (
       const rawSettings = localStorage.getItem('globalChatSettings');
       if (rawSettings) {
         const parsed = JSON.parse(rawSettings);
-        if (typeof parsed?.systemPrompt === 'string' && parsed.systemPrompt.trim().length > 0) {
+        if (
+          typeof parsed?.systemPrompt === 'string' &&
+          parsed.systemPrompt.trim().length > 0
+        ) {
           formData.append('systemPrompt', parsed.systemPrompt);
         }
         if (Number.isFinite(Number(parsed?.similarityThreshold))) {
-          formData.append('similarityThreshold', String(parsed.similarityThreshold));
+          formData.append(
+            'similarityThreshold',
+            String(parsed.similarityThreshold),
+          );
         }
         if (Number.isFinite(Number(parsed?.vectorWeight))) {
-          const vectorWeight = Math.max(0, Math.min(1, Number(parsed.vectorWeight)));
+          const vectorWeight = Math.max(
+            0,
+            Math.min(1, Number(parsed.vectorWeight)),
+          );
           formData.append('vectorWeight', String(vectorWeight));
-          formData.append('fullTextWeight', String(Number((1 - vectorWeight).toFixed(2))));
+          formData.append(
+            'fullTextWeight',
+            String(Number((1 - vectorWeight).toFixed(2))),
+          );
         }
         if (Number.isFinite(Number(parsed?.topN))) {
           formData.append('topN', String(parsed.topN));
         }
         if (typeof parsed?.multiTurnOptimization === 'boolean') {
-          formData.append('multiTurnOptimization', String(parsed.multiTurnOptimization));
+          formData.append(
+            'multiTurnOptimization',
+            String(parsed.multiTurnOptimization),
+          );
         }
       }
     } catch (settingsError) {
@@ -346,7 +370,9 @@ export const sendChatQuery = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to get chat response: ${response.status} ${response.statusText}. Body: ${errorText}`);
+      throw new Error(
+        `Failed to get chat response: ${response.status} ${response.statusText}. Body: ${errorText}`,
+      );
     }
 
     const data = await response.json();
@@ -355,17 +381,21 @@ export const sendChatQuery = async (
     // 1) data.data.response (wrapped)
     // 2) data.response (legacy wrapper)
     // 3) data (direct structured payload from /kathakali/chat-mudras)
-    const directStructured = data
-      && typeof data === 'object'
-      && (data.shortAnswer !== undefined
-        || data.reasoning !== undefined
-        || Array.isArray(data.sections)
-        || Array.isArray(data.tables));
-    const chatbotResponse = data.data?.response || data.response || (directStructured ? data : null);
+    const directStructured =
+      data &&
+      typeof data === 'object' &&
+      (data.shortAnswer !== undefined ||
+        data.reasoning !== undefined ||
+        Array.isArray(data.sections) ||
+        Array.isArray(data.tables));
+    const chatbotResponse =
+      data.data?.response || data.response || (directStructured ? data : null);
 
     if (chatbotResponse && chatbotResponse.shortAnswer !== undefined) {
       const result = {
-        shortAnswer: chatbotResponse.shortAnswer || 'I apologize, but I couldn\'t generate a response at the moment.',
+        shortAnswer:
+          chatbotResponse.shortAnswer ||
+          "I apologize, but I couldn't generate a response at the moment.",
         reasoning: chatbotResponse.reasoning || null,
         sections: chatbotResponse.sections || [],
         tables: chatbotResponse.tables || [],
@@ -378,29 +408,35 @@ export const sendChatQuery = async (
           hasStructuredContent: false,
           responseLength: 0,
           processingTimestamp: new Date().toISOString(),
-        }
+        },
       };
       return result;
-    } 
-      // Fallback - try direct data structure or legacy format
-      const responseText = data.shortAnswer || data.response || 'I apologize, but I couldn\'t generate a response at the moment.';
-      
-      const fallbackResult = {
-        shortAnswer: typeof responseText === 'string' ? responseText : responseText.shortAnswer || 'No response available',
-        reasoning: null,
-        sections: [],
-        tables: [],
-        citations: Array.isArray(data?.citations) ? data.citations : [],
-        retrieval: data?.retrieval || undefined,
-        assetMatches: Array.isArray(data?.assetMatches) ? data.assetMatches : [],
-        metadata: {
-          hasStructuredContent: false,
-          responseLength: typeof responseText === 'string' ? responseText.length : 0,
-          processingTimestamp: new Date().toISOString(),
-        }
-      };
-      return fallbackResult;
-    
+    }
+    // Fallback - try direct data structure or legacy format
+    const responseText =
+      data.shortAnswer ||
+      data.response ||
+      "I apologize, but I couldn't generate a response at the moment.";
+
+    const fallbackResult = {
+      shortAnswer:
+        typeof responseText === 'string'
+          ? responseText
+          : responseText.shortAnswer || 'No response available',
+      reasoning: null,
+      sections: [],
+      tables: [],
+      citations: Array.isArray(data?.citations) ? data.citations : [],
+      retrieval: data?.retrieval || undefined,
+      assetMatches: Array.isArray(data?.assetMatches) ? data.assetMatches : [],
+      metadata: {
+        hasStructuredContent: false,
+        responseLength:
+          typeof responseText === 'string' ? responseText.length : 0,
+        processingTimestamp: new Date().toISOString(),
+      },
+    };
+    return fallbackResult;
   } catch {
     // Chat API Error - return error response in new format
     const errorResult = {
@@ -415,7 +451,7 @@ export const sendChatQuery = async (
         hasStructuredContent: false,
         responseLength: 0,
         processingTimestamp: new Date().toISOString(),
-      }
+      },
     };
     return errorResult;
   }
@@ -424,12 +460,12 @@ export const sendChatQuery = async (
 export const getUserProficiencyGaps = async (): Promise<unknown> => {
   const token = await getCurrentUserToken();
   const response = await fetch(`${BACKEND_URI}/proficiency/details`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
   });
-  
+
   if (!response.ok) throw new Error('Failed to fetch proficiency');
   return response.json();
 };
@@ -440,9 +476,9 @@ export const seedUserProficiency = async (): Promise<void> => {
     await fetch(`${BACKEND_URI}/kathakali/seed-proficiency`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
     console.warn('Failed to seed user proficiency:', error);
@@ -464,66 +500,161 @@ export interface AdaptiveQuizQuestionDTO {
   target_level?: string;
 }
 
+export interface AdaptivePublicQuestion {
+  backendQuestionId: string;
+  displayId: number;
+  question: string;
+  options: string[];
+}
+
+export interface AdaptiveQuizProgress {
+  answered: number;
+  correct: number;
+  maxQuestions: number;
+  masteryStreak: number;
+  completed: boolean;
+  completionReason:
+    | 'mastery_criterion_met'
+    | 'maximum_questions_reached'
+    | null;
+  masteredConcepts: number;
+  totalConcepts: number;
+  activeConcept: string | null;
+  currentStreak: number;
+}
+
 export interface GenerateAdaptiveQuizResult {
-  quizId: string | null;
+  quizId: string;
   source: AdaptiveQuizSource;
-  questions: Array<{
-    backendQuestionId: string | null;
-    displayId: number | null;
-    question: string;
-    options: string[];
+  policyVersion: string;
+  question: AdaptivePublicQuestion;
+  progress: AdaptiveQuizProgress;
+}
+
+export interface AdaptiveAnswerResult {
+  quizId: string;
+  result: {
+    questionId: string;
+    correct: boolean;
+    selectedAnswer: string;
     correctAnswer: string;
-    explanation?: string;
+    explanation: string;
+  };
+  nextQuestion: AdaptivePublicQuestion | null;
+  nextQuestionError?: string | null;
+  progress: AdaptiveQuizProgress;
+  proficiencyUpdatesApplied: Array<{
+    conceptId: string;
+    previousLevel: string;
+    newLevel: string;
+    misconceptionCleared: boolean;
   }>;
-  raw: unknown;
 }
 
 /**
  * Generates an adaptive quiz and (on the backend) persists a quiz_session + quiz_question rows.
  * Returns the quiz session UUID (if provided) and normalized questions containing backend UUIDs.
  */
-export const generateAdaptiveQuizSession = async (params?: {
-  count?: number;
-}): Promise<GenerateAdaptiveQuizResult> => {
-  const token = await getCurrentUserToken();
+export const generateAdaptiveQuizSession =
+  async (): Promise<GenerateAdaptiveQuizResult> => {
+    const token = await getCurrentUserToken();
 
-  let proficiency: unknown = null;
-  try {
-    proficiency = await getUserProficiencyGaps();
-  } catch {
-    // Non-fatal; backend may derive proficiency server-side.
-  }
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
 
-  const headers: Record<string, string> = {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    const response = await fetch(
+      `${BACKEND_URI}/kathakali/generate-adaptive-quiz`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({}),
+      },
+    );
+
+    if (!response.ok) {
+      let message = `${response.status} ${response.statusText}`;
+      try {
+        const errorBody = await response.json();
+        message = errorBody?.error || message;
+      } catch {
+        // Keep the HTTP status when the response has no JSON body.
+      }
+      throw new Error(`Failed to generate adaptive quiz: ${message}`);
+    }
+
+    return response.json();
   };
 
-  // Prefer POST with payload; fall back to GET for backwards compatibility.
-  let response = await fetch(`${BACKEND_URI}/kathakali/generate-adaptive-quiz`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      count: params?.count,
-      proficiency,
-    })
-  });
+export const answerAdaptiveQuizQuestion = async (params: {
+  quizId: string;
+  questionId: string;
+  answer: string;
+  responseMs?: number;
+}): Promise<AdaptiveAnswerResult> => {
+  const token = await getCurrentUserToken();
+  const response = await fetch(
+    `${BACKEND_URI}/kathakali/quiz/${params.quizId}/answer`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        questionId: params.questionId,
+        answer: params.answer,
+        responseMs: params.responseMs,
+      }),
+    },
+  );
 
-
-  // TODO (Xu Cheng): Update Backend from GET to POST request
   if (!response.ok) {
-    response = await fetch(`${BACKEND_URI}/kathakali/generate-adaptive-quiz`, {
-      headers,
-    });
+    let message = `${response.status} ${response.statusText}`;
+    try {
+      const errorBody = await response.json();
+      message = errorBody?.error || message;
+    } catch {
+      // Keep the HTTP status when the response has no JSON body.
+    }
+    throw new Error(`Failed to submit adaptive answer: ${message}`);
   }
 
+  return response.json();
+};
+
+export const resumeAdaptiveQuizSession = async (params: {
+  quizId: string;
+}): Promise<{
+  quizId: string;
+  policyVersion: string;
+  question: AdaptivePublicQuestion | null;
+  progress: AdaptiveQuizProgress;
+}> => {
+  const token = await getCurrentUserToken();
+  const response = await fetch(
+    `${BACKEND_URI}/kathakali/quiz/${params.quizId}/current`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
   if (!response.ok) {
-    throw new Error(`Failed to generate adaptive quiz: ${response.status} ${response.statusText}`);
+    let message = `${response.status} ${response.statusText}`;
+    try {
+      const errorBody = await response.json();
+      message = errorBody?.error || message;
+    } catch {
+      // Keep the HTTP status when the response has no JSON body.
+    }
+    throw new Error(`Failed to resume adaptive quiz: ${message}`);
   }
 
-  const data = await response.json();
-
-  return data
+  return response.json();
 };
 
 export interface SubmitQuizResult {
@@ -547,12 +678,11 @@ export const submitQuizSession = async (params: {
   quizId: string;
   answers: Array<{ backendQuestionId: string; answer: string }>;
 }): Promise<SubmitQuizResult> => {
-
   const token = await getCurrentUserToken();
 
   const headers: Record<string, string> = {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   };
 
   const payload = {
@@ -561,11 +691,14 @@ export const submitQuizSession = async (params: {
 
   console.log(payload);
 
-  const response = await fetch(`${BACKEND_URI}/kathakali/quiz/${params.quizId}/submit`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload),
-  });
+  const response = await fetch(
+    `${BACKEND_URI}/kathakali/quiz/${params.quizId}/submit`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    },
+  );
 
   if (!response.ok) {
     let errText = `${response.status} ${response.statusText}`;
