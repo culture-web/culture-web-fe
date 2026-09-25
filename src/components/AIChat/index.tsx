@@ -35,8 +35,10 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, currentSessionId, onSessionCha
           index === self.findIndex((s) => s.id === session.id),
       );
       // Sort sessions in descending order by creation time (latest first)
-      const sortedSessions = uniqueSessions.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      const sortedSessions = [...uniqueSessions];
+      sortedSessions.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
       setSessions(sortedSessions);
     } catch (error) {

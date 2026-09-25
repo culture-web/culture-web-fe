@@ -564,7 +564,7 @@ const QuizPage: React.FC = () => {
               <span className="quiz-badge-icon">
                 <BookOutlined />
               </span>
-              Learning Arena
+              <span>Learning Arena</span>
             </div>
             <Title
               className="quiz-main-title"
